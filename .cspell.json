@@ -1,0 +1,41 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/vscode-extension/**",
+    "**/.git/**",
+    ".vscode",
+    "megalinter",
+    "package-lock.json",
+    "report"
+  ],
+  "words": [
+    "Backoff",
+    "camelcase",
+    "Cyberneering",
+    "Delimeter",
+    "dotenv",
+    "endgroup",
+    "eslintcache",
+    "httpclient",
+    "jscoverage",
+    "jspm",
+    "lcov",
+    "nccwpck",
+    "noproxy",
+    "nuxt",
+    "oidc",
+    "Oidc",
+    "Parens",
+    "pids",
+    "Retryable",
+    "stefanzweifel",
+    "strcmp",
+    "tsbuildinfo",
+    "venv",
+    "vercel",
+    "vuepress",
+    "wscript"
+  ]
+}
