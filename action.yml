@@ -1,6 +1,6 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Git Queue'
+description: 'A GitHub Action that implements a job queue with a concurrency lock by using Git empty commits'
+author: 'Nautilus Cyberneering'
 inputs:
   milliseconds: # change this
     required: true
