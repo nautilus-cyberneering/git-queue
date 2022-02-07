@@ -27,19 +27,19 @@ export class EmailAddress {
     }
   }
 
-  public static fromDisplayNameAndEmail(displayName: string, email: string) {
+  static fromDisplayNameAndEmail(displayName: string, email: string) {
     return new EmailAddress(`${displayName} <${email}>`)
   }
 
-  public getDisplayName() {
+  getDisplayName() {
     return this.displayName
   }
 
-  public getEmail() {
+  getEmail() {
     return this.email
   }
 
-  public toString(): string {
+  toString(): string {
     if (this.displayName == '') {
       return this.email
     }

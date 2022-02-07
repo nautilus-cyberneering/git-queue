@@ -31,7 +31,9 @@ export function testConfiguration(): TestConfig {
     }
   )
 
+  // secretlint-disable
   const gpgPrivateKey = `-----BEGIN PGP PRIVATE KEY BLOCK-----\n\n${gpgPrivateKeyBody}\n-----END PGP PRIVATE KEY BLOCK-----`
+  // secretlint-enable
 
   const signingKeyFingerprint = 'BD98B3F42545FF93EFF55F7F3F39AA1432CA6AD7'
 

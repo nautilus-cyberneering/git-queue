@@ -3,10 +3,10 @@ import * as cp from 'child_process'
 import * as path from 'path'
 import {expect, test} from '@jest/globals'
 import {
-  dummyPayload,
-  gitLogForLatestCommit,
   createInitializedTempGitDir,
-  createInitializedTempGnuPGHomeDir
+  createInitializedTempGnuPGHomeDir,
+  dummyPayload,
+  gitLogForLatestCommit
 } from '../src/__tests__/helpers'
 import {testConfiguration} from '../src/__tests__/config'
 
@@ -14,7 +14,7 @@ function executeAction(env) {
   const np = process.execPath
   const ip = path.join(__dirname, '..', 'lib', 'main.js')
   const options: cp.ExecFileSyncOptions = {
-    env: env
+    env
   }
   return cp.execFileSync(np, [ip], options).toString()
 }

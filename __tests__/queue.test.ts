@@ -3,12 +3,12 @@ import {CommitOptions} from '../src/commit-options'
 import {Queue} from '../src/queue'
 import {SigningKeyId} from '../src/signing-key-id'
 import {
-  createTempEmptyDir,
+  createInitializedTempGitDir,
   createInitializedTempGnuPGHomeDir,
+  createTempEmptyDir,
   dummyPayload,
   gitLogForLatestCommit,
-  newSimpleGit,
-  createInitializedTempGitDir
+  newSimpleGit
 } from '../src/__tests__/helpers'
 import {testConfiguration} from '../src/__tests__/config'
 
@@ -40,7 +40,7 @@ describe('Queue', () => {
 
     const git = await newSimpleGit(gitRepoDir)
 
-    let queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
+    const queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
 
     await queue.createJob(dummyPayload(), commitOptionsForTests())
 
@@ -54,7 +54,7 @@ describe('Queue', () => {
 
     const git = await newSimpleGit(gitRepoDir)
 
-    let queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
+    const queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
 
     await queue.createJob(dummyPayload(), commitOptionsForTests())
     await queue.markJobAsDone(dummyPayload(), commitOptionsForTests())
@@ -69,7 +69,7 @@ describe('Queue', () => {
 
     const git = await newSimpleGit(gitRepoDir)
 
-    let queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
+    const queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
 
     await queue.createJob(dummyPayload(), commitOptionsForTests())
 
@@ -93,7 +93,7 @@ describe('Queue', () => {
     git.addConfig('user.email', testConfiguration().git.user.email)
     git.env('GNUPGHOME', gnuPGHomeDir)
 
-    let queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
+    const queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
 
     await queue.createJob(dummyPayload(), commitOptionsForTestsUsingSignature())
 

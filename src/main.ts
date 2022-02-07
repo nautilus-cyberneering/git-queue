@@ -4,7 +4,7 @@ import {SimpleGit} from 'simple-git'
 import {Queue} from './queue'
 import {CommitAuthor, emptyCommitAuthor} from './commit-author'
 import {CommitOptions} from './commit-options'
-import {emptySigningKeyId, SigningKeyId} from './signing-key-id'
+import {SigningKeyId, emptySigningKeyId} from './signing-key-id'
 import {Inputs} from './context'
 import {getGnupgHome} from './gpg-env'
 import {createInstance} from './simple-git-factory'
@@ -51,7 +51,7 @@ async function getCommitOptions(
 
 async function run(): Promise<void> {
   try {
-    let inputs: context.Inputs = await context.getInputs()
+    const inputs: context.Inputs = await context.getInputs()
 
     const gitRepoDir =
       inputs.gitRepoDir == '' ? inputs.gitRepoDir : process.cwd()
@@ -64,7 +64,7 @@ async function run(): Promise<void> {
 
     const git = await createInstance(gitRepoDir)
 
-    let queue = await Queue.create(inputs.queueName, gitRepoDir, git)
+    const queue = await Queue.create(inputs.queueName, gitRepoDir, git)
 
     const commitOptions = await getCommitOptions(inputs, git)
 

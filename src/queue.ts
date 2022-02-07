@@ -1,18 +1,18 @@
 import {
-  DefaultLogFields,
-  SimpleGit,
   CheckRepoActions,
+  CleanOptions,
+  DefaultLogFields,
   GitResponseError,
-  CleanOptions
+  SimpleGit
 } from 'simple-git'
 import {Commit} from './commit'
 import {
+  CREATE_JOB_SUBJECT_PREFIX,
+  MARK_JOB_AS_DONE_SUBJECT_PREFIX,
   StoredCreateJobMessage,
   StoredMessage,
-  nullMessage,
   messageFactoryFromCommit,
-  CREATE_JOB_SUBJECT_PREFIX,
-  MARK_JOB_AS_DONE_SUBJECT_PREFIX
+  nullMessage
 } from './stored-message'
 import {CreateJobMessage, MarkJobAsDoneMessage, Message} from './message'
 import {CommitAuthor} from './commit-author'
@@ -22,7 +22,7 @@ export class Queue {
   name: string
   gitRepoDir: string
   git: SimpleGit
-  storedMessages: ReadonlyArray<StoredMessage>
+  storedMessages: readonly StoredMessage[]
 
   private constructor(name: string, gitRepoDir: string, git: SimpleGit) {
     this.name = name
@@ -36,7 +36,7 @@ export class Queue {
     gitRepoDir: string,
     git: SimpleGit
   ): Promise<Queue> {
-    let queue = new Queue(name, gitRepoDir, git)
+    const queue = new Queue(name, gitRepoDir, git)
     await queue.loadMessagesFromGit()
     return queue
   }
@@ -75,7 +75,7 @@ export class Queue {
     return commit.message.endsWith(this.name) ? true : false
   }
 
-  getMessages(): ReadonlyArray<StoredMessage> {
+  getMessages(): readonly StoredMessage[] {
     return this.storedMessages
   }
 
