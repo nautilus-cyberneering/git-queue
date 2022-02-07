@@ -1,3 +1,5 @@
+import {DefaultLogFields} from 'simple-git'
+
 export class Commit {
   hash: string
 
@@ -6,7 +8,7 @@ export class Commit {
   }
 }
 
-export function nullCommit() {
+export function nullCommit(): DefaultLogFields {
   return {
     hash: '',
     date: '',

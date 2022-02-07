@@ -27,27 +27,30 @@ export class EmailAddress {
     }
   }
 
-  static fromDisplayNameAndEmail(displayName: string, email: string) {
+  static fromDisplayNameAndEmail(
+    displayName: string,
+    email: string
+  ): EmailAddress {
     return new EmailAddress(`${displayName} <${email}>`)
   }
 
-  getDisplayName() {
+  getDisplayName(): string {
     return this.displayName
   }
 
-  getEmail() {
+  getEmail(): string {
     return this.email
   }
 
   toString(): string {
-    if (this.displayName == '') {
+    if (this.displayName === '') {
       return this.email
     }
 
     return `${this.displayName} <${this.email}>`
   }
 
-  private extractDisplayName(emailAddress: string) {
+  private extractDisplayName(emailAddress: string): string {
     if (!this.containsDisplayName(emailAddress)) {
       return ''
     }
@@ -58,7 +61,7 @@ export class EmailAddress {
     return name
   }
 
-  private extractEmail(emailAddress: string) {
+  private extractEmail(emailAddress: string): string {
     if (!this.containsDisplayName(emailAddress)) {
       return emailAddress
     }
@@ -70,15 +73,15 @@ export class EmailAddress {
     return email
   }
 
-  private isValid(email: string) {
+  private isValid(email: string): boolean {
     return /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()\.,;\s@\"]+\.{0,1})+([^<>()\.,;:\s@\"]{2,}|[\d\.]+))$/.test(
       email
     )
   }
 
-  private containsDisplayName(emailAddress: string) {
+  private containsDisplayName(emailAddress: string): boolean {
     const firstChar = emailAddress.indexOf('<')
     const lastChar = emailAddress.indexOf('>')
-    return firstChar != -1 && lastChar != -1
+    return firstChar !== -1 && lastChar !== -1
   }
 }

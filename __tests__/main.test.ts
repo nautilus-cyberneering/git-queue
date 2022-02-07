@@ -1,13 +1,15 @@
-import * as process from 'process'
 import * as cp from 'child_process'
 import * as path from 'path'
-import {expect, test} from '@jest/globals'
+import * as process from 'process'
+
 import {
   createInitializedTempGitDir,
   createInitializedTempGnuPGHomeDir,
   dummyPayload,
   gitLogForLatestCommit
 } from '../src/__tests__/helpers'
+
+import {expect} from '@jest/globals'
 import {testConfiguration} from '../src/__tests__/config'
 
 function executeAction(env) {

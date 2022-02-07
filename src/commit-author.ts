@@ -10,11 +10,11 @@ export class CommitAuthor {
     this.emailAddress = emailAddress
   }
 
-  static fromEmailAddressString(emailAddress: string) {
+  static fromEmailAddressString(emailAddress: string): CommitAuthor {
     return new CommitAuthor(new EmailAddress(emailAddress))
   }
 
-  static fromNameAndEmail(name: string, email: string) {
+  static fromNameAndEmail(name: string, email: string): CommitAuthor {
     return new CommitAuthor(EmailAddress.fromDisplayNameAndEmail(name, email))
   }
 
@@ -30,13 +30,13 @@ export class CommitAuthor {
     return this.emailAddress.toString()
   }
 
-  isEmpty() {
+  isEmpty(): boolean {
     return (
-      this.getName() == NO_AUTHOR_NAME && this.getEmail() == NO_AUTHOR_EMAIL
+      this.getName() === NO_AUTHOR_NAME && this.getEmail() === NO_AUTHOR_EMAIL
     )
   }
 }
 
-export function emptyCommitAuthor() {
+export function emptyCommitAuthor(): CommitAuthor {
   return CommitAuthor.fromNameAndEmail(NO_AUTHOR_NAME, NO_AUTHOR_EMAIL)
 }

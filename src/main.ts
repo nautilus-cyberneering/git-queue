@@ -1,13 +1,15 @@
-import * as core from '@actions/core'
 import * as context from './context'
-import {SimpleGit} from 'simple-git'
-import {Queue} from './queue'
+import * as core from '@actions/core'
+
 import {CommitAuthor, emptyCommitAuthor} from './commit-author'
-import {CommitOptions} from './commit-options'
 import {SigningKeyId, emptySigningKeyId} from './signing-key-id'
-import {Inputs} from './context'
-import {getGnupgHome} from './gpg-env'
+
 import {createInstance} from './simple-git-factory'
+import {getGnupgHome} from './gpg-env'
+
+import {CommitOptions} from './commit-options'
+import {Inputs} from './context'
+import {Queue} from './queue'
 
 const ACTION_CREATE_JOB = 'create-job'
 const ACTION_NEXT_JOB = 'next-job'
@@ -18,32 +20,23 @@ function actionOptions(): string {
   return options.toString()
 }
 
-async function getCommitAuthor(
-  commitAuthor: string,
-  git: SimpleGit
-): Promise<CommitAuthor> {
+async function getCommitAuthor(commitAuthor: string): Promise<CommitAuthor> {
   if (commitAuthor) {
     return CommitAuthor.fromEmailAddressString(commitAuthor)
   }
   return emptyCommitAuthor()
 }
 
-async function getSigningKeyId(
-  signingKeyId: string,
-  git: SimpleGit
-): Promise<SigningKeyId> {
+async function getSigningKeyId(signingKeyId: string): Promise<SigningKeyId> {
   if (signingKeyId) {
     return new SigningKeyId(signingKeyId)
   }
   return emptySigningKeyId()
 }
 
-async function getCommitOptions(
-  inputs: Inputs,
-  git: SimpleGit
-): Promise<CommitOptions> {
-  const author = await getCommitAuthor(inputs.gitCommitAuthor, git)
-  const gpgSign = await getSigningKeyId(inputs.gitCommitGpgSign, git)
+async function getCommitOptions(inputs: Inputs): Promise<CommitOptions> {
+  const author = await getCommitAuthor(inputs.gitCommitAuthor)
+  const gpgSign = await getSigningKeyId(inputs.gitCommitGpgSign)
   const noGpgSig = inputs.gitCommitNoGpgSign
 
   return new CommitOptions(author, gpgSign, noGpgSig)
@@ -54,7 +47,7 @@ async function run(): Promise<void> {
     const inputs: context.Inputs = await context.getInputs()
 
     const gitRepoDir =
-      inputs.gitRepoDir == '' ? inputs.gitRepoDir : process.cwd()
+      inputs.gitRepoDir === '' ? inputs.gitRepoDir : process.cwd()
     const gnuPGHomeDir = await getGnupgHome()
 
     await core.group(`Debug info`, async () => {
@@ -66,10 +59,10 @@ async function run(): Promise<void> {
 
     const queue = await Queue.create(inputs.queueName, gitRepoDir, git)
 
-    const commitOptions = await getCommitOptions(inputs, git)
+    const commitOptions = await getCommitOptions(inputs)
 
     switch (inputs.action) {
-      case ACTION_CREATE_JOB:
+      case ACTION_CREATE_JOB: {
         const createJobCommit = await queue.createJob(
           inputs.jobPayload,
           commitOptions
@@ -84,8 +77,8 @@ async function run(): Promise<void> {
         })
 
         break
-
-      case ACTION_NEXT_JOB:
+      }
+      case ACTION_NEXT_JOB: {
         const nextJob = queue.getNextJob()
 
         await core.group(`Setting outputs`, async () => {
@@ -101,8 +94,8 @@ async function run(): Promise<void> {
         })
 
         break
-
-      case ACTION_MARK_JOB_AS_DONE:
+      }
+      case ACTION_MARK_JOB_AS_DONE: {
         const markJobAsDoneCommit = await queue.markJobAsDone(
           inputs.jobPayload,
           commitOptions
@@ -118,8 +111,10 @@ async function run(): Promise<void> {
         })
 
         break
-      default:
+      }
+      default: {
         core.error(`Invalid action. Actions can only be: ${actionOptions}`)
+      }
     }
   } catch (error: any) {
     core.setFailed(error.message)

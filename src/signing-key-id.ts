@@ -5,15 +5,15 @@ export class SigningKeyId {
     this.id = id
   }
 
-  toString() {
+  toString(): string {
     return this.id
   }
 
-  isEmpty() {
-    return this.id == ''
+  isEmpty(): boolean {
+    return this.id === ''
   }
 }
 
-export function emptySigningKeyId() {
+export function emptySigningKeyId(): SigningKeyId {
   return new SigningKeyId('')
 }

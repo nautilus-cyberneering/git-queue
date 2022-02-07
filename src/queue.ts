@@ -1,11 +1,4 @@
-import {
-  CheckRepoActions,
-  CleanOptions,
-  DefaultLogFields,
-  GitResponseError,
-  SimpleGit
-} from 'simple-git'
-import {Commit} from './commit'
+import {DefaultLogFields, GitResponseError, SimpleGit} from 'simple-git'
 import {
   CREATE_JOB_SUBJECT_PREFIX,
   MARK_JOB_AS_DONE_SUBJECT_PREFIX,
@@ -15,7 +8,7 @@ import {
   nullMessage
 } from './stored-message'
 import {CreateJobMessage, MarkJobAsDoneMessage, Message} from './message'
-import {CommitAuthor} from './commit-author'
+import {Commit} from './commit'
 import {CommitOptions} from './commit-options'
 
 export class Queue {
@@ -84,7 +77,7 @@ export class Queue {
   }
 
   isEmpty(): boolean {
-    return this.storedMessages.length == 0
+    return this.storedMessages.length === 0
   }
 
   getNextJob(): StoredMessage {

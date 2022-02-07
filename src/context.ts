@@ -20,7 +20,7 @@ export async function getInputs(): Promise<Inputs> {
     gitCommitAuthor: core.getInput('git_commit_author', {required: false}),
     gitCommitGpgSign: core.getInput('git_commit_gpg_sign', {required: false}),
     gitCommitNoGpgSign:
-      core.getInput('git_commit_no_gpg_sign', {required: false}) == 'true'
+      core.getInput('git_commit_no_gpg_sign', {required: false}) === 'true'
         ? true
         : false
   }
