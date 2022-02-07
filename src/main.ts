@@ -53,7 +53,8 @@ async function run(): Promise<void> {
   try {
     let inputs: context.Inputs = await context.getInputs()
 
-    const gitRepoDir = inputs.gitRepoDir ? inputs.gitRepoDir : process.cwd()
+    const gitRepoDir =
+      inputs.gitRepoDir == '' ? inputs.gitRepoDir : process.cwd()
     const gnuPGHomeDir = await getGnupgHome()
 
     await core.group(`Debug info`, async () => {

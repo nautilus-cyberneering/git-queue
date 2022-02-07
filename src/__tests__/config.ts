@@ -1,13 +1,37 @@
 import * as fs from 'fs'
 
-export function testConfiguration() {
-  const gpgPrivateKey = fs.readFileSync(
+export interface TestConfig {
+  git: GitConfig
+  gpg_signing_key: GpgSigningKeyConfig
+}
+
+export interface GitConfig {
+  user: GitUserConfig
+}
+
+export interface GitUserConfig {
+  name: string
+  email: string
+  signingkey: string
+}
+
+export interface GpgSigningKeyConfig {
+  private_key: string
+  fingerprint: string
+  keygrip: string
+  passphrase: string
+}
+
+export function testConfiguration(): TestConfig {
+  const gpgPrivateKeyBody = fs.readFileSync(
     '__tests__/fixtures/test-key-committer.pgp',
     {
       encoding: 'utf8',
       flag: 'r'
     }
   )
+
+  const gpgPrivateKey = `-----BEGIN PGP PRIVATE KEY BLOCK-----\n\n${gpgPrivateKeyBody}\n-----END PGP PRIVATE KEY BLOCK-----`
 
   const signingKeyFingerprint = 'BD98B3F42545FF93EFF55F7F3F39AA1432CA6AD7'
 

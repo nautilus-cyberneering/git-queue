@@ -26,16 +26,8 @@ export const readPrivateKey = async (key: string): Promise<PrivateKey> => {
       : Buffer.from(key, 'base64').toString()
   })
 
-  const address = await privateKey.getPrimaryUser().then(primaryUser => {
-    if (primaryUser.user.userID?.userID) {
-      return addressParser(primaryUser.user.userID?.userID)
-    }
-
-    return {
-      name: '',
-      address: ''
-    }
-  })
+  const primaryUser = await privateKey.getPrimaryUser()
+  const address = addressParser(primaryUser.user.userID?.userID)
 
   return {
     fingerprint: privateKey.getFingerprint().toUpperCase(),
@@ -65,10 +57,17 @@ export const generateKeyPair = async (
 }
 
 export const isArmored = async (text: string): Promise<boolean> => {
-  return text.trimLeft().startsWith('---')
+  return text.trimStart().startsWith('---')
 }
 
-function addressParser(address: string): Address {
+function addressParser(address: string | undefined): Address {
+  if (address === undefined) {
+    return {
+      name: '',
+      address: ''
+    }
+  }
+
   const emailAddress = new EmailAddress(address)
   return {
     name: emailAddress.getDisplayName(),

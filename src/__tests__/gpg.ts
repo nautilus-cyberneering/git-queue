@@ -1,9 +1,8 @@
 import * as exec from '@actions/exec'
 import * as fs from 'fs'
-import * as path from 'path'
-import * as os from 'os'
 import * as openpgp from './openpgp'
-import {getGnupgHome} from '../gpg-env'
+import * as os from 'os'
+import * as path from 'path'
 
 export const agentConfig = `default-cache-ttl 7200
 max-cache-ttl 31536000
@@ -15,22 +14,21 @@ const gpgConnectAgent = async (
 ): Promise<string> => {
   const cmd = `gpg-connect-agent --homedir ${homedir} "${command}" /bye`
 
-  return await exec
-    .getExecOutput(cmd, [], {
-      ignoreReturnCode: true,
-      silent: true
-    })
-    .then(res => {
-      if (res.stderr.length > 0 && res.exitCode != 0) {
-        throw new Error(res.stderr)
-      }
-      for (const line of res.stdout.replace(/\r/g, '').trim().split(/\n/g)) {
-        if (line.startsWith('ERR')) {
-          throw new Error(line)
-        }
-      }
-      return res.stdout.trim()
-    })
+  const res = await exec.getExecOutput(cmd, [], {
+    ignoreReturnCode: true,
+    silent: true
+  })
+
+  if (res.stderr.length > 0 && res.exitCode !== 0) {
+    throw new Error(res.stderr)
+  }
+  for (const line of res.stdout.replace(/\r/g, '').trim().split(/\n/g)) {
+    if (line.startsWith('ERR')) {
+      throw new Error(line)
+    }
+  }
+
+  return res.stdout.trim()
 }
 
 export const importKey = async (
@@ -52,23 +50,22 @@ export const importKey = async (
 
   const args = ['--homedir', homedir, '--import', '--batch', '--yes', keyPath]
 
-  return await exec
-    .getExecOutput('gpg', args, {
+  try {
+    const res = await exec.getExecOutput('gpg', args, {
       ignoreReturnCode: true,
       silent: true
     })
-    .then(res => {
-      if (res.stderr.length > 0 && res.exitCode != 0) {
-        throw new Error(res.stderr)
-      }
-      if (res.stderr != '') {
-        return res.stderr.trim()
-      }
-      return res.stdout.trim()
-    })
-    .finally(() => {
-      fs.unlinkSync(keyPath)
-    })
+
+    if (res.stderr.length > 0 && res.exitCode !== 0) {
+      throw new Error(res.stderr)
+    }
+    if (res.stderr !== '') {
+      return res.stderr.trim()
+    }
+    return res.stdout.trim()
+  } finally {
+    fs.unlinkSync(keyPath)
+  }
 }
 
 export const getKeygrips = async (
@@ -85,20 +82,20 @@ export const getKeygrips = async (
     fingerprint
   ]
 
-  return await exec
-    .getExecOutput('gpg', args, {
-      ignoreReturnCode: true,
-      silent: true
-    })
-    .then(res => {
-      const keygrips: string[] = []
-      for (const line of res.stdout.replace(/\r/g, '').trim().split(/\n/g)) {
-        if (line.startsWith('grp')) {
-          keygrips.push(line.replace(/(grp|:)/g, '').trim())
-        }
-      }
-      return keygrips
-    })
+  const res = await exec.getExecOutput('gpg', args, {
+    ignoreReturnCode: true,
+    silent: true
+  })
+
+  const keygrips: string[] = []
+
+  for (const line of res.stdout.replace(/\r/g, '').trim().split(/\n/g)) {
+    if (line.startsWith('grp')) {
+      keygrips.push(line.replace(/(grp|:)/g, '').trim())
+    }
+  }
+
+  return keygrips
 }
 
 export const overwriteAgentConfiguration = async (
@@ -107,7 +104,7 @@ export const overwriteAgentConfiguration = async (
 ): Promise<void> => {
   const gpgAgentConfPath: string = path.join(homedir, 'gpg-agent.conf')
 
-  await fs.writeFile(gpgAgentConfPath, config, function (err) {
+  fs.writeFile(gpgAgentConfPath, config, function (err) {
     if (err) throw err
   })
 

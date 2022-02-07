@@ -7,7 +7,8 @@ import {
   createInitializedTempGnuPGHomeDir,
   dummyPayload,
   gitLogForLatestCommit,
-  newSimpleGit
+  newSimpleGit,
+  createInitializedTempGitDir
 } from '../src/__tests__/helpers'
 import {testConfiguration} from '../src/__tests__/config'
 
@@ -35,8 +36,9 @@ function commitOptionsForTestsUsingSignature() {
 
 describe('Queue', () => {
   it('should dispatch a new job', async () => {
-    const gitRepoDir = await createTempEmptyDir()
-    const git = await newSimpleGit(gitRepoDir, true)
+    const gitRepoDir = await createInitializedTempGitDir()
+
+    const git = await newSimpleGit(gitRepoDir)
 
     let queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
 
@@ -48,8 +50,9 @@ describe('Queue', () => {
   })
 
   it('should mark a job as done', async () => {
-    const gitRepoDir = await createTempEmptyDir()
-    const git = await newSimpleGit(gitRepoDir, true)
+    const gitRepoDir = await createInitializedTempGitDir()
+
+    const git = await newSimpleGit(gitRepoDir)
 
     let queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
 
@@ -62,8 +65,9 @@ describe('Queue', () => {
   })
 
   it('should allow to specify the commit author', async () => {
-    const gitRepoDir = await createTempEmptyDir()
-    const git = await newSimpleGit(gitRepoDir, true)
+    const gitRepoDir = await createInitializedTempGitDir()
+
+    const git = await newSimpleGit(gitRepoDir)
 
     let queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
 
@@ -77,12 +81,13 @@ describe('Queue', () => {
   })
 
   it('should allow to sign commits', async () => {
-    const gitRepoDir = await createTempEmptyDir()
+    const gitRepoDir = await createInitializedTempGitDir()
+
     const gnuPGHomeDir = await createInitializedTempGnuPGHomeDir()
     const signingKeyFingerprint =
       testConfiguration().gpg_signing_key.fingerprint
 
-    const git = await newSimpleGit(gitRepoDir, true)
+    const git = await newSimpleGit(gitRepoDir)
 
     git.addConfig('user.name', testConfiguration().git.user.name)
     git.addConfig('user.email', testConfiguration().git.user.email)

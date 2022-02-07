@@ -39,8 +39,8 @@ jobs:
         id: create-job
         uses: ./
         with:
-          queue_name: "Library Update [library-aaa]"
-          action: "create-job"
+          queue_name: 'Library Update [library-aaa]'
+          action: 'create-job'
           job_payload: '{"field": "value", "state": "pending"}'
 
       - name: Mutual exclusion code
@@ -52,16 +52,16 @@ jobs:
         if: ${{ steps.create-job.outputs.job_created == 'true' }}
         uses: ./
         with:
-          queue_name: "Library Update [library-aaa]"
-          action: "next-job"
+          queue_name: 'Library Update [library-aaa]'
+          action: 'next-job'
 
       - name: Mark job as done
         id: mark-job-as-done
         if: ${{ steps.create-job.outputs.job_created == 'true' }}
         uses: ./
         with:
-          queue_name: "Library Update [library-aaa]"
-          action: "mark-job-as-done"
+          queue_name: 'Library Update [library-aaa]'
+          action: 'mark-job-as-done'
           job_payload: '{"field": "value", "state": "done"}'
 
       - name: Show new commits
@@ -69,4 +69,3 @@ jobs:
         run: |
           git show --show-signature ${{ steps.create-job.outputs.job_commit }}
           git show --show-signature ${{ steps.mark-job-as-done.outputs.job_commit }}
-
