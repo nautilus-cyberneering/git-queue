@@ -1,5 +1,5 @@
-import {CommitAuthor} from '../src/commit-author'
-import {EmailAddress} from '../src/email-address'
+import {CommitAuthor} from '../../src/commit-author'
+import {EmailAddress} from '../../src/email-address'
 
 describe('CommitAuthor', () => {
   it('should have a name and email', () => {

@@ -1,7 +1,7 @@
-import {CommitAuthor} from '../src/commit-author'
-import {CommitOptions} from '../src/commit-options'
-import {EmailAddress} from '../src/email-address'
-import {SigningKeyId} from '../src/signing-key-id'
+import {CommitAuthor} from '../../src/commit-author'
+import {CommitOptions} from '../../src/commit-options'
+import {EmailAddress} from '../../src/email-address'
+import {SigningKeyId} from '../../src/signing-key-id'
 
 describe('CommitOptions', () => {
   it('should always include --allow-empty option', () => {

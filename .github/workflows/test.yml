@@ -6,15 +6,41 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  unit-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Show default runner node version
-        run: node --version
+      - name: Install
+        run: yarn install
+
+      - name: Test
+        run: yarn test-unit
+
+  e2e-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install
+        run: yarn install
+
+      - name: Build
+        run: yarn build        
+
+      - name: Test
+        run: yarn test-e2e        
+
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Import GPG key
         id: import-gpg
@@ -28,12 +54,7 @@ jobs:
           fingerprint: 'BD98B3F42545FF93EFF55F7F3F39AA1432CA6AD7'
 
       - name: Install dependencies and build
-        run: |
-          yarn install && yarn build
-
-      - name: Test
-        run: |
-          yarn test
+        run: yarn install && yarn build
 
       - name: Create job
         id: create-job

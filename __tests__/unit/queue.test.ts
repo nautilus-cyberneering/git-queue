@@ -4,13 +4,13 @@ import {
   dummyPayload,
   gitLogForLatestCommit,
   newSimpleGit
-} from '../src/__tests__/helpers'
+} from '../../src/__tests__/helpers'
 
-import {CommitAuthor} from '../src/commit-author'
-import {CommitOptions} from '../src/commit-options'
-import {Queue} from '../src/queue'
-import {SigningKeyId} from '../src/signing-key-id'
-import {testConfiguration} from '../src/__tests__/config'
+import {CommitAuthor} from '../../src/commit-author'
+import {CommitOptions} from '../../src/commit-options'
+import {Queue} from '../../src/queue'
+import {SigningKeyId} from '../../src/signing-key-id'
+import {testConfiguration} from '../../src/__tests__/config'
 
 function commitOptionsForTests(): CommitOptions {
   const author = CommitAuthor.fromNameAndEmail(

@@ -12,6 +12,8 @@
     "lint-check": "eslint **/*.ts",
     "package": "ncc build --source-map --license licenses.txt",
     "test": "jest --coverage",
+    "test-unit": "jest --testPathPattern __tests__/unit/[a-z-]+.test.ts",
+    "test-e2e": "jest --testPathPattern __tests__/e2e/[a-z-]+.test.ts",
     "all": "yarn build && yarn format && yarn lint && yarn package && yarn test"
   },
   "repository": {

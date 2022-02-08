@@ -7,15 +7,15 @@ import {
   createInitializedTempGnuPGHomeDir,
   dummyPayload,
   gitLogForLatestCommit
-} from '../src/__tests__/helpers'
+} from '../../src/__tests__/helpers'
 
 import {expect} from '@jest/globals'
-import {getErrorMessage} from '../src/error'
-import {testConfiguration} from '../src/__tests__/config'
+import {getErrorMessage} from '../../src/error'
+import {testConfiguration} from '../../src/__tests__/config'
 
 function executeAction(env, gitRepoDir): string | Buffer {
   const np = process.execPath
-  const ip = path.join(__dirname, '..', 'lib', 'main.js')
+  const ip = path.join(__dirname, '..', '..', 'lib', 'main.js')
   const options: cp.ExecFileSyncOptions = {
     env,
     cwd: gitRepoDir
