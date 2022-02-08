@@ -1,11 +1,42 @@
 name: 'Git Queue'
 description: 'A GitHub Action that implements a job queue with a concurrency lock by using Git empty commits'
-author: 'Nautilus Cyberneering'
+author: 'Nautilus-Cyberneering'
+branding:
+  icon: 'lock'
 inputs:
-  milliseconds: # change this
+  queue_name:
+    description: 'Queue name. It cannot contain special characters or white spaces'
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+  action:
+    description: 'The action you want to perform. Options: next-job, create-job, mark-job-as-done'
+    required: true
+  job_payload:
+    description: 'Job payload. It can be any string'
+    required: false
+    default: ''
+  git_repo_dir:
+    description: 'The git repository directory. The default value is the current working dir'
+    required: false
+    default: ''
+  git_commit_author:
+    description: 'The git commit --author argument: https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---authorltauthorgt'
+    required: false
+    default: ''
+  git_commit_gpg_sign:
+    description: 'The git commit --gpg-sign argument: https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---gpg-signltkeyidgt'
+    required: false
+    default: ''
+  git_commit_no_gpg_sign:
+    description: 'The git commit --no-gpg-sign argument: https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---no-gpg-sign'
+    required: false
+    default: ''
+outputs:
+  job_created:
+    description: 'Boolean, true if the job was created successfully'
+  job_commit:
+    description: 'The commit hash of the newly created commits, when the action creates a new commit'
+  job_payload:
+    description: 'The job payload'
 runs:
   using: 'node16'
   main: 'dist/index.js'
