@@ -27,6 +27,9 @@ export async function getInputs(): Promise<Inputs> {
 }
 
 // FIXME: Temp fix https://github.com/actions/toolkit/issues/777
-export function setOutput(name: string, value: any): void {
+export function setOutput(
+  name: string,
+  value: string | boolean | number
+): void {
   issueCommand('set-output', {name}, value)
 }

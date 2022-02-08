@@ -8,24 +8,28 @@ describe('setOutput', () => {
 
   it('setOutput produces the correct command', () => {
     context.setOutput('some output', 'some value')
-    assertWriteCalls([`::set-output name=some output::some value${os.EOL}`])
+    /* eslint-disable @typescript-eslint/unbound-method */
+    expect(process.stdout.write).toHaveBeenCalledWith(
+      `::set-output name=some output::some value${os.EOL}`
+    )
+    /* eslint-enable */
   })
 
   it('setOutput handles bools', () => {
     context.setOutput('some output', false)
-    assertWriteCalls([`::set-output name=some output::false${os.EOL}`])
+    /* eslint-disable @typescript-eslint/unbound-method */
+    expect(process.stdout.write).toHaveBeenCalledWith(
+      `::set-output name=some output::false${os.EOL}`
+    )
+    /* eslint-enable */
   })
 
   it('setOutput handles numbers', () => {
     context.setOutput('some output', 1.01)
-    assertWriteCalls([`::set-output name=some output::1.01${os.EOL}`])
+    /* eslint-disable @typescript-eslint/unbound-method */
+    expect(process.stdout.write).toHaveBeenCalledWith(
+      `::set-output name=some output::1.01${os.EOL}`
+    )
+    /* eslint-enable */
   })
 })
-
-// Assert that process.stdout.write calls called only with the given arguments.
-function assertWriteCalls(calls: string[]): void {
-  expect(process.stdout.write).toHaveBeenCalledTimes(calls.length)
-  for (let i = 0; i < calls.length; i++) {
-    expect(process.stdout.write).toHaveBeenNthCalledWith(i + 1, calls[i])
-  }
-}

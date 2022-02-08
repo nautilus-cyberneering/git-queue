@@ -12,7 +12,7 @@ import {
 import {expect} from '@jest/globals'
 import {testConfiguration} from '../src/__tests__/config'
 
-function executeAction(env) {
+function executeAction(env): string | Buffer {
   const np = process.execPath
   const ip = path.join(__dirname, '..', 'lib', 'main.js')
   const options: cp.ExecFileSyncOptions = {
@@ -21,7 +21,7 @@ function executeAction(env) {
   return cp.execFileSync(np, [ip], options).toString()
 }
 
-function createJob(gitRepoDir) {
+function createJob(gitRepoDir): string | Buffer {
   const env = {
     ...process.env,
     INPUT_QUEUE_NAME: 'QUEUE-NAME',
@@ -31,7 +31,7 @@ function createJob(gitRepoDir) {
     INPUT_GIT_COMMIT_NO_GPG_SIGN: true
   }
 
-  executeAction(env)
+  return executeAction(env)
 }
 
 describe('GitHub Action', () => {

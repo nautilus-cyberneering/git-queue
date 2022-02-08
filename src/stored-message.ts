@@ -28,11 +28,13 @@ export class NullMessage extends StoredMessage {}
 export class StoredCreateJobMessage extends StoredMessage {}
 export class StoredMarkJobAsDoneMessage extends StoredMessage {}
 
-export function nullMessage() {
+export function nullMessage(): NullMessage {
   return new NullMessage(nullCommit())
 }
 
-export function messageFactoryFromCommit(commit: DefaultLogFields) {
+export function messageFactoryFromCommit(
+  commit: DefaultLogFields
+): StoredMessage {
   const commitSubject = commit.message
 
   if (commitSubject.startsWith(CREATE_JOB_SUBJECT_PREFIX)) {

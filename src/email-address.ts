@@ -74,9 +74,7 @@ export class EmailAddress {
   }
 
   private isValid(email: string): boolean {
-    return /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()\.,;\s@\"]+\.{0,1})+([^<>()\.,;:\s@\"]{2,}|[\d\.]+))$/.test(
-      email
-    )
+    return emailIsValid(email)
   }
 
   private containsDisplayName(emailAddress: string): boolean {
@@ -84,4 +82,10 @@ export class EmailAddress {
     const lastChar = emailAddress.indexOf('>')
     return firstChar !== -1 && lastChar !== -1
   }
+}
+
+export function emailIsValid(email: string): boolean {
+  return /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>().,;\s@"]+\.{0,1})+([^<>().,;:\s@"]{2,}|[\d.]+))$/.test(
+    email
+  )
 }

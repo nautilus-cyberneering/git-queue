@@ -1,4 +1,3 @@
-import {DefaultLogFields, GitResponseError, SimpleGit} from 'simple-git'
 import {
   CREATE_JOB_SUBJECT_PREFIX,
   MARK_JOB_AS_DONE_SUBJECT_PREFIX,
@@ -8,6 +7,8 @@ import {
   nullMessage
 } from './stored-message'
 import {CreateJobMessage, MarkJobAsDoneMessage, Message} from './message'
+import {DefaultLogFields, GitResponseError, SimpleGit} from 'simple-git'
+
 import {Commit} from './commit'
 import {CommitOptions} from './commit-options'
 
@@ -34,7 +35,7 @@ export class Queue {
     return queue
   }
 
-  async loadMessagesFromGit() {
+  async loadMessagesFromGit(): Promise<void> {
     const isRepo = await this.git.checkIsRepo()
     if (!isRepo) {
       throw Error(`Invalid git dir: ${this.gitRepoDir}`)
@@ -64,7 +65,7 @@ export class Queue {
     }
   }
 
-  commitBelongsToQueue(commit: DefaultLogFields) {
+  commitBelongsToQueue(commit: DefaultLogFields): boolean {
     return commit.message.endsWith(this.name) ? true : false
   }
 
@@ -87,7 +88,7 @@ export class Queue {
       : nullMessage()
   }
 
-  guardThatThereIsNoPendingJobs() {
+  guardThatThereIsNoPendingJobs(): void {
     if (!this.getNextJob().isEmpty()) {
       throw new Error(
         `Can't create a new job. There is already a pending job in commit: ${this.getNextJob().commitHash()}`
@@ -95,7 +96,7 @@ export class Queue {
     }
   }
 
-  guardThatThereIsAPendingJob() {
+  guardThatThereIsAPendingJob(): void {
     if (this.getNextJob().isEmpty()) {
       throw new Error(`Can't mark job as done. There isn't any pending job`)
     }
@@ -112,7 +113,10 @@ export class Queue {
     return this.commitMessage(message, commitOptions)
   }
 
-  async markJobAsDone(payload: string, commitOptions: CommitOptions) {
+  async markJobAsDone(
+    payload: string,
+    commitOptions: CommitOptions
+  ): Promise<Commit> {
     this.guardThatThereIsAPendingJob()
 
     const message = new MarkJobAsDoneMessage(payload)

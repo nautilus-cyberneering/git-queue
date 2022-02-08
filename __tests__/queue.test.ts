@@ -12,7 +12,7 @@ import {Queue} from '../src/queue'
 import {SigningKeyId} from '../src/signing-key-id'
 import {testConfiguration} from '../src/__tests__/config'
 
-function commitOptionsForTests() {
+function commitOptionsForTests(): CommitOptions {
   const author = CommitAuthor.fromNameAndEmail(
     'A committer',
     'committer@example.com'
@@ -22,7 +22,7 @@ function commitOptionsForTests() {
   return new CommitOptions(author, signingKeyId, noGpgSig)
 }
 
-function commitOptionsForTestsUsingSignature() {
+function commitOptionsForTestsUsingSignature(): CommitOptions {
   const author = CommitAuthor.fromNameAndEmail(
     'A committer',
     'committer@example.com'

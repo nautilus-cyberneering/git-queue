@@ -4,12 +4,13 @@ import * as core from '@actions/core'
 import {CommitAuthor, emptyCommitAuthor} from './commit-author'
 import {SigningKeyId, emptySigningKeyId} from './signing-key-id'
 
-import {createInstance} from './simple-git-factory'
-import {getGnupgHome} from './gpg-env'
-
 import {CommitOptions} from './commit-options'
 import {Inputs} from './context'
 import {Queue} from './queue'
+
+import {createInstance} from './simple-git-factory'
+import {getErrorMessage} from './error'
+import {getGnupgHome} from './gpg-env'
 
 const ACTION_CREATE_JOB = 'create-job'
 const ACTION_NEXT_JOB = 'next-job'
@@ -116,8 +117,8 @@ async function run(): Promise<void> {
         core.error(`Invalid action. Actions can only be: ${actionOptions}`)
       }
     }
-  } catch (error: any) {
-    core.setFailed(error.message)
+  } catch (error) {
+    core.setFailed(getErrorMessage(error))
   }
 }
 

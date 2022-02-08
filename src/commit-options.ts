@@ -1,5 +1,6 @@
 import {CommitAuthor} from './commit-author'
 import {SigningKeyId} from './signing-key-id'
+import {TaskOptions} from 'simple-git'
 
 export class CommitOptions {
   author: CommitAuthor
@@ -12,7 +13,7 @@ export class CommitOptions {
     this.noGpgSig = noGpgSig
   }
 
-  forSimpleGit() {
+  forSimpleGit(): TaskOptions {
     return {
       '--allow-empty': null,
       ...(!this.author.isEmpty() && {
