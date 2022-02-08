@@ -14,7 +14,10 @@
     "report"
   ],
   "words": [
+    "Accentu",
+    "Accentu\u00e9",
     "Backoff",
+    "Bloggs",
     "bools",
     "camelcase",
     "Cyberneering",
@@ -35,6 +38,8 @@
     "Keygrips",
     "KEYINFO",
     "lcov",
+    "Lo\u00efc",
+    "localserver",
     "nccwpck",
     "noproxy",
     "nuxt",
@@ -49,6 +54,7 @@
     "Signingkey",
     "stefanzweifel",
     "strcmp",
+    "stringifying",
     "tsbuildinfo",
     "venv",
     "vercel",
