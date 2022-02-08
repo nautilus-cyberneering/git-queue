@@ -31,7 +31,7 @@ class CommitAuthor {
         return this.emailAddress.toString();
     }
     isEmpty() {
-        return (this.getName() == NO_AUTHOR_NAME && this.getEmail() == NO_AUTHOR_EMAIL);
+        return (this.getName() === NO_AUTHOR_NAME && this.getEmail() === NO_AUTHOR_EMAIL);
     }
 }
 exports.CommitAuthor = CommitAuthor;
@@ -155,7 +155,7 @@ function getInputs() {
             gitRepoDir: core.getInput('git_repo_dir', { required: false }),
             gitCommitAuthor: core.getInput('git_commit_author', { required: false }),
             gitCommitGpgSign: core.getInput('git_commit_gpg_sign', { required: false }),
-            gitCommitNoGpgSign: core.getInput('git_commit_no_gpg_sign', { required: false }) == 'true'
+            gitCommitNoGpgSign: core.getInput('git_commit_no_gpg_sign', { required: false }) === 'true'
                 ? true
                 : false
         };
@@ -177,7 +177,7 @@ exports.setOutput = setOutput;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.EmailAddress = void 0;
+exports.emailIsValid = exports.EmailAddress = void 0;
 /*
  * Wrapper for RFC5322 email address.
  *
@@ -212,7 +212,7 @@ class EmailAddress {
         return this.email;
     }
     toString() {
-        if (this.displayName == '') {
+        if (this.displayName === '') {
             return this.email;
         }
         return `${this.displayName} <${this.email}>`;
@@ -235,15 +235,52 @@ class EmailAddress {
         return email;
     }
     isValid(email) {
-        return /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()\.,;\s@\"]+\.{0,1})+([^<>()\.,;:\s@\"]{2,}|[\d\.]+))$/.test(email);
+        return emailIsValid(email);
     }
     containsDisplayName(emailAddress) {
         const firstChar = emailAddress.indexOf('<');
         const lastChar = emailAddress.indexOf('>');
-        return firstChar != -1 && lastChar != -1;
+        return firstChar !== -1 && lastChar !== -1;
     }
 }
 exports.EmailAddress = EmailAddress;
+function emailIsValid(email) {
+    return /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>().,;\s@"]+\.{0,1})+([^<>().,;:\s@"]{2,}|[\d.]+))$/.test(email);
+}
+exports.emailIsValid = emailIsValid;
+
+
+/***/ }),
+
+/***/ 434:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getErrorMessage = void 0;
+function isErrorWithMessage(error) {
+    return (typeof error === 'object' &&
+        error !== null &&
+        'message' in error &&
+        typeof error.message === 'string');
+}
+function toErrorWithMessage(maybeError) {
+    if (isErrorWithMessage(maybeError))
+        return maybeError;
+    try {
+        return new Error(JSON.stringify(maybeError));
+    }
+    catch (_a) {
+        // fallback in case there's an error stringifying the maybeError
+        // like with circular references for example.
+        return new Error(String(maybeError));
+    }
+}
+function getErrorMessage(error) {
+    return toErrorWithMessage(error).message;
+}
+exports.getErrorMessage = getErrorMessage;
 
 
 /***/ }),
@@ -283,14 +320,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getGnupgHome = void 0;
-const path = __importStar(__nccwpck_require__(17));
 const os = __importStar(__nccwpck_require__(37));
+const path = __importStar(__nccwpck_require__(17));
 const getGnupgHome = () => __awaiter(void 0, void 0, void 0, function* () {
     if (process.env.GNUPGHOME) {
         return process.env.GNUPGHOME;
     }
     let homedir = path.join(process.env.HOME || '', '.gnupg');
-    if (os.platform() == 'win32' && !process.env.HOME) {
+    if (os.platform() === 'win32' && !process.env.HOME) {
         homedir = path.join(process.env.USERPROFILE || '', '.gnupg');
     }
     return homedir;
@@ -334,14 +371,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__nccwpck_require__(186));
 const context = __importStar(__nccwpck_require__(842));
-const queue_1 = __nccwpck_require__(65);
+const core = __importStar(__nccwpck_require__(186));
 const commit_author_1 = __nccwpck_require__(606);
-const commit_options_1 = __nccwpck_require__(360);
 const signing_key_id_1 = __nccwpck_require__(869);
-const gpg_env_1 = __nccwpck_require__(314);
+const commit_options_1 = __nccwpck_require__(360);
+const queue_1 = __nccwpck_require__(65);
 const simple_git_factory_1 = __nccwpck_require__(649);
+const error_1 = __nccwpck_require__(434);
+const gpg_env_1 = __nccwpck_require__(314);
 const ACTION_CREATE_JOB = 'create-job';
 const ACTION_NEXT_JOB = 'next-job';
 const ACTION_MARK_JOB_AS_DONE = 'mark-job-as-done';
@@ -349,7 +387,7 @@ function actionOptions() {
     const options = [ACTION_CREATE_JOB, ACTION_NEXT_JOB, ACTION_MARK_JOB_AS_DONE];
     return options.toString();
 }
-function getCommitAuthor(commitAuthor, git) {
+function getCommitAuthor(commitAuthor) {
     return __awaiter(this, void 0, void 0, function* () {
         if (commitAuthor) {
             return commit_author_1.CommitAuthor.fromEmailAddressString(commitAuthor);
@@ -357,7 +395,7 @@ function getCommitAuthor(commitAuthor, git) {
         return (0, commit_author_1.emptyCommitAuthor)();
     });
 }
-function getSigningKeyId(signingKeyId, git) {
+function getSigningKeyId(signingKeyId) {
     return __awaiter(this, void 0, void 0, function* () {
         if (signingKeyId) {
             return new signing_key_id_1.SigningKeyId(signingKeyId);
@@ -365,10 +403,10 @@ function getSigningKeyId(signingKeyId, git) {
         return (0, signing_key_id_1.emptySigningKeyId)();
     });
 }
-function getCommitOptions(inputs, git) {
+function getCommitOptions(inputs) {
     return __awaiter(this, void 0, void 0, function* () {
-        const author = yield getCommitAuthor(inputs.gitCommitAuthor, git);
-        const gpgSign = yield getSigningKeyId(inputs.gitCommitGpgSign, git);
+        const author = yield getCommitAuthor(inputs.gitCommitAuthor);
+        const gpgSign = yield getSigningKeyId(inputs.gitCommitGpgSign);
         const noGpgSig = inputs.gitCommitNoGpgSign;
         return new commit_options_1.CommitOptions(author, gpgSign, noGpgSig);
     });
@@ -376,18 +414,18 @@ function getCommitOptions(inputs, git) {
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            let inputs = yield context.getInputs();
-            const gitRepoDir = inputs.gitRepoDir ? inputs.gitRepoDir : process.cwd();
+            const inputs = yield context.getInputs();
+            const gitRepoDir = inputs.gitRepoDir === '' ? inputs.gitRepoDir : process.cwd();
             const gnuPGHomeDir = yield (0, gpg_env_1.getGnupgHome)();
             yield core.group(`Debug info`, () => __awaiter(this, void 0, void 0, function* () {
                 core.info(`git_repo_dir: ${gitRepoDir}`);
                 core.info(`gnupg_home_dir: ${gnuPGHomeDir}`);
             }));
             const git = yield (0, simple_git_factory_1.createInstance)(gitRepoDir);
-            let queue = yield queue_1.Queue.create(inputs.queueName, gitRepoDir, git);
-            const commitOptions = yield getCommitOptions(inputs, git);
+            const queue = yield queue_1.Queue.create(inputs.queueName, gitRepoDir, git);
+            const commitOptions = yield getCommitOptions(inputs);
             switch (inputs.action) {
-                case ACTION_CREATE_JOB:
+                case ACTION_CREATE_JOB: {
                     const createJobCommit = yield queue.createJob(inputs.jobPayload, commitOptions);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_created', true);
@@ -396,7 +434,8 @@ function run() {
                         core.info(`job_commit: ${createJobCommit.hash}`);
                     }));
                     break;
-                case ACTION_NEXT_JOB:
+                }
+                case ACTION_NEXT_JOB: {
                     const nextJob = queue.getNextJob();
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_found', !nextJob.isEmpty());
@@ -408,7 +447,8 @@ function run() {
                         }
                     }));
                     break;
-                case ACTION_MARK_JOB_AS_DONE:
+                }
+                case ACTION_MARK_JOB_AS_DONE: {
                     const markJobAsDoneCommit = yield queue.markJobAsDone(inputs.jobPayload, commitOptions);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         // TODO: 'commit_created' or 'job_marked_as_done' or 'job_updated' instead of 'job_created'
@@ -418,12 +458,14 @@ function run() {
                         core.info(`job_commit: ${markJobAsDoneCommit.hash}`);
                     }));
                     break;
-                default:
+                }
+                default: {
                     core.error(`Invalid action. Actions can only be: ${actionOptions}`);
+                }
             }
         }
         catch (error) {
-            core.setFailed(error.message);
+            core.setFailed((0, error_1.getErrorMessage)(error));
         }
     });
 }
@@ -474,9 +516,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Queue = void 0;
-const commit_1 = __nccwpck_require__(873);
 const stored_message_1 = __nccwpck_require__(683);
 const message_1 = __nccwpck_require__(307);
+const commit_1 = __nccwpck_require__(873);
 class Queue {
     constructor(name, gitRepoDir, git) {
         this.name = name;
@@ -486,7 +528,7 @@ class Queue {
     }
     static create(name, gitRepoDir, git) {
         return __awaiter(this, void 0, void 0, function* () {
-            let queue = new Queue(name, gitRepoDir, git);
+            const queue = new Queue(name, gitRepoDir, git);
             yield queue.loadMessagesFromGit();
             return queue;
         });
@@ -524,7 +566,7 @@ class Queue {
         return this.isEmpty() ? (0, stored_message_1.nullMessage)() : this.storedMessages[0];
     }
     isEmpty() {
-        return this.storedMessages.length == 0;
+        return this.storedMessages.length === 0;
     }
     getNextJob() {
         const latestMessage = this.getLatestMessage();
@@ -604,7 +646,7 @@ class SigningKeyId {
         return this.id;
     }
     isEmpty() {
-        return this.id == '';
+        return this.id === '';
     }
 }
 exports.SigningKeyId = SigningKeyId;
