@@ -10,15 +10,26 @@ import {
 } from '../src/__tests__/helpers'
 
 import {expect} from '@jest/globals'
+import {getErrorMessage} from '../src/error'
 import {testConfiguration} from '../src/__tests__/config'
 
-function executeAction(env): string | Buffer {
+function executeAction(env, gitRepoDir): string | Buffer {
   const np = process.execPath
   const ip = path.join(__dirname, '..', 'lib', 'main.js')
   const options: cp.ExecFileSyncOptions = {
-    env
+    env,
+    cwd: gitRepoDir
   }
-  return cp.execFileSync(np, [ip], options).toString()
+
+  let output: string
+
+  try {
+    output = cp.execFileSync(np, [ip], options).toString()
+  } catch (error) {
+    output = getErrorMessage(error)
+  }
+
+  return output
 }
 
 function createJob(gitRepoDir): string | Buffer {
@@ -31,7 +42,7 @@ function createJob(gitRepoDir): string | Buffer {
     INPUT_GIT_COMMIT_NO_GPG_SIGN: true
   }
 
-  return executeAction(env)
+  return executeAction(env, gitRepoDir)
 }
 
 describe('GitHub Action', () => {
@@ -47,7 +58,7 @@ describe('GitHub Action', () => {
       INPUT_GIT_COMMIT_NO_GPG_SIGN: true
     }
 
-    const output = executeAction(env)
+    const output = executeAction(env, gitRepoDir)
 
     expect(output.includes('::set-output name=job_created::true')).toBe(true)
     expect(output.includes('::set-output name=job_commit::')).toBe(true)
@@ -66,7 +77,7 @@ describe('GitHub Action', () => {
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
     }
 
-    const output = executeAction(env)
+    const output = executeAction(env, gitRepoDir)
 
     expect(output.includes('::set-output name=job_commit::')).toBe(true)
     expect(
@@ -87,7 +98,7 @@ describe('GitHub Action', () => {
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
     }
 
-    const output = executeAction(env)
+    const output = executeAction(env, gitRepoDir)
 
     expect(output.includes('::set-output name=job_created::true')).toBe(true)
     expect(output.includes('::set-output name=job_commit::')).toBe(true)
@@ -106,7 +117,7 @@ describe('GitHub Action', () => {
       INPUT_GIT_COMMIT_AUTHOR: 'A committer <committer@example.com>'
     }
 
-    executeAction(env)
+    executeAction(env, gitRepoDir)
 
     const gitLogOutput = gitLogForLatestCommit(gitRepoDir)
 
@@ -131,7 +142,7 @@ describe('GitHub Action', () => {
       GNUPGHOME: gnuPGHomeDir
     }
 
-    executeAction(env)
+    executeAction(env, gitRepoDir)
 
     const gitLogOutput = gitLogForLatestCommit(gitRepoDir)
 
@@ -154,7 +165,7 @@ describe('GitHub Action', () => {
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
     }
 
-    executeAction(env)
+    executeAction(env, gitRepoDir)
 
     const gitLogOutput = gitLogForLatestCommit(gitRepoDir)
 
