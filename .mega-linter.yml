@@ -8,6 +8,8 @@ DEFAULT_BRANCH: main # Usually master or main
 # DISABLE:
 # - COPYPASTE # Uncomment to disable checks of excessive copy-pastes
 # - SPELL # Uncomment to disable checks of spelling mistakes
+DISABLE_LINTERS:
+  - TYPESCRIPT_STANDARD
 SHOW_ELAPSED_TIME: true
 FILEIO_REPORTER: false
 JAVASCRIPT_ES_FILTER_REGEX_EXCLUDE: (dist|jest.config.js)
