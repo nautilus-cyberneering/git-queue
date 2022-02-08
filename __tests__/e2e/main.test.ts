@@ -60,8 +60,12 @@ describe('GitHub Action', () => {
 
     const output = executeAction(env, gitRepoDir)
 
-    expect(output).toEqual(expect.stringContaining('::set-output name=job_created::true'));
-    expect(output).toEqual(expect.stringContaining('::set-output name=job_commit::'));
+    expect(output).toEqual(
+      expect.stringContaining('::set-output name=job_created::true')
+    )
+    expect(output).toEqual(
+      expect.stringContaining('::set-output name=job_commit::')
+    )
   })
 
   it('should get the next job', async () => {
@@ -79,8 +83,14 @@ describe('GitHub Action', () => {
 
     const output = executeAction(env, gitRepoDir)
 
-    expect(output).toEqual(expect.stringContaining('::set-output name=job_commit::'));
-    expect(output).toEqual(expect.stringContaining(`::set-output name=job_payload::${dummyPayload()}`));
+    expect(output).toEqual(
+      expect.stringContaining('::set-output name=job_commit::')
+    )
+    expect(output).toEqual(
+      expect.stringContaining(
+        `::set-output name=job_payload::${dummyPayload()}`
+      )
+    )
   })
 
   it('should mark the pending job as done', async () => {
@@ -98,8 +108,12 @@ describe('GitHub Action', () => {
 
     const output = executeAction(env, gitRepoDir)
 
-    expect(output).toEqual(expect.stringContaining('::set-output name=job_created::true'));
-    expect(output).toEqual(expect.stringContaining('::set-output name=job_commit::'));
+    expect(output).toEqual(
+      expect.stringContaining('::set-output name=job_created::true')
+    )
+    expect(output).toEqual(
+      expect.stringContaining('::set-output name=job_commit::')
+    )
   })
 
   it('should allow to overwrite commit author', async () => {
@@ -119,7 +133,9 @@ describe('GitHub Action', () => {
 
     const gitLogOutput = gitLogForLatestCommit(gitRepoDir)
 
-    expect(gitLogOutput).toEqual(expect.stringContaining('Author: A committer <committer@example.com>'));
+    expect(gitLogOutput).toEqual(
+      expect.stringContaining('Author: A committer <committer@example.com>')
+    )
   })
 
   it('should allow to overwrite commit signing key', async () => {
@@ -142,7 +158,11 @@ describe('GitHub Action', () => {
 
     const gitLogOutput = gitLogForLatestCommit(gitRepoDir)
 
-    expect(gitLogOutput).toEqual(expect.stringContaining(`gpg:                using RSA key ${signingKeyFingerprint}`));
+    expect(gitLogOutput).toEqual(
+      expect.stringContaining(
+        `gpg:                using RSA key ${signingKeyFingerprint}`
+      )
+    )
   })
 
   it('should allow to disable commit signing for a given commit', async () => {
@@ -163,6 +183,6 @@ describe('GitHub Action', () => {
 
     expect(!gitLogOutput.includes('gpg: Signature')).toBe(true)
 
-    expect(gitLogOutput).not.toEqual(expect.stringContaining('gpg: Signature'));
+    expect(gitLogOutput).not.toEqual(expect.stringContaining('gpg: Signature'))
   })
 })
