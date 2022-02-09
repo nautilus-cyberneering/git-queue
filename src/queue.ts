@@ -1,14 +1,13 @@
+import {DefaultLogFields, GitResponseError, SimpleGit} from 'simple-git'
 import {
-  CREATE_JOB_SUBJECT_PREFIX,
-  MARK_JOB_AS_DONE_SUBJECT_PREFIX,
+  FINISHED_JOB_SUBJECT_PREFIX,
+  NEW_JOB_SUBJECT_PREFIX,
   NewJobStoredMessage,
   StoredMessage,
   messageFactoryFromCommit,
   nullMessage
 } from './stored-message'
-import {NewJobMessage, JobFinishedMessage, Message} from './message'
-import {DefaultLogFields, GitResponseError, SimpleGit} from 'simple-git'
-
+import {JobFinishedMessage, Message, NewJobMessage} from './message'
 import {Commit} from './commit'
 import {CommitOptions} from './commit-options'
 
@@ -150,9 +149,9 @@ export class Queue {
   buildCommitSubject(message: Message): string {
     let commitSubject: string
     if (message instanceof NewJobMessage) {
-      commitSubject = `${CREATE_JOB_SUBJECT_PREFIX}${this.name}`
+      commitSubject = `${NEW_JOB_SUBJECT_PREFIX}${this.name}`
     } else if (message instanceof JobFinishedMessage) {
-      commitSubject = `${MARK_JOB_AS_DONE_SUBJECT_PREFIX}${this.name}`
+      commitSubject = `${FINISHED_JOB_SUBJECT_PREFIX}${this.name}`
     } else {
       throw Error(`Invalid Message type: ${typeof message}`)
     }
