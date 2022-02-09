@@ -76,7 +76,7 @@ jobs:
           name: Integration test git dir
           path: ${{ runner.temp }}/temp_git_dir
 
-      - name: Create job
+      - name: Create new job
         id: create-job
         uses: ./
         with:
@@ -99,18 +99,18 @@ jobs:
           action: 'next-job'
 
       - name: Mark job as done
-        id: mark-job-as-done
+        id: finish-job
         if: ${{ steps.create-job.outputs.job_created == 'true' }}
         uses: ./
         with:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'Library Update [library-aaa]'
-          action: 'mark-job-as-done'
+          action: 'finish-job'
           job_payload: '{"field": "value", "state": "done"}'
 
       - name: Show new commits
-        if: ${{ steps.mark-job-as-done.outputs.job_created == 'true' }}
+        if: ${{ steps.finish-job.outputs.job_created == 'true' }}
         run: |
           cd ${{ runner.temp }}/temp_git_dir
           git show --show-signature ${{ steps.create-job.outputs.job_commit }}
-          git show --show-signature ${{ steps.mark-job-as-done.outputs.job_commit }}
+          git show --show-signature ${{ steps.finish-job.outputs.job_commit }}

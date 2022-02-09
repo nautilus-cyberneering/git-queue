@@ -10,5 +10,5 @@ export abstract class Message {
   }
 }
 
-export class CreateJobMessage extends Message {}
-export class MarkJobAsDoneMessage extends Message {}
+export class NewJobMessage extends Message {}
+export class JobFinishedMessage extends Message {}

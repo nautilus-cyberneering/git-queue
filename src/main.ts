@@ -14,7 +14,7 @@ import {getGnupgHome} from './gpg-env'
 
 const ACTION_CREATE_JOB = 'create-job'
 const ACTION_NEXT_JOB = 'next-job'
-const ACTION_MARK_JOB_AS_DONE = 'mark-job-as-done'
+const ACTION_FINISH_JOB = 'finish-job'
 
 function actionOptions(): string {
   const options = [ACTION_CREATE_JOB, ACTION_NEXT_JOB, ACTION_FINISH_JOB]
@@ -99,7 +99,7 @@ async function run(): Promise<void> {
 
         break
       }
-      case ACTION_MARK_JOB_AS_DONE: {
+      case ACTION_FINISH_JOB: {
         const markJobAsDoneCommit = await queue.markJobAsDone(
           inputs.jobPayload,
           commitOptions

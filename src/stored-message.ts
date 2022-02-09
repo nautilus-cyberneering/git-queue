@@ -20,16 +20,16 @@ export abstract class StoredMessage {
   }
 
   isEmpty(): boolean {
-    return this instanceof NullMessage
+    return this instanceof NullStoredMessage
   }
 }
 
-export class NullMessage extends StoredMessage {}
-export class StoredCreateJobMessage extends StoredMessage {}
-export class StoredMarkJobAsDoneMessage extends StoredMessage {}
+export class NullStoredMessage extends StoredMessage {}
+export class NewJobStoredMessage extends StoredMessage {}
+export class JobFinishedStoredMessage extends StoredMessage {}
 
-export function nullMessage(): NullMessage {
-  return new NullMessage(nullCommit())
+export function nullMessage(): NullStoredMessage {
+  return new NullStoredMessage(nullCommit())
 }
 
 export function messageFactoryFromCommit(
@@ -38,11 +38,11 @@ export function messageFactoryFromCommit(
   const commitSubject = commit.message
 
   if (commitSubject.startsWith(CREATE_JOB_SUBJECT_PREFIX)) {
-    return new StoredCreateJobMessage(commit)
+    return new NewJobStoredMessage(commit)
   }
 
   if (commitSubject.startsWith(MARK_JOB_AS_DONE_SUBJECT_PREFIX)) {
-    return new StoredMarkJobAsDoneMessage(commit)
+    return new JobFinishedStoredMessage(commit)
   }
 
   throw new Error(`Queue message not found in commit: ${commit.hash}`)

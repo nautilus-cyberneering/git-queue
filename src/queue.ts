@@ -1,12 +1,12 @@
 import {
   CREATE_JOB_SUBJECT_PREFIX,
   MARK_JOB_AS_DONE_SUBJECT_PREFIX,
-  StoredCreateJobMessage,
+  NewJobStoredMessage,
   StoredMessage,
   messageFactoryFromCommit,
   nullMessage
 } from './stored-message'
-import {CreateJobMessage, MarkJobAsDoneMessage, Message} from './message'
+import {NewJobMessage, JobFinishedMessage, Message} from './message'
 import {DefaultLogFields, GitResponseError, SimpleGit} from 'simple-git'
 
 import {Commit} from './commit'
@@ -83,7 +83,7 @@ export class Queue {
 
   getNextJob(): StoredMessage {
     const latestMessage = this.getLatestMessage()
-    return latestMessage instanceof StoredCreateJobMessage
+    return latestMessage instanceof NewJobStoredMessage
       ? latestMessage
       : nullMessage()
   }
@@ -108,7 +108,7 @@ export class Queue {
   ): Promise<Commit> {
     this.guardThatThereIsNoPendingJobs()
 
-    const message = new CreateJobMessage(payload)
+    const message = new NewJobMessage(payload)
 
     return this.commitMessage(message, commitOptions)
   }
@@ -119,7 +119,7 @@ export class Queue {
   ): Promise<Commit> {
     this.guardThatThereIsAPendingJob()
 
-    const message = new MarkJobAsDoneMessage(payload)
+    const message = new JobFinishedMessage(payload)
 
     return this.commitMessage(message, commitOptions)
   }
@@ -149,9 +149,9 @@ export class Queue {
 
   buildCommitSubject(message: Message): string {
     let commitSubject: string
-    if (message instanceof CreateJobMessage) {
+    if (message instanceof NewJobMessage) {
       commitSubject = `${CREATE_JOB_SUBJECT_PREFIX}${this.name}`
-    } else if (message instanceof MarkJobAsDoneMessage) {
+    } else if (message instanceof JobFinishedMessage) {
       commitSubject = `${MARK_JOB_AS_DONE_SUBJECT_PREFIX}${this.name}`
     } else {
       throw Error(`Invalid Message type: ${typeof message}`)

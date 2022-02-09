@@ -52,7 +52,7 @@ describe('GitHub Action', () => {
       ...process.env,
       INPUT_QUEUE_NAME: 'QUEUE-NAME',
       INPUT_GIT_REPO_DIR: gitRepoDir,
-      INPUT_ACTION: 'next-job',
+      INPUT_ACTION: 'next-job2',
       INPUT_JOB_PAYLOAD: dummyPayload(),
       INPUT_GIT_COMMIT_NO_GPG_SIGN: true
     }
@@ -61,6 +61,27 @@ describe('GitHub Action', () => {
 
     expect(output).toEqual(
       expect.stringContaining(`git_repo_dir: ${gitRepoDir}`)
+    )
+  })
+
+  it('should return an error for invalid actions', async () => {
+    const gitRepoDir = await createInitializedTempGitDir()
+
+    const env = {
+      ...process.env,
+      INPUT_QUEUE_NAME: 'QUEUE-NAME',
+      INPUT_GIT_REPO_DIR: gitRepoDir,
+      INPUT_ACTION: 'INVALID ACTION',
+      INPUT_JOB_PAYLOAD: dummyPayload(),
+      INPUT_GIT_COMMIT_NO_GPG_SIGN: true
+    }
+
+    const output = executeAction(env)
+
+    expect(output).toEqual(
+      expect.stringContaining(
+        `::error::Invalid action. Actions can only be: create-job, next-job, finish-job`
+      )
     )
   })
 
@@ -120,7 +141,7 @@ describe('GitHub Action', () => {
       ...process.env,
       INPUT_QUEUE_NAME: 'QUEUE-NAME',
       INPUT_GIT_REPO_DIR: gitRepoDir,
-      INPUT_ACTION: 'mark-job-as-done',
+      INPUT_ACTION: 'finish-job',
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
     }
 
