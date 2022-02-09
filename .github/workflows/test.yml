@@ -65,6 +65,7 @@ jobs:
         run: |
           mkdir ${{ runner.temp }}/temp_git_dir
           cd ${{ runner.temp }}/temp_git_dir
+          git config --global init.defaultBranch main
           git init
           git status
 
@@ -110,6 +111,6 @@ jobs:
       - name: Show new commits
         if: ${{ steps.mark-job-as-done.outputs.job_created == 'true' }}
         run: |
-          cd git_repo_dir: ${{ runner.temp }}/temp_git_dir
+          cd ${{ runner.temp }}/temp_git_dir
           git show --show-signature ${{ steps.create-job.outputs.job_commit }}
           git show --show-signature ${{ steps.mark-job-as-done.outputs.job_commit }}
