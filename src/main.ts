@@ -52,6 +52,7 @@ async function run(): Promise<void> {
     const gnuPGHomeDir = await getGnupgHome()
 
     await core.group(`Debug info`, async () => {
+      core.info(`git_repo_dir input: ${inputs.gitRepoDir} ${typeof inputs.gitRepoDir}`)
       core.info(`git_repo_dir: ${gitRepoDir}`)
       core.info(`gnupg_home_dir: ${gnuPGHomeDir}`)
     })
