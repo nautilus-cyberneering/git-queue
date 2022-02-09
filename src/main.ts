@@ -17,8 +17,8 @@ const ACTION_NEXT_JOB = 'next-job'
 const ACTION_MARK_JOB_AS_DONE = 'mark-job-as-done'
 
 function actionOptions(): string {
-  const options = [ACTION_CREATE_JOB, ACTION_NEXT_JOB, ACTION_MARK_JOB_AS_DONE]
-  return options.toString()
+  const options = [ACTION_CREATE_JOB, ACTION_NEXT_JOB, ACTION_FINISH_JOB]
+  return options.join(', ')
 }
 
 async function getCommitAuthor(commitAuthor: string): Promise<CommitAuthor> {
@@ -117,7 +117,7 @@ async function run(): Promise<void> {
         break
       }
       default: {
-        core.error(`Invalid action. Actions can only be: ${actionOptions}`)
+        core.error(`Invalid action. Actions can only be: ${actionOptions()}`)
       }
     }
   } catch (error) {
