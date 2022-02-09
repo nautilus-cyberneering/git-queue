@@ -61,10 +61,25 @@ jobs:
       - name: Install dependencies and build
         run: yarn install && yarn build
 
+      - name: Create a temp git dir
+        run: |
+          mkdir ${{ runner.temp }}/temp_git_dir
+          cd ${{ runner.temp }}/temp_git_dir
+          git init
+          git status
+
+      - name: Upload test git dir on fail
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: Integration test git dir
+          path: ${{ runner.temp }}/temp_git_dir
+
       - name: Create job
         id: create-job
         uses: ./
         with:
+          git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'Library Update [library-aaa]'
           action: 'create-job'
           job_payload: '{"field": "value", "state": "pending"}'
@@ -78,6 +93,7 @@ jobs:
         if: ${{ steps.create-job.outputs.job_created == 'true' }}
         uses: ./
         with:
+          git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'Library Update [library-aaa]'
           action: 'next-job'
 
@@ -86,6 +102,7 @@ jobs:
         if: ${{ steps.create-job.outputs.job_created == 'true' }}
         uses: ./
         with:
+          git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'Library Update [library-aaa]'
           action: 'mark-job-as-done'
           job_payload: '{"field": "value", "state": "done"}'
@@ -93,5 +110,6 @@ jobs:
       - name: Show new commits
         if: ${{ steps.mark-job-as-done.outputs.job_created == 'true' }}
         run: |
+          cd git_repo_dir: ${{ runner.temp }}/temp_git_dir
           git show --show-signature ${{ steps.create-job.outputs.job_commit }}
           git show --show-signature ${{ steps.mark-job-as-done.outputs.job_commit }}
