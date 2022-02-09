@@ -13,12 +13,11 @@ import {expect} from '@jest/globals'
 import {getErrorMessage} from '../../src/error'
 import {testConfiguration} from '../../src/__tests__/config'
 
-function executeAction(env, gitRepoDir): string | Buffer {
+function executeAction(env): string | Buffer {
   const np = process.execPath
   const ip = path.join(__dirname, '..', '..', 'lib', 'main.js')
   const options: cp.ExecFileSyncOptions = {
-    env,
-    cwd: gitRepoDir
+    env
   }
 
   let output: string
@@ -42,10 +41,29 @@ function createJob(gitRepoDir): string | Buffer {
     INPUT_GIT_COMMIT_NO_GPG_SIGN: true
   }
 
-  return executeAction(env, gitRepoDir)
+  return executeAction(env)
 }
 
 describe('GitHub Action', () => {
+  it('should print the git repo dir at the beginning of the action execution', async () => {
+    const gitRepoDir = await createInitializedTempGitDir()
+
+    const env = {
+      ...process.env,
+      INPUT_QUEUE_NAME: 'QUEUE-NAME',
+      INPUT_GIT_REPO_DIR: gitRepoDir,
+      INPUT_ACTION: 'next-job',
+      INPUT_JOB_PAYLOAD: dummyPayload(),
+      INPUT_GIT_COMMIT_NO_GPG_SIGN: true
+    }
+
+    const output = executeAction(env)
+
+    expect(output).toEqual(
+      expect.stringContaining(`git_repo_dir: ${gitRepoDir}`)
+    )
+  })
+
   it('should create a new job', async () => {
     const gitRepoDir = await createInitializedTempGitDir()
 
@@ -58,7 +76,7 @@ describe('GitHub Action', () => {
       INPUT_GIT_COMMIT_NO_GPG_SIGN: true
     }
 
-    const output = executeAction(env, gitRepoDir)
+    const output = executeAction(env)
 
     expect(output).toEqual(
       expect.stringContaining('::set-output name=job_created::true')
@@ -81,7 +99,7 @@ describe('GitHub Action', () => {
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
     }
 
-    const output = executeAction(env, gitRepoDir)
+    const output = executeAction(env)
 
     expect(output).toEqual(
       expect.stringContaining('::set-output name=job_commit::')
@@ -106,7 +124,7 @@ describe('GitHub Action', () => {
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
     }
 
-    const output = executeAction(env, gitRepoDir)
+    const output = executeAction(env)
 
     expect(output).toEqual(
       expect.stringContaining('::set-output name=job_created::true')
@@ -129,7 +147,7 @@ describe('GitHub Action', () => {
       INPUT_GIT_COMMIT_AUTHOR: 'A committer <committer@example.com>'
     }
 
-    executeAction(env, gitRepoDir)
+    executeAction(env)
 
     const gitLogOutput = gitLogForLatestCommit(gitRepoDir)
 
@@ -154,7 +172,7 @@ describe('GitHub Action', () => {
       GNUPGHOME: gnuPGHomeDir
     }
 
-    executeAction(env, gitRepoDir)
+    executeAction(env)
 
     const gitLogOutput = gitLogForLatestCommit(gitRepoDir)
 
@@ -177,7 +195,7 @@ describe('GitHub Action', () => {
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
     }
 
-    executeAction(env, gitRepoDir)
+    executeAction(env)
 
     const gitLogOutput = gitLogForLatestCommit(gitRepoDir)
 
