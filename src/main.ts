@@ -48,10 +48,13 @@ async function run(): Promise<void> {
     const inputs: context.Inputs = await context.getInputs()
 
     const gitRepoDir =
-      inputs.gitRepoDir === '' ? inputs.gitRepoDir : process.cwd()
+      inputs.gitRepoDir !== '' ? inputs.gitRepoDir : process.cwd()
     const gnuPGHomeDir = await getGnupgHome()
 
     await core.group(`Debug info`, async () => {
+      core.info(
+        `git_repo_dir input: ${inputs.gitRepoDir} ${typeof inputs.gitRepoDir}`
+      )
       core.info(`git_repo_dir: ${gitRepoDir}`)
       core.info(`gnupg_home_dir: ${gnuPGHomeDir}`)
     })

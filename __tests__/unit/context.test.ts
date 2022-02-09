@@ -1,4 +1,4 @@
-import * as context from '../src/context'
+import * as context from '../../src/context'
 import * as os from 'os'
 
 describe('setOutput', () => {

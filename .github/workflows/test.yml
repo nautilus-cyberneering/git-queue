@@ -6,15 +6,46 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  unit-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Show default runner node version
-        run: node --version
+      - name: Install
+        run: yarn install
+
+      - name: Test
+        run: yarn test-unit
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up git committer identity
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Install
+        run: yarn install
+
+      - name: Build
+        run: yarn build
+
+      - name: Test
+        run: yarn test-e2e
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Import GPG key
         id: import-gpg
@@ -28,17 +59,28 @@ jobs:
           fingerprint: 'BD98B3F42545FF93EFF55F7F3F39AA1432CA6AD7'
 
       - name: Install dependencies and build
-        run: |
-          yarn install && yarn build
+        run: yarn install && yarn build && yarn package
 
-      - name: Test
+      - name: Create a temp git dir
         run: |
-          yarn test
+          mkdir ${{ runner.temp }}/temp_git_dir
+          cd ${{ runner.temp }}/temp_git_dir
+          git config --global init.defaultBranch main
+          git init
+          git status
+
+      - name: Upload test git dir on fail
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: Integration test git dir
+          path: ${{ runner.temp }}/temp_git_dir
 
       - name: Create job
         id: create-job
         uses: ./
         with:
+          git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'Library Update [library-aaa]'
           action: 'create-job'
           job_payload: '{"field": "value", "state": "pending"}'
@@ -52,6 +94,7 @@ jobs:
         if: ${{ steps.create-job.outputs.job_created == 'true' }}
         uses: ./
         with:
+          git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'Library Update [library-aaa]'
           action: 'next-job'
 
@@ -60,6 +103,7 @@ jobs:
         if: ${{ steps.create-job.outputs.job_created == 'true' }}
         uses: ./
         with:
+          git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'Library Update [library-aaa]'
           action: 'mark-job-as-done'
           job_payload: '{"field": "value", "state": "done"}'
@@ -67,5 +111,6 @@ jobs:
       - name: Show new commits
         if: ${{ steps.mark-job-as-done.outputs.job_created == 'true' }}
         run: |
+          cd ${{ runner.temp }}/temp_git_dir
           git show --show-signature ${{ steps.create-job.outputs.job_commit }}
           git show --show-signature ${{ steps.mark-job-as-done.outputs.job_commit }}

@@ -1,4 +1,4 @@
-import {EmailAddress, emailIsValid} from '../src/email-address'
+import {EmailAddress, emailIsValid} from '../../src/email-address'
 
 describe('EmailAddress', () => {
   it('should accept email addresses with display name', () => {

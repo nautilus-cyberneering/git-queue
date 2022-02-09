@@ -8,10 +8,12 @@
     "build": "tsc",
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
-    "lint": "eslint --fix **/*.ts",
-    "lint-check": "eslint **/*.ts",
+    "lint": "eslint --fix src/**/*.ts __tests__/**/*.ts",
+    "lint-check": "eslint src/**/*.ts __tests__/**/*.ts",
     "package": "ncc build --source-map --license licenses.txt",
     "test": "jest --coverage",
+    "test-unit": "jest --testPathPattern __tests__/unit/[a-z-]+.test.ts",
+    "test-e2e": "yarn build && jest --testPathPattern __tests__/e2e/[a-z-]+.test.ts",
     "all": "yarn build && yarn format && yarn lint && yarn package && yarn test"
   },
   "repository": {

@@ -4,13 +4,15 @@ import {
   dummyPayload,
   gitLogForLatestCommit,
   newSimpleGit
-} from '../src/__tests__/helpers'
+} from '../../src/__tests__/helpers'
 
-import {CommitAuthor} from '../src/commit-author'
-import {CommitOptions} from '../src/commit-options'
-import {Queue} from '../src/queue'
-import {SigningKeyId} from '../src/signing-key-id'
-import {testConfiguration} from '../src/__tests__/config'
+import {CommitAuthor} from '../../src/commit-author'
+import {CommitOptions} from '../../src/commit-options'
+import {Queue} from '../../src/queue'
+import {SigningKeyId} from '../../src/signing-key-id'
+import {SimpleGit} from 'simple-git'
+
+import {testConfiguration} from '../../src/__tests__/config'
 
 function commitOptionsForTests(): CommitOptions {
   const author = CommitAuthor.fromNameAndEmail(
@@ -34,11 +36,20 @@ function commitOptionsForTestsUsingSignature(): CommitOptions {
   return new CommitOptions(author, signingKeyId, noGpgSig)
 }
 
+async function newSimpleGitWithCommitterIdentity(
+  gitRepoDir: string
+): Promise<SimpleGit> {
+  const git = await newSimpleGit(gitRepoDir)
+  git.addConfig('user.name', testConfiguration().git.user.name)
+  git.addConfig('user.email', testConfiguration().git.user.email)
+  return git
+}
+
 describe('Queue', () => {
   it('should dispatch a new job', async () => {
     const gitRepoDir = await createInitializedTempGitDir()
 
-    const git = await newSimpleGit(gitRepoDir)
+    const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
 
     const queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
 
@@ -52,7 +63,7 @@ describe('Queue', () => {
   it('should mark a job as done', async () => {
     const gitRepoDir = await createInitializedTempGitDir()
 
-    const git = await newSimpleGit(gitRepoDir)
+    const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
 
     const queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
 
@@ -67,7 +78,7 @@ describe('Queue', () => {
   it('should allow to specify the commit author', async () => {
     const gitRepoDir = await createInitializedTempGitDir()
 
-    const git = await newSimpleGit(gitRepoDir)
+    const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
 
     const queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
 
@@ -87,10 +98,8 @@ describe('Queue', () => {
     const signingKeyFingerprint =
       testConfiguration().gpg_signing_key.fingerprint
 
-    const git = await newSimpleGit(gitRepoDir)
+    const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
 
-    git.addConfig('user.name', testConfiguration().git.user.name)
-    git.addConfig('user.email', testConfiguration().git.user.email)
     git.env('GNUPGHOME', gnuPGHomeDir)
 
     const queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
