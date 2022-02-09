@@ -415,9 +415,10 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const inputs = yield context.getInputs();
-            const gitRepoDir = inputs.gitRepoDir === '' ? inputs.gitRepoDir : process.cwd();
+            const gitRepoDir = inputs.gitRepoDir !== '' ? inputs.gitRepoDir : process.cwd();
             const gnuPGHomeDir = yield (0, gpg_env_1.getGnupgHome)();
             yield core.group(`Debug info`, () => __awaiter(this, void 0, void 0, function* () {
+                core.info(`git_repo_dir input: ${inputs.gitRepoDir} ${typeof inputs.gitRepoDir}`);
                 core.info(`git_repo_dir: ${gitRepoDir}`);
                 core.info(`gnupg_home_dir: ${gnuPGHomeDir}`);
             }));
