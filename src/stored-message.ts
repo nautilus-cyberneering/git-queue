@@ -1,8 +1,8 @@
 import {DefaultLogFields} from 'simple-git'
 import {nullCommit} from './commit'
 
-export const CREATE_JOB_SUBJECT_PREFIX = 'CLAIM LOCK: JOB: '
-export const MARK_JOB_AS_DONE_SUBJECT_PREFIX = 'RELEASE LOCK: JOB DONE: '
+export const NEW_JOB_SUBJECT_PREFIX = '📝🈺: '
+export const FINISHED_JOB_SUBJECT_PREFIX = '📝✅: '
 
 // TODO: Code Review: should be only use our own class Commit?
 // We are exposing the class Commit in the main module and using DefaultLogFields internally.
@@ -41,11 +41,11 @@ export function messageFactoryFromCommit(
 ): StoredMessage {
   const commitSubject = commit.message
 
-  if (commitSubject.startsWith(CREATE_JOB_SUBJECT_PREFIX)) {
+  if (commitSubject.startsWith(NEW_JOB_SUBJECT_PREFIX)) {
     return new NewJobStoredMessage(commit)
   }
 
-  if (commitSubject.startsWith(MARK_JOB_AS_DONE_SUBJECT_PREFIX)) {
+  if (commitSubject.startsWith(FINISHED_JOB_SUBJECT_PREFIX)) {
     return new JobFinishedStoredMessage(commit)
   }
 

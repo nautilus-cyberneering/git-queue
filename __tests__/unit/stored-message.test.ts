@@ -12,7 +12,7 @@ describe('Queue', () => {
     const commit: DefaultLogFields = {
       hash: 'not relevant',
       date: 'not relevant',
-      message: 'CLAIM LOCK: JOB: ',
+      message: '📝🈺: ',
       refs: 'not relevant',
       body: 'not relevant',
       author_name: 'not relevant',
@@ -28,7 +28,7 @@ describe('Queue', () => {
     const commit: DefaultLogFields = {
       hash: '8324b0720e4312e0a933a74e840bc2f042999452',
       date: 'not relevant',
-      message: 'CLAIM LOCK: JOB: ',
+      message: '📝🈺: ',
       refs: 'not relevant',
       body: 'not relevant',
       author_name: 'not relevant',
@@ -46,7 +46,7 @@ describe('Queue', () => {
     const commit: DefaultLogFields = {
       hash: 'not relevant',
       date: 'not relevant',
-      message: 'RELEASE LOCK: JOB DONE: ',
+      message: '📝✅: ',
       refs: 'not relevant',
       body: 'not relevant',
       author_name: 'not relevant',
@@ -62,7 +62,7 @@ describe('Queue', () => {
     const commit: DefaultLogFields = {
       hash: 'not relevant',
       date: 'not relevant',
-      message: 'RELEASE LOCK: JOB DONE: ',
+      message: '📝✅: ',
       refs: 'not relevant',
       body: '--PAYLOAD--',
       author_name: 'not relevant',
@@ -78,7 +78,7 @@ describe('Queue', () => {
     const commit: DefaultLogFields = {
       hash: 'not relevant',
       date: 'not relevant',
-      message: 'RELEASE LOCK: JOB DONE: ',
+      message: '📝✅: ',
       refs: 'not relevant',
       body: '  --PAYLOAD--  ',
       author_name: 'not relevant',
