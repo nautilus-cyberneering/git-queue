@@ -59,7 +59,7 @@ jobs:
           fingerprint: 'BD98B3F42545FF93EFF55F7F3F39AA1432CA6AD7'
 
       - name: Install dependencies and build
-        run: yarn install && yarn build
+        run: yarn install && yarn build && yarn package
 
       - name: Create a temp git dir
         run: |
