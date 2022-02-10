@@ -60,7 +60,7 @@ describe('Queue', () => {
     expect(nextJob.payload()).toBe(dummyPayload())
   })
 
-  it('should mark a job as done', async () => {
+  it('should mark a job as finished', async () => {
     const gitRepoDir = await createInitializedTempGitDir()
 
     const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
@@ -68,7 +68,7 @@ describe('Queue', () => {
     const queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
 
     await queue.createJob(dummyPayload(), commitOptionsForTests())
-    await queue.markJobAsDone(dummyPayload(), commitOptionsForTests())
+    await queue.markJobAsFinished(dummyPayload(), commitOptionsForTests())
 
     const nextJob = queue.getNextJob()
 

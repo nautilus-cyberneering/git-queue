@@ -97,7 +97,7 @@ export class Queue {
 
   guardThatThereIsAPendingJob(): void {
     if (this.getNextJob().isEmpty()) {
-      throw new Error(`Can't mark job as done. There isn't any pending job`)
+      throw new Error(`Can't mark job as finished. There isn't any pending job`)
     }
   }
 
@@ -112,7 +112,7 @@ export class Queue {
     return this.commitMessage(message, commitOptions)
   }
 
-  async markJobAsDone(
+  async markJobAsFinished(
     payload: string,
     commitOptions: CommitOptions
   ): Promise<CommitInfo> {

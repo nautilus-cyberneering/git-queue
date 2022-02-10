@@ -132,7 +132,7 @@ describe('GitHub Action', () => {
     )
   })
 
-  it('should mark the pending job as done', async () => {
+  it('should mark the pending job as finished', async () => {
     const gitRepoDir = await createInitializedTempGitDir()
 
     createJob(gitRepoDir)
@@ -148,7 +148,7 @@ describe('GitHub Action', () => {
     const output = executeAction(env)
 
     expect(output).toEqual(
-      expect.stringContaining('::set-output name=job_created::true')
+      expect.stringContaining('::set-output name=job_finished::true')
     )
     expect(output).toEqual(
       expect.stringContaining('::set-output name=job_commit::')

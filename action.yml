@@ -33,6 +33,8 @@ inputs:
 outputs:
   job_created:
     description: 'Boolean, true if the job was created successfully'
+  job_finished:
+    description: 'Boolean, true if the job was finished successfully'
   job_commit:
     description: 'The commit hash of the newly created commits, when the action creates a new commit'
   job_payload:

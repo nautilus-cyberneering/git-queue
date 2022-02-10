@@ -98,7 +98,7 @@ jobs:
           queue_name: 'Library Update [library-aaa]'
           action: 'next-job'
 
-      - name: Mark job as done
+      - name: Mark job as finished
         id: finish-job
         if: ${{ steps.create-job.outputs.job_created == 'true' }}
         uses: ./
@@ -106,7 +106,7 @@ jobs:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'Library Update [library-aaa]'
           action: 'finish-job'
-          job_payload: '{"field": "value", "state": "done"}'
+          job_payload: '{"field": "value", "state": "finished"}'
 
       - name: Show new commits
         if: ${{ steps.finish-job.outputs.job_created == 'true' }}

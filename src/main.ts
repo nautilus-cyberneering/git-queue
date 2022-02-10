@@ -100,18 +100,17 @@ async function run(): Promise<void> {
         break
       }
       case ACTION_FINISH_JOB: {
-        const markJobAsDoneCommit = await queue.markJobAsDone(
+        const markJobAsFinishedCommit = await queue.markJobAsFinished(
           inputs.jobPayload,
           commitOptions
         )
 
         await core.group(`Setting outputs`, async () => {
-          // TODO: 'commit_created' or 'job_marked_as_done' or 'job_updated' instead of 'job_created'
-          context.setOutput('job_created', true)
-          context.setOutput('job_commit', markJobAsDoneCommit.hash)
+          context.setOutput('job_finished', true)
+          context.setOutput('job_commit', markJobAsFinishedCommit.hash)
 
-          core.info(`job_created: true`)
-          core.info(`job_commit: ${markJobAsDoneCommit.hash}`)
+          core.info(`job_finished: true`)
+          core.info(`job_commit: ${markJobAsFinishedCommit.hash}`)
         })
 
         break
