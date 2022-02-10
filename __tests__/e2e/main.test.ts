@@ -52,7 +52,7 @@ describe('GitHub Action', () => {
       ...process.env,
       INPUT_QUEUE_NAME: 'QUEUE-NAME',
       INPUT_GIT_REPO_DIR: gitRepoDir,
-      INPUT_ACTION: 'next-job2',
+      INPUT_ACTION: 'next-job',
       INPUT_JOB_PAYLOAD: dummyPayload(),
       INPUT_GIT_COMMIT_NO_GPG_SIGN: true
     }
