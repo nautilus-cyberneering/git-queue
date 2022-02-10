@@ -8,7 +8,7 @@ import {
   nullMessage
 } from './stored-message'
 import {JobFinishedMessage, Message, NewJobMessage} from './message'
-import {Commit} from './commit'
+import {CommitInfo} from './commit-info'
 import {CommitOptions} from './commit-options'
 
 export class Queue {
@@ -104,7 +104,7 @@ export class Queue {
   async createJob(
     payload: string,
     commitOptions: CommitOptions
-  ): Promise<Commit> {
+  ): Promise<CommitInfo> {
     this.guardThatThereIsNoPendingJobs()
 
     const message = new NewJobMessage(payload)
@@ -115,7 +115,7 @@ export class Queue {
   async markJobAsDone(
     payload: string,
     commitOptions: CommitOptions
-  ): Promise<Commit> {
+  ): Promise<CommitInfo> {
     this.guardThatThereIsAPendingJob()
 
     const message = new JobFinishedMessage(payload)
@@ -126,14 +126,27 @@ export class Queue {
   async commitMessage(
     message: Message,
     commitOptions: CommitOptions
-  ): Promise<Commit> {
+  ): Promise<CommitInfo> {
     const commitMessage = this.buildCommitMessage(message)
     const commitResult = await this.git.commit(
       commitMessage,
       commitOptions.forSimpleGit()
     )
     await this.loadMessagesFromGit()
-    return new Commit(commitResult.commit)
+    const committedMessage = this.findStoredMessageByCommit(commitResult.commit)
+    return CommitInfo.fromDefaultLogFields(committedMessage.commit)
+  }
+
+  findStoredMessageByCommit(hash: string): StoredMessage {
+    const commits = this.storedMessages.filter(
+      message => message.commitHash() === hash
+    )
+
+    if (commits.length === 0) {
+      return nullMessage()
+    }
+
+    return commits[0]
   }
 
   buildCommitMessage(message: Message): string[] {

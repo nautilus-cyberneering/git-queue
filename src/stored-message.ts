@@ -1,5 +1,4 @@
 import {DefaultLogFields} from 'simple-git'
-import {nullCommit} from './commit'
 
 export const NEW_JOB_SUBJECT_PREFIX = '📝🈺: '
 export const FINISHED_JOB_SUBJECT_PREFIX = '📝✅: '
@@ -31,6 +30,18 @@ export abstract class StoredMessage {
 export class NullStoredMessage extends StoredMessage {}
 export class NewJobStoredMessage extends StoredMessage {}
 export class JobFinishedStoredMessage extends StoredMessage {}
+
+export function nullCommit(): DefaultLogFields {
+  return {
+    hash: '',
+    date: '',
+    message: '',
+    refs: '',
+    body: '',
+    author_name: '',
+    author_email: ''
+  }
+}
 
 export function nullMessage(): NullStoredMessage {
   return new NullStoredMessage(nullCommit())

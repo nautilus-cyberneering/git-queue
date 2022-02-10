@@ -114,4 +114,21 @@ describe('Queue', () => {
       )
     ).toBe(true)
   })
+
+  it('should find an stored message by its commit hash', async () => {
+    const gitRepoDir = await createInitializedTempGitDir()
+
+    const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
+
+    const queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
+
+    const commit = await queue.createJob(
+      dummyPayload(),
+      commitOptionsForTests()
+    )
+
+    const storedMessage = queue.findStoredMessageByCommit(commit.hash)
+
+    expect(storedMessage.commitHash()).toBe(commit.hash)
+  })
 })
