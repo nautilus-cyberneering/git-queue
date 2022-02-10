@@ -1,13 +1,7 @@
-import {
-  FINISHED_JOB_SUBJECT_PREFIX,
-  NEW_JOB_SUBJECT_PREFIX,
-  NewJobStoredMessage,
-  StoredMessage,
-  messageFactoryFromCommitInfo,
-  nullMessage
-} from './stored-message'
 import {GitResponseError, SimpleGit} from 'simple-git'
 import {JobFinishedMessage, Message, NewJobMessage} from './message'
+import {NewJobStoredMessage, StoredMessage, nullMessage} from './stored-message'
+
 import {CommitBody} from './commit-body'
 import {CommitInfo} from './commit-info'
 import {CommitMessage} from './commit-message'
@@ -52,7 +46,7 @@ export class Queue {
         this.commitBelongsToQueue(new CommitSubject(commit.message))
       )
       this.storedMessages = commits.map(commit =>
-        messageFactoryFromCommitInfo(CommitInfo.fromDefaultLogFields(commit))
+        StoredMessage.fromCommitInfo(CommitInfo.fromDefaultLogFields(commit))
       )
     } catch (err) {
       if (
@@ -159,17 +153,7 @@ export class Queue {
   }
 
   buildCommitSubject(message: Message): CommitSubject {
-    let commitSubject: string
-
-    if (message instanceof NewJobMessage) {
-      commitSubject = `${NEW_JOB_SUBJECT_PREFIX}${this.name}`
-    } else if (message instanceof JobFinishedMessage) {
-      commitSubject = `${FINISHED_JOB_SUBJECT_PREFIX}${this.name}`
-    } else {
-      throw Error(`Invalid Message type: ${typeof message}`)
-    }
-
-    return new CommitSubject(commitSubject)
+    return CommitSubject.fromMessageAndQueueName(message, this.name)
   }
 
   buildCommitBody(message: Message): CommitBody {

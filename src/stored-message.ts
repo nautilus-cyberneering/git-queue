@@ -1,13 +1,24 @@
 import {CommitInfo, nullCommitInfo} from './commit-info'
-
-export const NEW_JOB_SUBJECT_PREFIX = '📝🈺: '
-export const FINISHED_JOB_SUBJECT_PREFIX = '📝✅: '
+import {CommitSubject} from './commit-subject'
 
 export abstract class StoredMessage {
   commit: CommitInfo
 
   constructor(commit: CommitInfo) {
     this.commit = commit
+  }
+
+  static fromCommitInfo(commit: CommitInfo): StoredMessage {
+    const messageKey = new CommitSubject(commit.message).getMessageKey()
+    switch (messageKey) {
+      case '🈺': {
+        return new NewJobStoredMessage(commit)
+      }
+      case '✅': {
+        return new JobFinishedStoredMessage(commit)
+      }
+    }
+    throw new Error(`Invalid message key: ${messageKey}`)
   }
 
   commitInfo(): CommitInfo {
@@ -33,20 +44,4 @@ export class JobFinishedStoredMessage extends StoredMessage {}
 
 export function nullMessage(): NullStoredMessage {
   return new NullStoredMessage(nullCommitInfo())
-}
-
-export function messageFactoryFromCommitInfo(
-  commit: CommitInfo
-): StoredMessage {
-  const commitSubject = commit.message
-
-  if (commitSubject.startsWith(NEW_JOB_SUBJECT_PREFIX)) {
-    return new NewJobStoredMessage(commit)
-  }
-
-  if (commitSubject.startsWith(FINISHED_JOB_SUBJECT_PREFIX)) {
-    return new JobFinishedStoredMessage(commit)
-  }
-
-  throw new Error(`Queue message not found in commit: ${commit.hash}`)
 }

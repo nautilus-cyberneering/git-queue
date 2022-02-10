@@ -31,4 +31,9 @@ describe('CommitSubject', () => {
     const subject = new CommitSubject('1')
     expect(subject.toString()).toBe('1')
   })
+
+  it('should extract the message key', () => {
+    const subject = new CommitSubject('📝🈺: NOT RELEVANT')
+    expect(subject.getMessageKey()).toBe('🈺')
+  })
 })

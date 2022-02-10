@@ -2,7 +2,6 @@ import {
   JobFinishedStoredMessage,
   NewJobStoredMessage,
   StoredMessage,
-  messageFactoryFromCommitInfo,
   nullMessage
 } from '../../src/stored-message'
 import {CommitInfo} from '../../src/commit-info'
@@ -20,7 +19,7 @@ describe('Queue', () => {
       author_email: 'not relevant'
     }
 
-    const message = messageFactoryFromCommitInfo(
+    const message = StoredMessage.fromCommitInfo(
       CommitInfo.fromDefaultLogFields(commit)
     )
 
@@ -38,7 +37,7 @@ describe('Queue', () => {
       author_email: 'not relevant'
     }
 
-    const message = messageFactoryFromCommitInfo(
+    const message = StoredMessage.fromCommitInfo(
       CommitInfo.fromDefaultLogFields(commit)
     )
 
@@ -58,7 +57,7 @@ describe('Queue', () => {
       author_email: 'not relevant'
     }
 
-    const message = messageFactoryFromCommitInfo(
+    const message = StoredMessage.fromCommitInfo(
       CommitInfo.fromDefaultLogFields(commit)
     )
 
@@ -76,7 +75,7 @@ describe('Queue', () => {
       author_email: 'not relevant'
     }
 
-    const message = messageFactoryFromCommitInfo(
+    const message = StoredMessage.fromCommitInfo(
       CommitInfo.fromDefaultLogFields(commit)
     )
 
@@ -94,7 +93,7 @@ describe('Queue', () => {
       author_email: 'not relevant'
     }
 
-    const message = messageFactoryFromCommitInfo(
+    const message = StoredMessage.fromCommitInfo(
       CommitInfo.fromDefaultLogFields(commit)
     )
 
@@ -119,7 +118,7 @@ describe('Queue', () => {
         author_email: 'not relevant'
       }
 
-      return messageFactoryFromCommitInfo(
+      return StoredMessage.fromCommitInfo(
         CommitInfo.fromDefaultLogFields(commit)
       )
     }
