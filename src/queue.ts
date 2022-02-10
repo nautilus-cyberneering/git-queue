@@ -1,4 +1,3 @@
-import {DefaultLogFields, GitResponseError, SimpleGit} from 'simple-git'
 import {
   FINISHED_JOB_SUBJECT_PREFIX,
   NEW_JOB_SUBJECT_PREFIX,
@@ -7,9 +6,13 @@ import {
   messageFactoryFromCommitInfo,
   nullMessage
 } from './stored-message'
+import {GitResponseError, SimpleGit} from 'simple-git'
 import {JobFinishedMessage, Message, NewJobMessage} from './message'
+import {CommitBody} from './commit-body'
 import {CommitInfo} from './commit-info'
+import {CommitMessage} from './commit-message'
 import {CommitOptions} from './commit-options'
+import {CommitSubject} from './commit-subject'
 
 export class Queue {
   name: string
@@ -46,7 +49,7 @@ export class Queue {
     try {
       const gitLog = await this.git.log()
       const commits = gitLog.all.filter(commit =>
-        this.commitBelongsToQueue(commit)
+        this.commitBelongsToQueue(new CommitSubject(commit.message))
       )
       this.storedMessages = commits.map(commit =>
         messageFactoryFromCommitInfo(CommitInfo.fromDefaultLogFields(commit))
@@ -64,8 +67,8 @@ export class Queue {
     }
   }
 
-  commitBelongsToQueue(commit: DefaultLogFields): boolean {
-    return commit.message.endsWith(this.name) ? true : false
+  commitBelongsToQueue(commitSubject: CommitSubject): boolean {
+    return commitSubject.belongsToQueue(this.name)
   }
 
   getMessages(): readonly StoredMessage[] {
@@ -129,7 +132,7 @@ export class Queue {
   ): Promise<CommitInfo> {
     const commitMessage = this.buildCommitMessage(message)
     const commitResult = await this.git.commit(
-      commitMessage,
+      commitMessage.forSimpleGit(),
       commitOptions.forSimpleGit()
     )
     await this.loadMessagesFromGit()
@@ -149,18 +152,15 @@ export class Queue {
     return commits[0]
   }
 
-  buildCommitMessage(message: Message): string[] {
+  buildCommitMessage(message: Message): CommitMessage {
     const commitSubject = this.buildCommitSubject(message)
-
-    const commitBody = message.getPayload()
-
-    const commitMessage = [commitSubject, commitBody]
-
-    return commitMessage
+    const commitBody = this.buildCommitBody(message)
+    return new CommitMessage(commitSubject, commitBody)
   }
 
-  buildCommitSubject(message: Message): string {
+  buildCommitSubject(message: Message): CommitSubject {
     let commitSubject: string
+
     if (message instanceof NewJobMessage) {
       commitSubject = `${NEW_JOB_SUBJECT_PREFIX}${this.name}`
     } else if (message instanceof JobFinishedMessage) {
@@ -168,6 +168,11 @@ export class Queue {
     } else {
       throw Error(`Invalid Message type: ${typeof message}`)
     }
-    return commitSubject
+
+    return new CommitSubject(commitSubject)
+  }
+
+  buildCommitBody(message: Message): CommitBody {
+    return new CommitBody(message.getPayload())
   }
 }
