@@ -3,10 +3,6 @@ import {CommitInfo, nullCommitInfo} from './commit-info'
 export const NEW_JOB_SUBJECT_PREFIX = '📝🈺: '
 export const FINISHED_JOB_SUBJECT_PREFIX = '📝✅: '
 
-// TODO: Code Review: should be only use our own class Commit?
-// We are exposing the class Commit in the main module and using DefaultLogFields internally.
-// We can keep doing that but we should rename "nullCommit()" function to "emptyDefaultLogFields()".
-
 export abstract class StoredMessage {
   commit: CommitInfo
 
