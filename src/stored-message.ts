@@ -1,4 +1,4 @@
-import {DefaultLogFields} from 'simple-git'
+import {CommitInfo, nullCommitInfo} from './commit-info'
 
 export const NEW_JOB_SUBJECT_PREFIX = '📝🈺: '
 export const FINISHED_JOB_SUBJECT_PREFIX = '📝✅: '
@@ -8,10 +8,14 @@ export const FINISHED_JOB_SUBJECT_PREFIX = '📝✅: '
 // We can keep doing that but we should rename "nullCommit()" function to "emptyDefaultLogFields()".
 
 export abstract class StoredMessage {
-  commit: DefaultLogFields
+  commit: CommitInfo
 
-  constructor(commit: DefaultLogFields) {
+  constructor(commit: CommitInfo) {
     this.commit = commit
+  }
+
+  commitInfo(): CommitInfo {
+    return this.commit
   }
 
   commitHash(): string {
@@ -31,24 +35,12 @@ export class NullStoredMessage extends StoredMessage {}
 export class NewJobStoredMessage extends StoredMessage {}
 export class JobFinishedStoredMessage extends StoredMessage {}
 
-export function nullCommit(): DefaultLogFields {
-  return {
-    hash: '',
-    date: '',
-    message: '',
-    refs: '',
-    body: '',
-    author_name: '',
-    author_email: ''
-  }
-}
-
 export function nullMessage(): NullStoredMessage {
-  return new NullStoredMessage(nullCommit())
+  return new NullStoredMessage(nullCommitInfo())
 }
 
-export function messageFactoryFromCommit(
-  commit: DefaultLogFields
+export function messageFactoryFromCommitInfo(
+  commit: CommitInfo
 ): StoredMessage {
   const commitSubject = commit.message
 

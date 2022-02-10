@@ -2,9 +2,10 @@ import {
   JobFinishedStoredMessage,
   NewJobStoredMessage,
   StoredMessage,
-  messageFactoryFromCommit,
+  messageFactoryFromCommitInfo,
   nullMessage
 } from '../../src/stored-message'
+import {CommitInfo} from '../../src/commit-info'
 import {DefaultLogFields} from 'simple-git'
 
 describe('Queue', () => {
@@ -19,7 +20,9 @@ describe('Queue', () => {
       author_email: 'not relevant'
     }
 
-    const message = messageFactoryFromCommit(commit)
+    const message = messageFactoryFromCommitInfo(
+      CommitInfo.fromDefaultLogFields(commit)
+    )
 
     expect(message).toBeInstanceOf(NewJobStoredMessage)
   })
@@ -35,7 +38,9 @@ describe('Queue', () => {
       author_email: 'not relevant'
     }
 
-    const message = messageFactoryFromCommit(commit)
+    const message = messageFactoryFromCommitInfo(
+      CommitInfo.fromDefaultLogFields(commit)
+    )
 
     expect(message.commitHash()).toBe(
       '8324b0720e4312e0a933a74e840bc2f042999452'
@@ -53,7 +58,9 @@ describe('Queue', () => {
       author_email: 'not relevant'
     }
 
-    const message = messageFactoryFromCommit(commit)
+    const message = messageFactoryFromCommitInfo(
+      CommitInfo.fromDefaultLogFields(commit)
+    )
 
     expect(message).toBeInstanceOf(JobFinishedStoredMessage)
   })
@@ -69,7 +76,9 @@ describe('Queue', () => {
       author_email: 'not relevant'
     }
 
-    const message = messageFactoryFromCommit(commit)
+    const message = messageFactoryFromCommitInfo(
+      CommitInfo.fromDefaultLogFields(commit)
+    )
 
     expect(message.payload()).toBe('--PAYLOAD--')
   })
@@ -85,7 +94,9 @@ describe('Queue', () => {
       author_email: 'not relevant'
     }
 
-    const message = messageFactoryFromCommit(commit)
+    const message = messageFactoryFromCommitInfo(
+      CommitInfo.fromDefaultLogFields(commit)
+    )
 
     expect(message.payload()).toBe('--PAYLOAD--')
   })
@@ -108,7 +119,9 @@ describe('Queue', () => {
         author_email: 'not relevant'
       }
 
-      return messageFactoryFromCommit(commit)
+      return messageFactoryFromCommitInfo(
+        CommitInfo.fromDefaultLogFields(commit)
+      )
     }
 
     expect(fn).toThrow(Error)

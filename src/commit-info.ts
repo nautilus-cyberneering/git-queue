@@ -39,3 +39,7 @@ export class CommitInfo {
     )
   }
 }
+
+export function nullCommitInfo(): CommitInfo {
+  return new CommitInfo('', '', '', '', '', '', '')
+}

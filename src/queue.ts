@@ -4,7 +4,7 @@ import {
   NEW_JOB_SUBJECT_PREFIX,
   NewJobStoredMessage,
   StoredMessage,
-  messageFactoryFromCommit,
+  messageFactoryFromCommitInfo,
   nullMessage
 } from './stored-message'
 import {JobFinishedMessage, Message, NewJobMessage} from './message'
@@ -49,7 +49,7 @@ export class Queue {
         this.commitBelongsToQueue(commit)
       )
       this.storedMessages = commits.map(commit =>
-        messageFactoryFromCommit(commit)
+        messageFactoryFromCommitInfo(CommitInfo.fromDefaultLogFields(commit))
       )
     } catch (err) {
       if (
@@ -134,7 +134,7 @@ export class Queue {
     )
     await this.loadMessagesFromGit()
     const committedMessage = this.findStoredMessageByCommit(commitResult.commit)
-    return CommitInfo.fromDefaultLogFields(committedMessage.commit)
+    return committedMessage.commit
   }
 
   findStoredMessageByCommit(hash: string): StoredMessage {
