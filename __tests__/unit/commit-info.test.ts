@@ -32,12 +32,6 @@ describe('CommitInfo', () => {
       author_email: 'author email'
     })
 
-    expect(commitInfo.hash).toBe('hash')
-    expect(commitInfo.date).toBe('date')
-    expect(commitInfo.message).toBe('message')
-    expect(commitInfo.refs).toBe('refs')
-    expect(commitInfo.body).toBe('body')
-    expect(commitInfo.authorName).toBe('author name')
-    expect(commitInfo.authorEmail).toBe('author email')
+    expect(commitInfo).toBeInstanceOf(CommitInfo)
   })
 })
