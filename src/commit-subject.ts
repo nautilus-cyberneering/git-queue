@@ -1,4 +1,5 @@
 import {Message} from './message'
+import {QueueName} from './queue-name'
 
 const COMMIT_SUBJECT_PREFIX = '📝'
 const COMMIT_SUBJECT_DELIMITER = ':'
@@ -18,7 +19,7 @@ export class CommitSubject {
 
   static fromMessageAndQueueName(
     message: Message,
-    queueName: string
+    queueName: QueueName
   ): CommitSubject {
     const messageKey = message.getKey()
 
@@ -28,7 +29,7 @@ export class CommitSubject {
       jobRefPart = `${COMMIT_SUBJECT_DELIMITER} ${COMMIT_SUBJECT_JOB_REF_PREFIX}${message.getJobRef()}`
     }
 
-    const commitSubject = `${COMMIT_SUBJECT_PREFIX}${messageKey}${COMMIT_SUBJECT_DELIMITER} ${queueName}${jobRefPart}`
+    const commitSubject = `${COMMIT_SUBJECT_PREFIX}${messageKey}${COMMIT_SUBJECT_DELIMITER} ${queueName.toString()}${jobRefPart}`
 
     return new CommitSubject(commitSubject)
   }
@@ -45,14 +46,14 @@ export class CommitSubject {
     return this.text === other.text
   }
 
-  belongsToQueue(queueName: string): boolean {
-    return this.getQueueName() === queueName
+  belongsToQueue(queueName: QueueName): boolean {
+    return this.getQueueName().equalsTo(queueName)
   }
 
-  getQueueName(): string {
+  getQueueName(): QueueName {
     const parts = this.text.split(COMMIT_SUBJECT_DELIMITER)
     // TODO: We assume there is always a queue name although the constructor validation is not done yet.
-    return parts[1].trim()
+    return new QueueName(parts[1].trim())
   }
 
   getMessageKey(): string {

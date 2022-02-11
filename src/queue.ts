@@ -8,14 +8,15 @@ import {CommitInfo} from './commit-info'
 import {CommitMessage} from './commit-message'
 import {CommitOptions} from './commit-options'
 import {CommitSubject} from './commit-subject'
+import {QueueName} from './queue-name'
 
 export class Queue {
-  name: string
+  name: QueueName
   gitRepoDir: string
   git: SimpleGit
   storedMessages: readonly StoredMessage[]
 
-  private constructor(name: string, gitRepoDir: string, git: SimpleGit) {
+  private constructor(name: QueueName, gitRepoDir: string, git: SimpleGit) {
     this.name = name
     this.gitRepoDir = gitRepoDir
     this.git = git
@@ -23,7 +24,7 @@ export class Queue {
   }
 
   static async create(
-    name: string,
+    name: QueueName,
     gitRepoDir: string,
     git: SimpleGit
   ): Promise<Queue> {

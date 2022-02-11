@@ -1,4 +1,5 @@
 import {CommitSubject} from '../../src/commit-subject'
+import {QueueName} from '../../src/queue-name'
 
 function dummyCommitSubjectText(): string {
   return '📝🈺: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
@@ -13,18 +14,20 @@ describe('CommitSubject', () => {
 
   it('should know if a given commit subject belongs to a queue', () => {
     const commit = new CommitSubject(dummyCommitSubjectText())
-    expect(commit.belongsToQueue('queue-name')).toBe(true)
-    expect(commit.belongsToQueue('queue-name-2')).toBe(false)
+    expect(commit.belongsToQueue(new QueueName('queue-name'))).toBe(true)
+    expect(commit.belongsToQueue(new QueueName('queue-name-2'))).toBe(false)
 
     const commit2 = new CommitSubject(
       '📝🈺: Library Update [library-aaa]: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
     )
-    expect(commit2.belongsToQueue('Library Update [library-aaa]')).toBe(true)
+    expect(
+      commit2.belongsToQueue(new QueueName('Library Update [library-aaa]'))
+    ).toBe(true)
 
     const commit3 = new CommitSubject(
       'standard commit: - this is not a queue commit - missing prefix'
     )
-    expect(commit3.belongsToQueue('standard commit')).toBe(false)
+    expect(commit3.belongsToQueue(new QueueName('standard commit'))).toBe(false)
   })
 
   it('should compare two subjects', () => {
@@ -54,6 +57,8 @@ describe('CommitSubject', () => {
 
   it('should allow to include the queue name', () => {
     const subject = new CommitSubject(dummyCommitSubjectText())
-    expect(subject.getQueueName()).toBe('queue-name')
+    expect(subject.getQueueName().equalsTo(new QueueName('queue-name'))).toBe(
+      true
+    )
   })
 })

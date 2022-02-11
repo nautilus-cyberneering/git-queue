@@ -9,6 +9,7 @@ import {
 import {CommitAuthor} from '../../src/commit-author'
 import {CommitOptions} from '../../src/commit-options'
 import {Queue} from '../../src/queue'
+import {QueueName} from '../../src/queue-name'
 import {SigningKeyId} from '../../src/signing-key-id'
 import {SimpleGit} from 'simple-git'
 
@@ -51,7 +52,11 @@ describe('Queue', () => {
 
     const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
 
-    const queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
+    const queue = await Queue.create(
+      new QueueName('QUEUE NAME'),
+      gitRepoDir,
+      git
+    )
 
     await queue.createJob(dummyPayload(), commitOptionsForTests())
 
@@ -65,7 +70,11 @@ describe('Queue', () => {
 
     const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
 
-    const queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
+    const queue = await Queue.create(
+      new QueueName('QUEUE NAME'),
+      gitRepoDir,
+      git
+    )
 
     await queue.createJob(dummyPayload(), commitOptionsForTests())
     await queue.markJobAsFinished(dummyPayload(), commitOptionsForTests())
@@ -80,7 +89,11 @@ describe('Queue', () => {
 
     const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
 
-    const queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
+    const queue = await Queue.create(
+      new QueueName('QUEUE NAME'),
+      gitRepoDir,
+      git
+    )
 
     await queue.createJob(dummyPayload(), commitOptionsForTests())
 
@@ -102,7 +115,11 @@ describe('Queue', () => {
 
     git.env('GNUPGHOME', gnuPGHomeDir)
 
-    const queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
+    const queue = await Queue.create(
+      new QueueName('QUEUE NAME'),
+      gitRepoDir,
+      git
+    )
 
     await queue.createJob(dummyPayload(), commitOptionsForTestsUsingSignature())
 
@@ -120,7 +137,11 @@ describe('Queue', () => {
 
     const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
 
-    const queue = await Queue.create('QUEUE NAME', gitRepoDir, git)
+    const queue = await Queue.create(
+      new QueueName('QUEUE NAME'),
+      gitRepoDir,
+      git
+    )
 
     const commit = await queue.createJob(
       dummyPayload(),

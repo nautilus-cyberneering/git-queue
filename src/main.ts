@@ -7,6 +7,7 @@ import {SigningKeyId, emptySigningKeyId} from './signing-key-id'
 import {CommitOptions} from './commit-options'
 import {Inputs} from './context'
 import {Queue} from './queue'
+import {QueueName} from './queue-name'
 
 import {createInstance} from './simple-git-factory'
 import {getErrorMessage} from './error'
@@ -61,7 +62,11 @@ async function run(): Promise<void> {
 
     const git = await createInstance(gitRepoDir)
 
-    const queue = await Queue.create(inputs.queueName, gitRepoDir, git)
+    const queue = await Queue.create(
+      new QueueName(inputs.queueName),
+      gitRepoDir,
+      git
+    )
 
     const commitOptions = await getCommitOptions(inputs)
 
