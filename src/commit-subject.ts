@@ -33,6 +33,10 @@ export class CommitSubject {
     return new CommitSubject(commitSubject)
   }
 
+  static belongsToAnyQueue(subject: string): boolean {
+    return subject.startsWith(COMMIT_SUBJECT_PREFIX)
+  }
+
   toString(): string {
     return this.text
   }
@@ -47,6 +51,7 @@ export class CommitSubject {
 
   getQueueName(): string {
     const parts = this.text.split(COMMIT_SUBJECT_DELIMITER)
+    // TODO: We assume there is always a queue name although the constructor validation is not done yet.
     return parts[1].trim()
   }
 

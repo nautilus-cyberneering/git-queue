@@ -190,6 +190,9 @@ class CommitSubject {
         const commitSubject = `${COMMIT_SUBJECT_PREFIX}${messageKey}${COMMIT_SUBJECT_DELIMITER} ${queueName}${jobRefPart}`;
         return new CommitSubject(commitSubject);
     }
+    static belongsToAnyQueue(subject) {
+        return subject.startsWith(COMMIT_SUBJECT_PREFIX);
+    }
     toString() {
         return this.text;
     }
@@ -201,6 +204,7 @@ class CommitSubject {
     }
     getQueueName() {
         const parts = this.text.split(COMMIT_SUBJECT_DELIMITER);
+        // TODO: We assume there is always a queue name although the constructor validation is not done yet.
         return parts[1].trim();
     }
     getMessageKey() {
@@ -668,7 +672,7 @@ class Queue {
             const currentBranch = status.current;
             try {
                 const gitLog = yield this.git.log();
-                const commits = gitLog.all.filter(commit => this.commitBelongsToQueue(new commit_subject_1.CommitSubject(commit.message)));
+                const commits = gitLog.all.filter(commit => this.commitBelongsToQueue(commit.message));
                 this.storedMessages = commits.map(commit => stored_message_1.StoredMessage.fromCommitInfo(commit_info_1.CommitInfo.fromDefaultLogFields(commit)));
             }
             catch (err) {
@@ -682,7 +686,10 @@ class Queue {
         });
     }
     commitBelongsToQueue(commitSubject) {
-        return commitSubject.belongsToQueue(this.name);
+        if (!commit_subject_1.CommitSubject.belongsToAnyQueue(commitSubject)) {
+            return false;
+        }
+        return new commit_subject_1.CommitSubject(commitSubject).belongsToQueue(this.name);
     }
     getMessages() {
         return this.storedMessages;

@@ -43,7 +43,7 @@ export class Queue {
     try {
       const gitLog = await this.git.log()
       const commits = gitLog.all.filter(commit =>
-        this.commitBelongsToQueue(new CommitSubject(commit.message))
+        this.commitBelongsToQueue(commit.message)
       )
       this.storedMessages = commits.map(commit =>
         StoredMessage.fromCommitInfo(CommitInfo.fromDefaultLogFields(commit))
@@ -61,8 +61,11 @@ export class Queue {
     }
   }
 
-  commitBelongsToQueue(commitSubject: CommitSubject): boolean {
-    return commitSubject.belongsToQueue(this.name)
+  commitBelongsToQueue(commitSubject: string): boolean {
+    if (!CommitSubject.belongsToAnyQueue(commitSubject)) {
+      return false
+    }
+    return new CommitSubject(commitSubject).belongsToQueue(this.name)
   }
 
   getMessages(): readonly StoredMessage[] {
