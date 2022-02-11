@@ -5,6 +5,10 @@ export class SigningKeyId {
     this.id = id
   }
 
+  equalsTo(other: SigningKeyId): boolean {
+    return this.id === other.id
+  }
+
   toString(): string {
     return this.id
   }

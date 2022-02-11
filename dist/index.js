@@ -844,6 +844,9 @@ class SigningKeyId {
     constructor(id) {
         this.id = id;
     }
+    equalsTo(other) {
+        return this.id === other.id;
+    }
     toString() {
         return this.id;
     }
