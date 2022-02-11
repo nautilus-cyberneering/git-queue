@@ -203,6 +203,7 @@ exports.CommitOptions = CommitOptions;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommitSubject = void 0;
+const message_key_1 = __nccwpck_require__(493);
 const queue_name_1 = __nccwpck_require__(7894);
 const COMMIT_SUBJECT_PREFIX = '📝';
 const COMMIT_SUBJECT_DELIMITER = ':';
@@ -222,7 +223,7 @@ class CommitSubject {
         if (message.hasJobRef()) {
             jobRefPart = `${COMMIT_SUBJECT_DELIMITER} ${COMMIT_SUBJECT_JOB_REF_PREFIX}${message.getJobRef()}`;
         }
-        const commitSubject = `${COMMIT_SUBJECT_PREFIX}${messageKey}${COMMIT_SUBJECT_DELIMITER} ${queueName.toString()}${jobRefPart}`;
+        const commitSubject = `${COMMIT_SUBJECT_PREFIX}${messageKey.toString()}${COMMIT_SUBJECT_DELIMITER} ${queueName.toString()}${jobRefPart}`;
         return new CommitSubject(commitSubject);
     }
     static belongsToAnyQueue(subject) {
@@ -245,7 +246,7 @@ class CommitSubject {
     getMessageKey() {
         const queuePrefix = this.text.indexOf(COMMIT_SUBJECT_PREFIX);
         const colonPos = this.text.indexOf(COMMIT_SUBJECT_DELIMITER);
-        return this.text.substring(queuePrefix + COMMIT_SUBJECT_PREFIX.length, colonPos);
+        return new message_key_1.MessageKey(this.text.substring(queuePrefix + COMMIT_SUBJECT_PREFIX.length, colonPos));
     }
     getJobRef() {
         const queuePrefix = this.text.indexOf(COMMIT_SUBJECT_JOB_REF_PREFIX);
@@ -623,6 +624,29 @@ run();
 
 /***/ }),
 
+/***/ 493:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MessageKey = void 0;
+class MessageKey {
+    constructor(id) {
+        this.id = id;
+    }
+    equalsTo(other) {
+        return this.id === other.id;
+    }
+    toString() {
+        return this.id;
+    }
+}
+exports.MessageKey = MessageKey;
+
+
+/***/ }),
+
 /***/ 3307:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -631,6 +655,7 @@ run();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.JobFinishedMessage = exports.NewJobMessage = exports.Message = void 0;
 const commit_hash_1 = __nccwpck_require__(5533);
+const message_key_1 = __nccwpck_require__(493);
 class Message {
     constructor(payload, jobRef = (0, commit_hash_1.nullCommitHash)()) {
         this.payload = payload;
@@ -649,13 +674,13 @@ class Message {
 exports.Message = Message;
 class NewJobMessage extends Message {
     getKey() {
-        return '🈺';
+        return new message_key_1.MessageKey('🈺');
     }
 }
 exports.NewJobMessage = NewJobMessage;
 class JobFinishedMessage extends Message {
     getKey() {
-        return '✅';
+        return new message_key_1.MessageKey('✅');
     }
 }
 exports.JobFinishedMessage = JobFinishedMessage;
@@ -956,7 +981,7 @@ class StoredMessage {
     }
     static fromCommitInfo(commit) {
         const messageKey = new commit_subject_1.CommitSubject(commit.message).getMessageKey();
-        switch (messageKey) {
+        switch (messageKey.toString()) {
             case '🈺': {
                 return new NewJobStoredMessage(commit);
             }

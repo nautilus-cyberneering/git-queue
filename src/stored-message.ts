@@ -11,7 +11,7 @@ export abstract class StoredMessage {
 
   static fromCommitInfo(commit: CommitInfo): StoredMessage {
     const messageKey = new CommitSubject(commit.message).getMessageKey()
-    switch (messageKey) {
+    switch (messageKey.toString()) {
       case '🈺': {
         return new NewJobStoredMessage(commit)
       }

@@ -1,4 +1,5 @@
 import {Message} from './message'
+import {MessageKey} from './message-key'
 import {QueueName} from './queue-name'
 
 const COMMIT_SUBJECT_PREFIX = '📝'
@@ -29,7 +30,7 @@ export class CommitSubject {
       jobRefPart = `${COMMIT_SUBJECT_DELIMITER} ${COMMIT_SUBJECT_JOB_REF_PREFIX}${message.getJobRef()}`
     }
 
-    const commitSubject = `${COMMIT_SUBJECT_PREFIX}${messageKey}${COMMIT_SUBJECT_DELIMITER} ${queueName.toString()}${jobRefPart}`
+    const commitSubject = `${COMMIT_SUBJECT_PREFIX}${messageKey.toString()}${COMMIT_SUBJECT_DELIMITER} ${queueName.toString()}${jobRefPart}`
 
     return new CommitSubject(commitSubject)
   }
@@ -56,12 +57,11 @@ export class CommitSubject {
     return new QueueName(parts[1].trim())
   }
 
-  getMessageKey(): string {
+  getMessageKey(): MessageKey {
     const queuePrefix = this.text.indexOf(COMMIT_SUBJECT_PREFIX)
     const colonPos = this.text.indexOf(COMMIT_SUBJECT_DELIMITER)
-    return this.text.substring(
-      queuePrefix + COMMIT_SUBJECT_PREFIX.length,
-      colonPos
+    return new MessageKey(
+      this.text.substring(queuePrefix + COMMIT_SUBJECT_PREFIX.length, colonPos)
     )
   }
 

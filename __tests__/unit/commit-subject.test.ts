@@ -47,7 +47,7 @@ describe('CommitSubject', () => {
 
   it('should allow to include a message key', () => {
     const subject = new CommitSubject(dummyCommitSubjectText())
-    expect(subject.getMessageKey()).toBe('🈺')
+    expect(subject.getMessageKey().toString()).toBe('🈺')
   })
 
   it('should allow to include a reference to another job by using the commit hash', () => {

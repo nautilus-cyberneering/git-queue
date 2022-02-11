@@ -1,4 +1,5 @@
 import {CommitHash, nullCommitHash} from './commit-hash'
+import {MessageKey} from './message-key'
 
 export abstract class Message {
   payload: string
@@ -21,18 +22,17 @@ export abstract class Message {
     return !this.jobRef.isNull()
   }
 
-  // The key is an unique identifier for the message
-  abstract getKey(): string
+  abstract getKey(): MessageKey
 }
 
 export class NewJobMessage extends Message {
-  getKey(): string {
-    return '🈺'
+  getKey(): MessageKey {
+    return new MessageKey('🈺')
   }
 }
 
 export class JobFinishedMessage extends Message {
-  getKey(): string {
-    return '✅'
+  getKey(): MessageKey {
+    return new MessageKey('✅')
   }
 }
