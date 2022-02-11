@@ -1,9 +1,10 @@
+import {CommitHash} from '../../src/commit-hash'
 import {CommitInfo} from '../../src/commit-info'
 
 describe('CommitInfo', () => {
   it('should have basic commit info', () => {
     const commitInfo = new CommitInfo(
-      'hash',
+      new CommitHash('ad5cea6308f69d7955d8de5f0da19f675d5ba75f'),
       'date',
       'message',
       'refs',
@@ -12,7 +13,11 @@ describe('CommitInfo', () => {
       'author email'
     )
 
-    expect(commitInfo.hash).toBe('hash')
+    expect(
+      commitInfo.hash.equalsTo(
+        new CommitHash('ad5cea6308f69d7955d8de5f0da19f675d5ba75f')
+      )
+    ).toBe(true)
     expect(commitInfo.date).toBe('date')
     expect(commitInfo.message).toBe('message')
     expect(commitInfo.refs).toBe('refs')
@@ -23,7 +28,7 @@ describe('CommitInfo', () => {
 
   it('should be instantiated from the simple-git class DefaultLogFields', () => {
     const commitInfo = CommitInfo.fromDefaultLogFields({
-      hash: 'hash',
+      hash: 'ad5cea6308f69d7955d8de5f0da19f675d5ba75f',
       date: 'date',
       message: 'message',
       refs: 'refs',

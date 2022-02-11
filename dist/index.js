@@ -66,13 +66,47 @@ exports.CommitBody = CommitBody;
 
 /***/ }),
 
-/***/ 136:
+/***/ 533:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.nullCommitHash = exports.CommitHash = void 0;
+class CommitHash {
+    constructor(value) {
+        this.value = value;
+    }
+    getHash() {
+        return this.value;
+    }
+    isNull() {
+        return this.value === '';
+    }
+    equalsTo(other) {
+        return this.value === other.value;
+    }
+    toString() {
+        return this.value;
+    }
+}
+exports.CommitHash = CommitHash;
+function nullCommitHash() {
+    return new CommitHash('');
+}
+exports.nullCommitHash = nullCommitHash;
+
+
+/***/ }),
+
+/***/ 136:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nullCommitInfo = exports.CommitInfo = void 0;
+const commit_hash_1 = __nccwpck_require__(533);
 class CommitInfo {
     constructor(hash, date, message, refs, body, authorName, authorEmail) {
         this.hash = hash;
@@ -84,12 +118,12 @@ class CommitInfo {
         this.authorEmail = authorEmail;
     }
     static fromDefaultLogFields(defaultLogFields) {
-        return new CommitInfo(defaultLogFields.hash, defaultLogFields.date, defaultLogFields.message, defaultLogFields.refs, defaultLogFields.body, defaultLogFields.author_name, defaultLogFields.author_email);
+        return new CommitInfo(new commit_hash_1.CommitHash(defaultLogFields.hash), defaultLogFields.date, defaultLogFields.message, defaultLogFields.refs, defaultLogFields.body, defaultLogFields.author_name, defaultLogFields.author_email);
     }
 }
 exports.CommitInfo = CommitInfo;
 function nullCommitInfo() {
-    return new CommitInfo('', '', '', '', '', '', '');
+    return new CommitInfo((0, commit_hash_1.nullCommitHash)(), '', '', '', '', '', '');
 }
 exports.nullCommitInfo = nullCommitInfo;
 
@@ -543,7 +577,7 @@ function run() {
                     const createJobCommit = yield queue.createJob(inputs.jobPayload, commitOptions);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_created', true);
-                        context.setOutput('job_commit', createJobCommit.hash);
+                        context.setOutput('job_commit', createJobCommit.hash.toString());
                         core.info(`job_created: true`);
                         core.info(`job_commit: ${createJobCommit.hash}`);
                     }));
@@ -554,7 +588,7 @@ function run() {
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_found', !nextJob.isEmpty());
                         if (!nextJob.isEmpty()) {
-                            context.setOutput('job_commit', nextJob.commitHash());
+                            context.setOutput('job_commit', nextJob.commitHash().toString());
                             context.setOutput('job_payload', nextJob.payload());
                             core.info(`job_commit: ${nextJob.commitHash()}`);
                             core.info(`job_payload: ${nextJob.payload()}`);
@@ -566,7 +600,7 @@ function run() {
                     const markJobAsFinishedCommit = yield queue.markJobAsFinished(inputs.jobPayload, commitOptions);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_finished', true);
-                        context.setOutput('job_commit', markJobAsFinishedCommit.hash);
+                        context.setOutput('job_commit', markJobAsFinishedCommit.hash.toString());
                         core.info(`job_finished: true`);
                         core.info(`job_commit: ${markJobAsFinishedCommit.hash}`);
                     }));
@@ -588,14 +622,15 @@ run();
 /***/ }),
 
 /***/ 307:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.JobFinishedMessage = exports.NewJobMessage = exports.Message = void 0;
+const commit_hash_1 = __nccwpck_require__(533);
 class Message {
-    constructor(payload, jobRef = '') {
+    constructor(payload, jobRef = (0, commit_hash_1.nullCommitHash)()) {
         this.payload = payload;
         this.jobRef = jobRef;
     }
@@ -606,7 +641,7 @@ class Message {
         return this.jobRef;
     }
     hasJobRef() {
-        return this.jobRef !== '';
+        return !this.jobRef.isNull();
     }
 }
 exports.Message = Message;
@@ -645,6 +680,7 @@ exports.Queue = void 0;
 const message_1 = __nccwpck_require__(307);
 const stored_message_1 = __nccwpck_require__(683);
 const commit_body_1 = __nccwpck_require__(801);
+const commit_hash_1 = __nccwpck_require__(533);
 const commit_info_1 = __nccwpck_require__(136);
 const commit_message_1 = __nccwpck_require__(961);
 const commit_subject_1 = __nccwpck_require__(798);
@@ -737,12 +773,12 @@ class Queue {
             const commitMessage = this.buildCommitMessage(message);
             const commitResult = yield this.git.commit(commitMessage.forSimpleGit(), commitOptions.forSimpleGit());
             yield this.loadMessagesFromGit();
-            const committedMessage = this.findStoredMessageByCommit(commitResult.commit);
+            const committedMessage = this.findStoredMessageByCommit(new commit_hash_1.CommitHash(commitResult.commit));
             return committedMessage.commit;
         });
     }
-    findStoredMessageByCommit(hash) {
-        const commits = this.storedMessages.filter(message => message.commitHash() === hash);
+    findStoredMessageByCommit(commitHash) {
+        const commits = this.storedMessages.filter(message => message.commitHash().equalsTo(commitHash));
         if (commits.length === 0) {
             return (0, stored_message_1.nullMessage)();
         }

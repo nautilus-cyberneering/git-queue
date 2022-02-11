@@ -129,6 +129,6 @@ describe('Queue', () => {
 
     const storedMessage = queue.findStoredMessageByCommit(commit.hash)
 
-    expect(storedMessage.commitHash()).toBe(commit.hash)
+    expect(storedMessage.commitHash().equalsTo(commit.hash)).toBe(true)
   })
 })

@@ -3,6 +3,7 @@ import {JobFinishedMessage, Message, NewJobMessage} from './message'
 import {NewJobStoredMessage, StoredMessage, nullMessage} from './stored-message'
 
 import {CommitBody} from './commit-body'
+import {CommitHash} from './commit-hash'
 import {CommitInfo} from './commit-info'
 import {CommitMessage} from './commit-message'
 import {CommitOptions} from './commit-options'
@@ -135,13 +136,15 @@ export class Queue {
       commitOptions.forSimpleGit()
     )
     await this.loadMessagesFromGit()
-    const committedMessage = this.findStoredMessageByCommit(commitResult.commit)
+    const committedMessage = this.findStoredMessageByCommit(
+      new CommitHash(commitResult.commit)
+    )
     return committedMessage.commit
   }
 
-  findStoredMessageByCommit(hash: string): StoredMessage {
-    const commits = this.storedMessages.filter(
-      message => message.commitHash() === hash
+  findStoredMessageByCommit(commitHash: CommitHash): StoredMessage {
+    const commits = this.storedMessages.filter(message =>
+      message.commitHash().equalsTo(commitHash)
     )
 
     if (commits.length === 0) {

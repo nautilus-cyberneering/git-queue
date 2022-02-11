@@ -1,7 +1,8 @@
+import {CommitHash, nullCommitHash} from './commit-hash'
 import {DefaultLogFields} from 'simple-git'
 
 export class CommitInfo {
-  hash: string
+  hash: CommitHash
   date: string
   message: string
   refs: string
@@ -10,7 +11,7 @@ export class CommitInfo {
   authorEmail: string
 
   constructor(
-    hash: string,
+    hash: CommitHash,
     date: string,
     message: string,
     refs: string,
@@ -29,7 +30,7 @@ export class CommitInfo {
 
   static fromDefaultLogFields(defaultLogFields: DefaultLogFields): CommitInfo {
     return new CommitInfo(
-      defaultLogFields.hash,
+      new CommitHash(defaultLogFields.hash),
       defaultLogFields.date,
       defaultLogFields.message,
       defaultLogFields.refs,
@@ -41,5 +42,5 @@ export class CommitInfo {
 }
 
 export function nullCommitInfo(): CommitInfo {
-  return new CommitInfo('', '', '', '', '', '', '')
+  return new CommitInfo(nullCommitHash(), '', '', '', '', '', '')
 }

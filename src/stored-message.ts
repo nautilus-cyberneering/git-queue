@@ -1,4 +1,5 @@
 import {CommitInfo, nullCommitInfo} from './commit-info'
+import {CommitHash} from './commit-hash'
 import {CommitSubject} from './commit-subject'
 
 export abstract class StoredMessage {
@@ -25,7 +26,7 @@ export abstract class StoredMessage {
     return this.commit
   }
 
-  commitHash(): string {
+  commitHash(): CommitHash {
     return this.commit.hash
   }
 

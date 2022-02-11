@@ -1,8 +1,10 @@
+import {CommitHash, nullCommitHash} from './commit-hash'
+
 export abstract class Message {
   payload: string
-  jobRef: string
+  jobRef: CommitHash
 
-  constructor(payload: string, jobRef = '') {
+  constructor(payload: string, jobRef: CommitHash = nullCommitHash()) {
     this.payload = payload
     this.jobRef = jobRef
   }
@@ -11,12 +13,12 @@ export abstract class Message {
     return this.payload
   }
 
-  getJobRef(): string {
+  getJobRef(): CommitHash {
     return this.jobRef
   }
 
   hasJobRef(): boolean {
-    return this.jobRef !== ''
+    return !this.jobRef.isNull()
   }
 
   // The key is an unique identifier for the message

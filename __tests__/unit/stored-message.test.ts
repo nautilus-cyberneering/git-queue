@@ -4,6 +4,7 @@ import {
   StoredMessage,
   nullMessage
 } from '../../src/stored-message'
+import {CommitHash} from '../../src/commit-hash'
 import {CommitInfo} from '../../src/commit-info'
 import {DefaultLogFields} from 'simple-git'
 
@@ -41,9 +42,11 @@ describe('Queue', () => {
       CommitInfo.fromDefaultLogFields(commit)
     )
 
-    expect(message.commitHash()).toBe(
-      '8324b0720e4312e0a933a74e840bc2f042999452'
-    )
+    expect(
+      message
+        .commitHash()
+        .equalsTo(new CommitHash('8324b0720e4312e0a933a74e840bc2f042999452'))
+    ).toBe(true)
   })
 
   it('should build a finished-job message from a commit', async () => {

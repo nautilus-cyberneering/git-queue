@@ -1,3 +1,4 @@
+import {CommitHash} from '../../src/commit-hash'
 import {NewJobMessage} from '../../src/message'
 
 describe('Message', () => {
@@ -7,18 +8,16 @@ describe('Message', () => {
   })
 
   it('could have an optional reference (commit hash) to another job', () => {
-    const message = new NewJobMessage(
-      'payload',
-      'f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
-    )
-    expect(message.getJobRef()).toBe('f1a69d48a01cc130a64aeac5eaf762e4ba685de7')
+    const hash = new CommitHash('f1a69d48a01cc130a64aeac5eaf762e4ba685de7')
+
+    const message = new NewJobMessage('payload', hash)
+
+    expect(message.getJobRef().equalsTo(hash)).toBe(true)
   })
 
-  it('should return the job ref', () => {
-    const message = new NewJobMessage(
-      'payload',
-      'f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
-    )
-    expect(message.getJobRef()).toBe('f1a69d48a01cc130a64aeac5eaf762e4ba685de7')
+  it('should allow to omit the job reference', () => {
+    const message = new NewJobMessage('payload')
+
+    expect(message.getJobRef().isNull()).toBe(true)
   })
 })

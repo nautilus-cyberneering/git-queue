@@ -74,7 +74,7 @@ async function run(): Promise<void> {
 
         await core.group(`Setting outputs`, async () => {
           context.setOutput('job_created', true)
-          context.setOutput('job_commit', createJobCommit.hash)
+          context.setOutput('job_commit', createJobCommit.hash.toString())
 
           core.info(`job_created: true`)
           core.info(`job_commit: ${createJobCommit.hash}`)
@@ -89,7 +89,7 @@ async function run(): Promise<void> {
           context.setOutput('job_found', !nextJob.isEmpty())
 
           if (!nextJob.isEmpty()) {
-            context.setOutput('job_commit', nextJob.commitHash())
+            context.setOutput('job_commit', nextJob.commitHash().toString())
             context.setOutput('job_payload', nextJob.payload())
 
             core.info(`job_commit: ${nextJob.commitHash()}`)
@@ -107,7 +107,10 @@ async function run(): Promise<void> {
 
         await core.group(`Setting outputs`, async () => {
           context.setOutput('job_finished', true)
-          context.setOutput('job_commit', markJobAsFinishedCommit.hash)
+          context.setOutput(
+            'job_commit',
+            markJobAsFinishedCommit.hash.toString()
+          )
 
           core.info(`job_finished: true`)
           core.info(`job_commit: ${markJobAsFinishedCommit.hash}`)
