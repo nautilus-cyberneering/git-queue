@@ -258,6 +258,62 @@ exports.CommitSubject = CommitSubject;
 
 /***/ }),
 
+/***/ 6537:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.nullMessage = exports.JobFinishedCommittedMessage = exports.NewJobCommittedMessage = exports.NullCommittedMessage = exports.CommittedMessage = void 0;
+const commit_info_1 = __nccwpck_require__(4136);
+const commit_subject_1 = __nccwpck_require__(8798);
+class CommittedMessage {
+    constructor(commit) {
+        this.commit = commit;
+    }
+    static fromCommitInfo(commit) {
+        const messageKey = new commit_subject_1.CommitSubject(commit.message).getMessageKey();
+        switch (messageKey.toString()) {
+            case '🈺': {
+                return new NewJobCommittedMessage(commit);
+            }
+            case '✅': {
+                return new JobFinishedCommittedMessage(commit);
+            }
+        }
+        throw new Error(`Invalid message key: ${messageKey}`);
+    }
+    commitInfo() {
+        return this.commit;
+    }
+    commitHash() {
+        return this.commit.hash;
+    }
+    payload() {
+        return this.commit.body.trim();
+    }
+    isEmpty() {
+        return this instanceof NullCommittedMessage;
+    }
+}
+exports.CommittedMessage = CommittedMessage;
+class NullCommittedMessage extends CommittedMessage {
+}
+exports.NullCommittedMessage = NullCommittedMessage;
+class NewJobCommittedMessage extends CommittedMessage {
+}
+exports.NewJobCommittedMessage = NewJobCommittedMessage;
+class JobFinishedCommittedMessage extends CommittedMessage {
+}
+exports.JobFinishedCommittedMessage = JobFinishedCommittedMessage;
+function nullMessage() {
+    return new NullCommittedMessage((0, commit_info_1.nullCommitInfo)());
+}
+exports.nullMessage = nullMessage;
+
+
+/***/ }),
+
 /***/ 3842:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -734,8 +790,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Queue = void 0;
+const committed_message_1 = __nccwpck_require__(6537);
 const message_1 = __nccwpck_require__(3307);
-const stored_message_1 = __nccwpck_require__(8683);
 const commit_body_1 = __nccwpck_require__(3801);
 const commit_hash_1 = __nccwpck_require__(5533);
 const commit_info_1 = __nccwpck_require__(4136);
@@ -746,7 +802,7 @@ class Queue {
         this.name = name;
         this.gitRepoDir = gitRepoDir;
         this.git = git;
-        this.storedMessages = [];
+        this.committedMessages = [];
     }
     static create(name, gitRepoDir, git) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -766,7 +822,7 @@ class Queue {
             try {
                 const gitLog = yield this.git.log();
                 const commits = gitLog.all.filter(commit => this.commitBelongsToQueue(commit.message));
-                this.storedMessages = commits.map(commit => stored_message_1.StoredMessage.fromCommitInfo(commit_info_1.CommitInfo.fromDefaultLogFields(commit)));
+                this.committedMessages = commits.map(commit => committed_message_1.CommittedMessage.fromCommitInfo(commit_info_1.CommitInfo.fromDefaultLogFields(commit)));
             }
             catch (err) {
                 if (err.message.includes(`fatal: your current branch '${currentBranch}' does not have any commits yet`)) {
@@ -785,19 +841,19 @@ class Queue {
         return new commit_subject_1.CommitSubject(commitSubject).belongsToQueue(this.name);
     }
     getMessages() {
-        return this.storedMessages;
+        return this.committedMessages;
     }
     getLatestMessage() {
-        return this.isEmpty() ? (0, stored_message_1.nullMessage)() : this.storedMessages[0];
+        return this.isEmpty() ? (0, committed_message_1.nullMessage)() : this.committedMessages[0];
     }
     isEmpty() {
-        return this.storedMessages.length === 0;
+        return this.committedMessages.length === 0;
     }
     getNextJob() {
         const latestMessage = this.getLatestMessage();
-        return latestMessage instanceof stored_message_1.NewJobStoredMessage
+        return latestMessage instanceof committed_message_1.NewJobCommittedMessage
             ? latestMessage
-            : (0, stored_message_1.nullMessage)();
+            : (0, committed_message_1.nullMessage)();
     }
     guardThatThereIsNoPendingJobs() {
         if (!this.getNextJob().isEmpty()) {
@@ -830,14 +886,14 @@ class Queue {
             const commitMessage = this.buildCommitMessage(message);
             const commitResult = yield this.git.commit(commitMessage.forSimpleGit(), commitOptions.forSimpleGit());
             yield this.loadMessagesFromGit();
-            const committedMessage = this.findStoredMessageByCommit(new commit_hash_1.CommitHash(commitResult.commit));
+            const committedMessage = this.findCommittedMessageByCommit(new commit_hash_1.CommitHash(commitResult.commit));
             return committedMessage.commit;
         });
     }
-    findStoredMessageByCommit(commitHash) {
-        const commits = this.storedMessages.filter(message => message.commitHash().equalsTo(commitHash));
+    findCommittedMessageByCommit(commitHash) {
+        const commits = this.committedMessages.filter(message => message.commitHash().equalsTo(commitHash));
         if (commits.length === 0) {
-            return (0, stored_message_1.nullMessage)();
+            return (0, committed_message_1.nullMessage)();
         }
         return commits[0];
     }
@@ -962,62 +1018,6 @@ function createInstance(gitRepoDir) {
     });
 }
 exports.createInstance = createInstance;
-
-
-/***/ }),
-
-/***/ 8683:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.nullMessage = exports.JobFinishedStoredMessage = exports.NewJobStoredMessage = exports.NullStoredMessage = exports.StoredMessage = void 0;
-const commit_info_1 = __nccwpck_require__(4136);
-const commit_subject_1 = __nccwpck_require__(8798);
-class StoredMessage {
-    constructor(commit) {
-        this.commit = commit;
-    }
-    static fromCommitInfo(commit) {
-        const messageKey = new commit_subject_1.CommitSubject(commit.message).getMessageKey();
-        switch (messageKey.toString()) {
-            case '🈺': {
-                return new NewJobStoredMessage(commit);
-            }
-            case '✅': {
-                return new JobFinishedStoredMessage(commit);
-            }
-        }
-        throw new Error(`Invalid message key: ${messageKey}`);
-    }
-    commitInfo() {
-        return this.commit;
-    }
-    commitHash() {
-        return this.commit.hash;
-    }
-    payload() {
-        return this.commit.body.trim();
-    }
-    isEmpty() {
-        return this instanceof NullStoredMessage;
-    }
-}
-exports.StoredMessage = StoredMessage;
-class NullStoredMessage extends StoredMessage {
-}
-exports.NullStoredMessage = NullStoredMessage;
-class NewJobStoredMessage extends StoredMessage {
-}
-exports.NewJobStoredMessage = NewJobStoredMessage;
-class JobFinishedStoredMessage extends StoredMessage {
-}
-exports.JobFinishedStoredMessage = JobFinishedStoredMessage;
-function nullMessage() {
-    return new NullStoredMessage((0, commit_info_1.nullCommitInfo)());
-}
-exports.nullMessage = nullMessage;
 
 
 /***/ }),

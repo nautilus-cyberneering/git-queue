@@ -1,6 +1,10 @@
+import {
+  CommittedMessage,
+  NewJobCommittedMessage,
+  nullMessage
+} from './committed-message'
 import {GitResponseError, SimpleGit} from 'simple-git'
 import {JobFinishedMessage, Message, NewJobMessage} from './message'
-import {NewJobStoredMessage, StoredMessage, nullMessage} from './stored-message'
 
 import {CommitBody} from './commit-body'
 import {CommitHash} from './commit-hash'
@@ -14,13 +18,13 @@ export class Queue {
   name: QueueName
   gitRepoDir: string
   git: SimpleGit
-  storedMessages: readonly StoredMessage[]
+  committedMessages: readonly CommittedMessage[]
 
   private constructor(name: QueueName, gitRepoDir: string, git: SimpleGit) {
     this.name = name
     this.gitRepoDir = gitRepoDir
     this.git = git
-    this.storedMessages = []
+    this.committedMessages = []
   }
 
   static async create(
@@ -47,8 +51,8 @@ export class Queue {
       const commits = gitLog.all.filter(commit =>
         this.commitBelongsToQueue(commit.message)
       )
-      this.storedMessages = commits.map(commit =>
-        StoredMessage.fromCommitInfo(CommitInfo.fromDefaultLogFields(commit))
+      this.committedMessages = commits.map(commit =>
+        CommittedMessage.fromCommitInfo(CommitInfo.fromDefaultLogFields(commit))
       )
     } catch (err) {
       if (
@@ -70,21 +74,21 @@ export class Queue {
     return new CommitSubject(commitSubject).belongsToQueue(this.name)
   }
 
-  getMessages(): readonly StoredMessage[] {
-    return this.storedMessages
+  getMessages(): readonly CommittedMessage[] {
+    return this.committedMessages
   }
 
-  getLatestMessage(): StoredMessage {
-    return this.isEmpty() ? nullMessage() : this.storedMessages[0]
+  getLatestMessage(): CommittedMessage {
+    return this.isEmpty() ? nullMessage() : this.committedMessages[0]
   }
 
   isEmpty(): boolean {
-    return this.storedMessages.length === 0
+    return this.committedMessages.length === 0
   }
 
-  getNextJob(): StoredMessage {
+  getNextJob(): CommittedMessage {
     const latestMessage = this.getLatestMessage()
-    return latestMessage instanceof NewJobStoredMessage
+    return latestMessage instanceof NewJobCommittedMessage
       ? latestMessage
       : nullMessage()
   }
@@ -97,7 +101,7 @@ export class Queue {
     }
   }
 
-  guardThatThereIsAPendingJob(): StoredMessage {
+  guardThatThereIsAPendingJob(): CommittedMessage {
     const pendingJob = this.getNextJob()
     if (pendingJob.isEmpty()) {
       throw new Error(`Can't mark job as finished. There isn't any pending job`)
@@ -137,14 +141,14 @@ export class Queue {
       commitOptions.forSimpleGit()
     )
     await this.loadMessagesFromGit()
-    const committedMessage = this.findStoredMessageByCommit(
+    const committedMessage = this.findCommittedMessageByCommit(
       new CommitHash(commitResult.commit)
     )
     return committedMessage.commit
   }
 
-  findStoredMessageByCommit(commitHash: CommitHash): StoredMessage {
-    const commits = this.storedMessages.filter(message =>
+  findCommittedMessageByCommit(commitHash: CommitHash): CommittedMessage {
+    const commits = this.committedMessages.filter(message =>
       message.commitHash().equalsTo(commitHash)
     )
 

@@ -1,9 +1,9 @@
 import {
-  JobFinishedStoredMessage,
-  NewJobStoredMessage,
-  StoredMessage,
+  CommittedMessage,
+  JobFinishedCommittedMessage,
+  NewJobCommittedMessage,
   nullMessage
-} from '../../src/stored-message'
+} from '../../src/committed-message'
 import {CommitHash} from '../../src/commit-hash'
 import {CommitInfo} from '../../src/commit-info'
 import {DefaultLogFields} from 'simple-git'
@@ -20,11 +20,11 @@ describe('Queue', () => {
       author_email: 'not relevant'
     }
 
-    const message = StoredMessage.fromCommitInfo(
+    const message = CommittedMessage.fromCommitInfo(
       CommitInfo.fromDefaultLogFields(commit)
     )
 
-    expect(message).toBeInstanceOf(NewJobStoredMessage)
+    expect(message).toBeInstanceOf(NewJobCommittedMessage)
   })
 
   it('should return the hash of the commit where the message was stored', async () => {
@@ -38,7 +38,7 @@ describe('Queue', () => {
       author_email: 'not relevant'
     }
 
-    const message = StoredMessage.fromCommitInfo(
+    const message = CommittedMessage.fromCommitInfo(
       CommitInfo.fromDefaultLogFields(commit)
     )
 
@@ -60,11 +60,11 @@ describe('Queue', () => {
       author_email: 'not relevant'
     }
 
-    const message = StoredMessage.fromCommitInfo(
+    const message = CommittedMessage.fromCommitInfo(
       CommitInfo.fromDefaultLogFields(commit)
     )
 
-    expect(message).toBeInstanceOf(JobFinishedStoredMessage)
+    expect(message).toBeInstanceOf(JobFinishedCommittedMessage)
   })
 
   it('should parse the payload from the commit body', async () => {
@@ -78,7 +78,7 @@ describe('Queue', () => {
       author_email: 'not relevant'
     }
 
-    const message = StoredMessage.fromCommitInfo(
+    const message = CommittedMessage.fromCommitInfo(
       CommitInfo.fromDefaultLogFields(commit)
     )
 
@@ -96,7 +96,7 @@ describe('Queue', () => {
       author_email: 'not relevant'
     }
 
-    const message = StoredMessage.fromCommitInfo(
+    const message = CommittedMessage.fromCommitInfo(
       CommitInfo.fromDefaultLogFields(commit)
     )
 
@@ -110,7 +110,7 @@ describe('Queue', () => {
   })
 
   it('should throw an error when trying to build a message from a no-queue commit', async () => {
-    const fn = (): StoredMessage => {
+    const fn = (): CommittedMessage => {
       const commit: DefaultLogFields = {
         hash: 'not relevant',
         date: 'not relevant',
@@ -121,7 +121,7 @@ describe('Queue', () => {
         author_email: 'not relevant'
       }
 
-      return StoredMessage.fromCommitInfo(
+      return CommittedMessage.fromCommitInfo(
         CommitInfo.fromDefaultLogFields(commit)
       )
     }

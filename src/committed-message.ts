@@ -2,21 +2,21 @@ import {CommitInfo, nullCommitInfo} from './commit-info'
 import {CommitHash} from './commit-hash'
 import {CommitSubject} from './commit-subject'
 
-export abstract class StoredMessage {
+export abstract class CommittedMessage {
   commit: CommitInfo
 
   constructor(commit: CommitInfo) {
     this.commit = commit
   }
 
-  static fromCommitInfo(commit: CommitInfo): StoredMessage {
+  static fromCommitInfo(commit: CommitInfo): CommittedMessage {
     const messageKey = new CommitSubject(commit.message).getMessageKey()
     switch (messageKey.toString()) {
       case '🈺': {
-        return new NewJobStoredMessage(commit)
+        return new NewJobCommittedMessage(commit)
       }
       case '✅': {
-        return new JobFinishedStoredMessage(commit)
+        return new JobFinishedCommittedMessage(commit)
       }
     }
     throw new Error(`Invalid message key: ${messageKey}`)
@@ -35,14 +35,14 @@ export abstract class StoredMessage {
   }
 
   isEmpty(): boolean {
-    return this instanceof NullStoredMessage
+    return this instanceof NullCommittedMessage
   }
 }
 
-export class NullStoredMessage extends StoredMessage {}
-export class NewJobStoredMessage extends StoredMessage {}
-export class JobFinishedStoredMessage extends StoredMessage {}
+export class NullCommittedMessage extends CommittedMessage {}
+export class NewJobCommittedMessage extends CommittedMessage {}
+export class JobFinishedCommittedMessage extends CommittedMessage {}
 
-export function nullMessage(): NullStoredMessage {
-  return new NullStoredMessage(nullCommitInfo())
+export function nullMessage(): NullCommittedMessage {
+  return new NullCommittedMessage(nullCommitInfo())
 }

@@ -98,9 +98,9 @@ describe('Queue', () => {
       commitOptionsForTests()
     )
 
-    const storedMessage = queue.findStoredMessageByCommit(commit.hash)
+    const committedMessage = queue.findCommittedMessageByCommit(commit.hash)
 
-    expect(storedMessage.commitHash().equalsTo(commit.hash)).toBe(true)
+    expect(committedMessage.commitHash().equalsTo(commit.hash)).toBe(true)
   })
 
   it('should allow to sign commits', async () => {
