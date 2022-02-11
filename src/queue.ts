@@ -92,10 +92,12 @@ export class Queue {
     }
   }
 
-  guardThatThereIsAPendingJob(): void {
-    if (this.getNextJob().isEmpty()) {
+  guardThatThereIsAPendingJob(): StoredMessage {
+    const pendingJob = this.getNextJob()
+    if (pendingJob.isEmpty()) {
       throw new Error(`Can't mark job as finished. There isn't any pending job`)
     }
+    return pendingJob
   }
 
   async createJob(
@@ -113,9 +115,9 @@ export class Queue {
     payload: string,
     commitOptions: CommitOptions
   ): Promise<CommitInfo> {
-    this.guardThatThereIsAPendingJob()
+    const pendingJob = this.guardThatThereIsAPendingJob()
 
-    const message = new JobFinishedMessage(payload)
+    const message = new JobFinishedMessage(payload, pendingJob.commitHash())
 
     return this.commitMessage(message, commitOptions)
   }

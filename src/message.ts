@@ -1,12 +1,22 @@
 export abstract class Message {
   payload: string
+  jobRef: string
 
-  constructor(payload: string) {
+  constructor(payload: string, jobRef = '') {
     this.payload = payload
+    this.jobRef = jobRef
   }
 
   getPayload(): string {
     return this.payload
+  }
+
+  getJobRef(): string {
+    return this.jobRef
+  }
+
+  hasJobRef(): boolean {
+    return this.jobRef !== ''
   }
 
   // The key is an unique identifier for the message

@@ -43,6 +43,88 @@ exports.emptyCommitAuthor = emptyCommitAuthor;
 
 /***/ }),
 
+/***/ 801:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CommitBody = void 0;
+class CommitBody {
+    constructor(text) {
+        this.text = text;
+    }
+    toString() {
+        return this.text;
+    }
+    equalsTo(other) {
+        return this.text === other.text;
+    }
+}
+exports.CommitBody = CommitBody;
+
+
+/***/ }),
+
+/***/ 136:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.nullCommitInfo = exports.CommitInfo = void 0;
+class CommitInfo {
+    constructor(hash, date, message, refs, body, authorName, authorEmail) {
+        this.hash = hash;
+        this.date = date;
+        this.message = message;
+        this.refs = refs;
+        this.body = body;
+        this.authorName = authorName;
+        this.authorEmail = authorEmail;
+    }
+    static fromDefaultLogFields(defaultLogFields) {
+        return new CommitInfo(defaultLogFields.hash, defaultLogFields.date, defaultLogFields.message, defaultLogFields.refs, defaultLogFields.body, defaultLogFields.author_name, defaultLogFields.author_email);
+    }
+}
+exports.CommitInfo = CommitInfo;
+function nullCommitInfo() {
+    return new CommitInfo('', '', '', '', '', '', '');
+}
+exports.nullCommitInfo = nullCommitInfo;
+
+
+/***/ }),
+
+/***/ 961:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CommitMessage = void 0;
+const commit_body_1 = __nccwpck_require__(801);
+const commit_subject_1 = __nccwpck_require__(798);
+class CommitMessage {
+    constructor(subject, body) {
+        this.subject = subject;
+        this.body = body;
+    }
+    static fromText(subject, body) {
+        return new CommitMessage(new commit_subject_1.CommitSubject(subject), new commit_body_1.CommitBody(body));
+    }
+    equalsTo(other) {
+        return (this.subject.equalsTo(other.subject) && this.body.equalsTo(other.body));
+    }
+    forSimpleGit() {
+        return [this.subject.toString(), this.body.toString()];
+    }
+}
+exports.CommitMessage = CommitMessage;
+
+
+/***/ }),
+
 /***/ 360:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -80,31 +162,58 @@ exports.CommitOptions = CommitOptions;
 
 /***/ }),
 
-/***/ 873:
+/***/ 798:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.nullCommit = exports.Commit = void 0;
-class Commit {
-    constructor(hash) {
-        this.hash = hash;
+exports.CommitSubject = void 0;
+const COMMIT_SUBJECT_PREFIX = '📝';
+const COMMIT_SUBJECT_DELIMITER = ':';
+const COMMIT_SUBJECT_JOB_REF_PREFIX = 'job.ref.';
+/* The first line of a commit message.
+ * Format: {COMMIT_SUBJECT_PREFIX}{MESSAGE_KEY}: {QUEUE_NAME}: job.ref.{COMMIT_HASH}
+ * Example: 📝✅: queue_name: job.ref.1e31b549c630f806961a291b4e3d4a1471f37490
+ */
+class CommitSubject {
+    constructor(text) {
+        // TODO: validation
+        this.text = text;
+    }
+    static fromMessageAndQueueName(message, queueName) {
+        const messageKey = message.getKey();
+        let jobRefPart = '';
+        if (message.hasJobRef()) {
+            jobRefPart = `${COMMIT_SUBJECT_DELIMITER} ${COMMIT_SUBJECT_JOB_REF_PREFIX}${message.getJobRef()}`;
+        }
+        const commitSubject = `${COMMIT_SUBJECT_PREFIX}${messageKey}${COMMIT_SUBJECT_DELIMITER} ${queueName}${jobRefPart}`;
+        return new CommitSubject(commitSubject);
+    }
+    toString() {
+        return this.text;
+    }
+    equalsTo(other) {
+        return this.text === other.text;
+    }
+    belongsToQueue(queueName) {
+        return this.getQueueName() === queueName;
+    }
+    getQueueName() {
+        const parts = this.text.split(COMMIT_SUBJECT_DELIMITER);
+        return parts[1].trim();
+    }
+    getMessageKey() {
+        const queuePrefix = this.text.indexOf(COMMIT_SUBJECT_PREFIX);
+        const colonPos = this.text.indexOf(COMMIT_SUBJECT_DELIMITER);
+        return this.text.substring(queuePrefix + COMMIT_SUBJECT_PREFIX.length, colonPos);
+    }
+    getJobRef() {
+        const queuePrefix = this.text.indexOf(COMMIT_SUBJECT_JOB_REF_PREFIX);
+        return this.text.substring(queuePrefix + COMMIT_SUBJECT_JOB_REF_PREFIX.length);
     }
 }
-exports.Commit = Commit;
-function nullCommit() {
-    return {
-        hash: '',
-        date: '',
-        message: '',
-        refs: '',
-        body: '',
-        author_name: '',
-        author_email: ''
-    };
-}
-exports.nullCommit = nullCommit;
+exports.CommitSubject = CommitSubject;
 
 
 /***/ }),
@@ -382,10 +491,10 @@ const error_1 = __nccwpck_require__(434);
 const gpg_env_1 = __nccwpck_require__(314);
 const ACTION_CREATE_JOB = 'create-job';
 const ACTION_NEXT_JOB = 'next-job';
-const ACTION_MARK_JOB_AS_DONE = 'mark-job-as-done';
+const ACTION_FINISH_JOB = 'finish-job';
 function actionOptions() {
-    const options = [ACTION_CREATE_JOB, ACTION_NEXT_JOB, ACTION_MARK_JOB_AS_DONE];
-    return options.toString();
+    const options = [ACTION_CREATE_JOB, ACTION_NEXT_JOB, ACTION_FINISH_JOB];
+    return options.join(', ');
 }
 function getCommitAuthor(commitAuthor) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -449,19 +558,18 @@ function run() {
                     }));
                     break;
                 }
-                case ACTION_MARK_JOB_AS_DONE: {
-                    const markJobAsDoneCommit = yield queue.markJobAsDone(inputs.jobPayload, commitOptions);
+                case ACTION_FINISH_JOB: {
+                    const markJobAsFinishedCommit = yield queue.markJobAsFinished(inputs.jobPayload, commitOptions);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
-                        // TODO: 'commit_created' or 'job_marked_as_done' or 'job_updated' instead of 'job_created'
-                        context.setOutput('job_created', true);
-                        context.setOutput('job_commit', markJobAsDoneCommit.hash);
-                        core.info(`job_created: true`);
-                        core.info(`job_commit: ${markJobAsDoneCommit.hash}`);
+                        context.setOutput('job_finished', true);
+                        context.setOutput('job_commit', markJobAsFinishedCommit.hash);
+                        core.info(`job_finished: true`);
+                        core.info(`job_commit: ${markJobAsFinishedCommit.hash}`);
                     }));
                     break;
                 }
                 default: {
-                    core.error(`Invalid action. Actions can only be: ${actionOptions}`);
+                    core.error(`Invalid action. Actions can only be: ${actionOptions()}`);
                 }
             }
         }
@@ -481,22 +589,35 @@ run();
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MarkJobAsDoneMessage = exports.CreateJobMessage = exports.Message = void 0;
+exports.JobFinishedMessage = exports.NewJobMessage = exports.Message = void 0;
 class Message {
-    constructor(payload) {
+    constructor(payload, jobRef = '') {
         this.payload = payload;
+        this.jobRef = jobRef;
     }
     getPayload() {
         return this.payload;
     }
+    getJobRef() {
+        return this.jobRef;
+    }
+    hasJobRef() {
+        return this.jobRef !== '';
+    }
 }
 exports.Message = Message;
-class CreateJobMessage extends Message {
+class NewJobMessage extends Message {
+    getKey() {
+        return '🈺';
+    }
 }
-exports.CreateJobMessage = CreateJobMessage;
-class MarkJobAsDoneMessage extends Message {
+exports.NewJobMessage = NewJobMessage;
+class JobFinishedMessage extends Message {
+    getKey() {
+        return '✅';
+    }
 }
-exports.MarkJobAsDoneMessage = MarkJobAsDoneMessage;
+exports.JobFinishedMessage = JobFinishedMessage;
 
 
 /***/ }),
@@ -517,9 +638,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Queue = void 0;
-const stored_message_1 = __nccwpck_require__(683);
 const message_1 = __nccwpck_require__(307);
-const commit_1 = __nccwpck_require__(873);
+const stored_message_1 = __nccwpck_require__(683);
+const commit_body_1 = __nccwpck_require__(801);
+const commit_info_1 = __nccwpck_require__(136);
+const commit_message_1 = __nccwpck_require__(961);
+const commit_subject_1 = __nccwpck_require__(798);
 class Queue {
     constructor(name, gitRepoDir, git) {
         this.name = name;
@@ -544,8 +668,8 @@ class Queue {
             const currentBranch = status.current;
             try {
                 const gitLog = yield this.git.log();
-                const commits = gitLog.all.filter(commit => this.commitBelongsToQueue(commit));
-                this.storedMessages = commits.map(commit => (0, stored_message_1.messageFactoryFromCommit)(commit));
+                const commits = gitLog.all.filter(commit => this.commitBelongsToQueue(new commit_subject_1.CommitSubject(commit.message)));
+                this.storedMessages = commits.map(commit => stored_message_1.StoredMessage.fromCommitInfo(commit_info_1.CommitInfo.fromDefaultLogFields(commit)));
             }
             catch (err) {
                 if (err.message.includes(`fatal: your current branch '${currentBranch}' does not have any commits yet`)) {
@@ -557,8 +681,8 @@ class Queue {
             }
         });
     }
-    commitBelongsToQueue(commit) {
-        return commit.message.endsWith(this.name) ? true : false;
+    commitBelongsToQueue(commitSubject) {
+        return commitSubject.belongsToQueue(this.name);
     }
     getMessages() {
         return this.storedMessages;
@@ -571,7 +695,7 @@ class Queue {
     }
     getNextJob() {
         const latestMessage = this.getLatestMessage();
-        return latestMessage instanceof stored_message_1.StoredCreateJobMessage
+        return latestMessage instanceof stored_message_1.NewJobStoredMessage
             ? latestMessage
             : (0, stored_message_1.nullMessage)();
     }
@@ -581,50 +705,52 @@ class Queue {
         }
     }
     guardThatThereIsAPendingJob() {
-        if (this.getNextJob().isEmpty()) {
-            throw new Error(`Can't mark job as done. There isn't any pending job`);
+        const pendingJob = this.getNextJob();
+        if (pendingJob.isEmpty()) {
+            throw new Error(`Can't mark job as finished. There isn't any pending job`);
         }
+        return pendingJob;
     }
     createJob(payload, commitOptions) {
         return __awaiter(this, void 0, void 0, function* () {
             this.guardThatThereIsNoPendingJobs();
-            const message = new message_1.CreateJobMessage(payload);
+            const message = new message_1.NewJobMessage(payload);
             return this.commitMessage(message, commitOptions);
         });
     }
-    markJobAsDone(payload, commitOptions) {
+    markJobAsFinished(payload, commitOptions) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.guardThatThereIsAPendingJob();
-            const message = new message_1.MarkJobAsDoneMessage(payload);
+            const pendingJob = this.guardThatThereIsAPendingJob();
+            const message = new message_1.JobFinishedMessage(payload, pendingJob.commitHash());
             return this.commitMessage(message, commitOptions);
         });
     }
     commitMessage(message, commitOptions) {
         return __awaiter(this, void 0, void 0, function* () {
             const commitMessage = this.buildCommitMessage(message);
-            const commitResult = yield this.git.commit(commitMessage, commitOptions.forSimpleGit());
+            const commitResult = yield this.git.commit(commitMessage.forSimpleGit(), commitOptions.forSimpleGit());
             yield this.loadMessagesFromGit();
-            return new commit_1.Commit(commitResult.commit);
+            const committedMessage = this.findStoredMessageByCommit(commitResult.commit);
+            return committedMessage.commit;
         });
+    }
+    findStoredMessageByCommit(hash) {
+        const commits = this.storedMessages.filter(message => message.commitHash() === hash);
+        if (commits.length === 0) {
+            return (0, stored_message_1.nullMessage)();
+        }
+        return commits[0];
     }
     buildCommitMessage(message) {
         const commitSubject = this.buildCommitSubject(message);
-        const commitBody = message.getPayload();
-        const commitMessage = [commitSubject, commitBody];
-        return commitMessage;
+        const commitBody = this.buildCommitBody(message);
+        return new commit_message_1.CommitMessage(commitSubject, commitBody);
     }
     buildCommitSubject(message) {
-        let commitSubject;
-        if (message instanceof message_1.CreateJobMessage) {
-            commitSubject = `${stored_message_1.CREATE_JOB_SUBJECT_PREFIX}${this.name}`;
-        }
-        else if (message instanceof message_1.MarkJobAsDoneMessage) {
-            commitSubject = `${stored_message_1.MARK_JOB_AS_DONE_SUBJECT_PREFIX}${this.name}`;
-        }
-        else {
-            throw Error(`Invalid Message type: ${typeof message}`);
-        }
-        return commitSubject;
+        return commit_subject_1.CommitSubject.fromMessageAndQueueName(message, this.name);
+    }
+    buildCommitBody(message) {
+        return new commit_body_1.CommitBody(message.getPayload());
     }
 }
 exports.Queue = Queue;
@@ -743,13 +869,27 @@ exports.createInstance = createInstance;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.messageFactoryFromCommit = exports.nullMessage = exports.StoredMarkJobAsDoneMessage = exports.StoredCreateJobMessage = exports.NullMessage = exports.StoredMessage = exports.MARK_JOB_AS_DONE_SUBJECT_PREFIX = exports.CREATE_JOB_SUBJECT_PREFIX = void 0;
-const commit_1 = __nccwpck_require__(873);
-exports.CREATE_JOB_SUBJECT_PREFIX = 'CLAIM LOCK: JOB: ';
-exports.MARK_JOB_AS_DONE_SUBJECT_PREFIX = 'RELEASE LOCK: JOB DONE: ';
+exports.nullMessage = exports.JobFinishedStoredMessage = exports.NewJobStoredMessage = exports.NullStoredMessage = exports.StoredMessage = void 0;
+const commit_info_1 = __nccwpck_require__(136);
+const commit_subject_1 = __nccwpck_require__(798);
 class StoredMessage {
     constructor(commit) {
         this.commit = commit;
+    }
+    static fromCommitInfo(commit) {
+        const messageKey = new commit_subject_1.CommitSubject(commit.message).getMessageKey();
+        switch (messageKey) {
+            case '🈺': {
+                return new NewJobStoredMessage(commit);
+            }
+            case '✅': {
+                return new JobFinishedStoredMessage(commit);
+            }
+        }
+        throw new Error(`Invalid message key: ${messageKey}`);
+    }
+    commitInfo() {
+        return this.commit;
     }
     commitHash() {
         return this.commit.hash;
@@ -758,34 +898,23 @@ class StoredMessage {
         return this.commit.body.trim();
     }
     isEmpty() {
-        return this instanceof NullMessage;
+        return this instanceof NullStoredMessage;
     }
 }
 exports.StoredMessage = StoredMessage;
-class NullMessage extends StoredMessage {
+class NullStoredMessage extends StoredMessage {
 }
-exports.NullMessage = NullMessage;
-class StoredCreateJobMessage extends StoredMessage {
+exports.NullStoredMessage = NullStoredMessage;
+class NewJobStoredMessage extends StoredMessage {
 }
-exports.StoredCreateJobMessage = StoredCreateJobMessage;
-class StoredMarkJobAsDoneMessage extends StoredMessage {
+exports.NewJobStoredMessage = NewJobStoredMessage;
+class JobFinishedStoredMessage extends StoredMessage {
 }
-exports.StoredMarkJobAsDoneMessage = StoredMarkJobAsDoneMessage;
+exports.JobFinishedStoredMessage = JobFinishedStoredMessage;
 function nullMessage() {
-    return new NullMessage((0, commit_1.nullCommit)());
+    return new NullStoredMessage((0, commit_info_1.nullCommitInfo)());
 }
 exports.nullMessage = nullMessage;
-function messageFactoryFromCommit(commit) {
-    const commitSubject = commit.message;
-    if (commitSubject.startsWith(exports.CREATE_JOB_SUBJECT_PREFIX)) {
-        return new StoredCreateJobMessage(commit);
-    }
-    if (commitSubject.startsWith(exports.MARK_JOB_AS_DONE_SUBJECT_PREFIX)) {
-        return new StoredMarkJobAsDoneMessage(commit);
-    }
-    throw new Error(`Queue message not found in commit: ${commit.hash}`);
-}
-exports.messageFactoryFromCommit = messageFactoryFromCommit;
 
 
 /***/ }),

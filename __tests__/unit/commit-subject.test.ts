@@ -1,5 +1,9 @@
 import {CommitSubject} from '../../src/commit-subject'
 
+function dummyCommitSubjectText(): string {
+  return '📝🈺: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+}
+
 describe('CommitSubject', () => {
   it('should contain a text', () => {
     const commitSubject = new CommitSubject('text')
@@ -7,14 +11,10 @@ describe('CommitSubject', () => {
     expect(commitSubject.text).toBe('text')
   })
 
-  it('should know if a given subject belongs to a queue', () => {
-    const commitThatBelongs = new CommitSubject('...QUEUE_NAME')
-    expect(commitThatBelongs.belongsToQueue('QUEUE_NAME')).toBe(true)
-
-    const commitThatDoesNotBelong = new CommitSubject(
-      'QUEUE_NAME IS NOT THE LAST PART OF THE SUBJECT'
-    )
-    expect(commitThatDoesNotBelong.belongsToQueue('QUEUE_NAME')).toBe(false)
+  it('should know if a given commit subject belongs to a queue', () => {
+    const commit = new CommitSubject(dummyCommitSubjectText())
+    expect(commit.belongsToQueue('queue-name')).toBe(true)
+    expect(commit.belongsToQueue('queue-name-2')).toBe(false)
   })
 
   it('should compare two subjects', () => {
@@ -32,8 +32,18 @@ describe('CommitSubject', () => {
     expect(subject.toString()).toBe('1')
   })
 
-  it('should extract the message key', () => {
-    const subject = new CommitSubject('📝🈺: NOT RELEVANT')
+  it('should allow to include a message key', () => {
+    const subject = new CommitSubject(dummyCommitSubjectText())
     expect(subject.getMessageKey()).toBe('🈺')
+  })
+
+  it('should allow to include a reference to another job by using the commit hash', () => {
+    const subject = new CommitSubject(dummyCommitSubjectText())
+    expect(subject.getJobRef()).toBe('f1a69d48a01cc130a64aeac5eaf762e4ba685de7')
+  })
+
+  it('should allow to include the queue name', () => {
+    const subject = new CommitSubject(dummyCommitSubjectText())
+    expect(subject.getQueueName()).toBe('queue-name')
   })
 })
