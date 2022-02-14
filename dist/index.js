@@ -75,6 +75,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nullCommitHash = exports.CommitHash = void 0;
 class CommitHash {
     constructor(value) {
+        // TODO: validation
         this.value = value;
     }
     getHash() {
@@ -138,14 +139,14 @@ exports.nullCommitInfo = nullCommitInfo;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommitMessage = void 0;
 const commit_body_1 = __nccwpck_require__(3801);
-const commit_subject_1 = __nccwpck_require__(8798);
+const commit_subject_parser_1 = __nccwpck_require__(386);
 class CommitMessage {
     constructor(subject, body) {
         this.subject = subject;
         this.body = body;
     }
     static fromText(subject, body) {
-        return new CommitMessage(new commit_subject_1.CommitSubject(subject), new commit_body_1.CommitBody(body));
+        return new CommitMessage(commit_subject_parser_1.CommitSubjectParser.parseText(subject), new commit_body_1.CommitBody(body));
     }
     equalsTo(other) {
         return (this.subject.equalsTo(other.subject) && this.body.equalsTo(other.body));
@@ -196,6 +197,84 @@ exports.CommitOptions = CommitOptions;
 
 /***/ }),
 
+/***/ 386:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CommitSubjectParser = exports.commitSubjectBelongsToAQueue = exports.COMMIT_SUBJECT_JOB_REF_PREFIX = exports.COMMIT_SUBJECT_DELIMITER = exports.COMMIT_SUBJECT_PREFIX = void 0;
+const errors_1 = __nccwpck_require__(9292);
+const commit_hash_1 = __nccwpck_require__(5533);
+const commit_subject_1 = __nccwpck_require__(8798);
+const message_key_1 = __nccwpck_require__(493);
+const queue_name_1 = __nccwpck_require__(7894);
+exports.COMMIT_SUBJECT_PREFIX = '📝';
+exports.COMMIT_SUBJECT_DELIMITER = ':';
+exports.COMMIT_SUBJECT_JOB_REF_PREFIX = 'job.ref.';
+function commitSubjectBelongsToAQueue(subject) {
+    return CommitSubjectParser.commitSubjectBelongsToAQueue(subject);
+}
+exports.commitSubjectBelongsToAQueue = commitSubjectBelongsToAQueue;
+class CommitSubjectParser {
+    constructor(text) {
+        this.text = text;
+    }
+    static commitSubjectBelongsToAQueue(subject) {
+        return subject.startsWith(exports.COMMIT_SUBJECT_PREFIX);
+    }
+    static parseText(text) {
+        const parser = new CommitSubjectParser(text);
+        return new commit_subject_1.CommitSubject(parser.getMessageKey(), parser.getQueueName(), parser.getJobRef());
+    }
+    static toText(commitSubject) {
+        const jobRef = commitSubject.getJobRef().isNull()
+            ? ''
+            : `${exports.COMMIT_SUBJECT_DELIMITER} ${exports.COMMIT_SUBJECT_JOB_REF_PREFIX}${commitSubject
+                .getJobRef()
+                .toString()}`;
+        return `${exports.COMMIT_SUBJECT_PREFIX}${commitSubject
+            .getMessageKey()
+            .toString()}${exports.COMMIT_SUBJECT_DELIMITER} ${commitSubject
+            .getQueueName()
+            .toString()}${jobRef}`;
+    }
+    getQueueName() {
+        const parts = this.text.split(exports.COMMIT_SUBJECT_DELIMITER);
+        if (parts[1] === undefined) {
+            throw new errors_1.MissingQueueNameInCommitSubjectError(this.text);
+        }
+        const queueName = parts[1].trim();
+        if (queueName === '') {
+            throw new errors_1.MissingQueueNameInCommitSubjectError(this.text);
+        }
+        return new queue_name_1.QueueName(parts[1].trim());
+    }
+    getMessageKey() {
+        const queuePrefix = this.text.indexOf(exports.COMMIT_SUBJECT_PREFIX);
+        const colonPos = this.text.indexOf(exports.COMMIT_SUBJECT_DELIMITER);
+        const messageKey = this.text.substring(queuePrefix + exports.COMMIT_SUBJECT_PREFIX.length, colonPos);
+        if (messageKey === '') {
+            throw new errors_1.MissingMessageKeyInCommitSubjectError(this.text);
+        }
+        return new message_key_1.MessageKey(this.text.substring(queuePrefix + exports.COMMIT_SUBJECT_PREFIX.length, colonPos));
+    }
+    getJobRef() {
+        const jobRef = this.text.indexOf(exports.COMMIT_SUBJECT_JOB_REF_PREFIX);
+        const commitHash = this.text
+            .substring(jobRef + exports.COMMIT_SUBJECT_JOB_REF_PREFIX.length)
+            .trim();
+        if (commitHash === '') {
+            throw new errors_1.MissingCommitHashInJobReferenceError(this.text);
+        }
+        return new commit_hash_1.CommitHash(commitHash);
+    }
+}
+exports.CommitSubjectParser = CommitSubjectParser;
+
+
+/***/ }),
+
 /***/ 8798:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -203,54 +282,37 @@ exports.CommitOptions = CommitOptions;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommitSubject = void 0;
-const message_key_1 = __nccwpck_require__(493);
-const queue_name_1 = __nccwpck_require__(7894);
-const COMMIT_SUBJECT_PREFIX = '📝';
-const COMMIT_SUBJECT_DELIMITER = ':';
-const COMMIT_SUBJECT_JOB_REF_PREFIX = 'job.ref.';
+const commit_subject_parser_1 = __nccwpck_require__(386);
 /* The first line of a commit message.
  * Format: {COMMIT_SUBJECT_PREFIX}{MESSAGE_KEY}: {QUEUE_NAME}: job.ref.{COMMIT_HASH}
  * Example: 📝✅: queue_name: job.ref.1e31b549c630f806961a291b4e3d4a1471f37490
  */
 class CommitSubject {
-    constructor(text) {
-        // TODO: validation
-        this.text = text;
+    constructor(messageKey, queueName, jobRef) {
+        this.messageKey = messageKey;
+        this.queueName = queueName;
+        this.jobRef = jobRef;
     }
     static fromMessageAndQueueName(message, queueName) {
-        const messageKey = message.getKey();
-        let jobRefPart = '';
-        if (message.hasJobRef()) {
-            jobRefPart = `${COMMIT_SUBJECT_DELIMITER} ${COMMIT_SUBJECT_JOB_REF_PREFIX}${message.getJobRef()}`;
-        }
-        const commitSubject = `${COMMIT_SUBJECT_PREFIX}${messageKey.toString()}${COMMIT_SUBJECT_DELIMITER} ${queueName.toString()}${jobRefPart}`;
-        return new CommitSubject(commitSubject);
-    }
-    static belongsToAnyQueue(subject) {
-        return subject.startsWith(COMMIT_SUBJECT_PREFIX);
+        return new CommitSubject(message.getKey(), queueName, message.getJobRef());
     }
     toString() {
-        return this.text;
+        return commit_subject_parser_1.CommitSubjectParser.toText(this);
     }
     equalsTo(other) {
-        return this.text === other.text;
+        return this.toString() === other.toString();
     }
     belongsToQueue(queueName) {
-        return this.getQueueName().equalsTo(queueName);
-    }
-    getQueueName() {
-        const parts = this.text.split(COMMIT_SUBJECT_DELIMITER);
-        // TODO: We assume there is always a queue name although the constructor validation is not done yet.
-        return new queue_name_1.QueueName(parts[1].trim());
+        return this.queueName.equalsTo(queueName);
     }
     getMessageKey() {
-        const queuePrefix = this.text.indexOf(COMMIT_SUBJECT_PREFIX);
-        const colonPos = this.text.indexOf(COMMIT_SUBJECT_DELIMITER);
-        return new message_key_1.MessageKey(this.text.substring(queuePrefix + COMMIT_SUBJECT_PREFIX.length, colonPos));
+        return this.messageKey;
+    }
+    getQueueName() {
+        return this.queueName;
     }
     getJobRef() {
-        const queuePrefix = this.text.indexOf(COMMIT_SUBJECT_JOB_REF_PREFIX);
-        return this.text.substring(queuePrefix + COMMIT_SUBJECT_JOB_REF_PREFIX.length);
+        return this.jobRef;
     }
 }
 exports.CommitSubject = CommitSubject;
@@ -266,13 +328,14 @@ exports.CommitSubject = CommitSubject;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nullMessage = exports.JobFinishedCommittedMessage = exports.NewJobCommittedMessage = exports.NullCommittedMessage = exports.CommittedMessage = void 0;
 const commit_info_1 = __nccwpck_require__(4136);
-const commit_subject_1 = __nccwpck_require__(8798);
+const commit_subject_parser_1 = __nccwpck_require__(386);
+const errors_1 = __nccwpck_require__(9292);
 class CommittedMessage {
     constructor(commit) {
         this.commit = commit;
     }
     static fromCommitInfo(commit) {
-        const messageKey = new commit_subject_1.CommitSubject(commit.message).getMessageKey();
+        const messageKey = commit_subject_parser_1.CommitSubjectParser.parseText(commit.message).getMessageKey();
         switch (messageKey.toString()) {
             case '🈺': {
                 return new NewJobCommittedMessage(commit);
@@ -281,7 +344,7 @@ class CommittedMessage {
                 return new JobFinishedCommittedMessage(commit);
             }
         }
-        throw new Error(`Invalid message key: ${messageKey}`);
+        throw new errors_1.InvalidMessageKeyError(messageKey.toString());
     }
     commitInfo() {
         return this.commit;
@@ -486,6 +549,59 @@ function getErrorMessage(error) {
     return toErrorWithMessage(error).message;
 }
 exports.getErrorMessage = getErrorMessage;
+
+
+/***/ }),
+
+/***/ 9292:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NoPendingJobsFoundError = exports.PendingJobsLimitReachedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+class MissingQueueNameInCommitSubjectError extends Error {
+    constructor(commitSubject) {
+        super(`Missing queue name in commit subject: ${commitSubject}`);
+        Object.setPrototypeOf(this, MissingQueueNameInCommitSubjectError.prototype);
+    }
+}
+exports.MissingQueueNameInCommitSubjectError = MissingQueueNameInCommitSubjectError;
+class MissingMessageKeyInCommitSubjectError extends Error {
+    constructor(commitSubject) {
+        super(`Missing message key in commit subject: ${commitSubject}`);
+        Object.setPrototypeOf(this, MissingMessageKeyInCommitSubjectError.prototype);
+    }
+}
+exports.MissingMessageKeyInCommitSubjectError = MissingMessageKeyInCommitSubjectError;
+class MissingCommitHashInJobReferenceError extends Error {
+    constructor(commitSubject) {
+        super(`Missing commit hash in job reference in commit subject: ${commitSubject}`);
+        Object.setPrototypeOf(this, MissingMessageKeyInCommitSubjectError.prototype);
+    }
+}
+exports.MissingCommitHashInJobReferenceError = MissingCommitHashInJobReferenceError;
+class InvalidMessageKeyError extends Error {
+    constructor(messageKey) {
+        super(`Invalid message key: ${messageKey}`);
+        Object.setPrototypeOf(this, InvalidMessageKeyError.prototype);
+    }
+}
+exports.InvalidMessageKeyError = InvalidMessageKeyError;
+class PendingJobsLimitReachedError extends Error {
+    constructor(commitHash) {
+        super(`Can't create a new job. There is already a pending job in commit: ${commitHash}`);
+        Object.setPrototypeOf(this, PendingJobsLimitReachedError.prototype);
+    }
+}
+exports.PendingJobsLimitReachedError = PendingJobsLimitReachedError;
+class NoPendingJobsFoundError extends Error {
+    constructor(queueName) {
+        super(`Can't mark job as finished. There isn't any pending job in queue: ${queueName}`);
+        Object.setPrototypeOf(this, NoPendingJobsFoundError.prototype);
+    }
+}
+exports.NoPendingJobsFoundError = NoPendingJobsFoundError;
 
 
 /***/ }),
@@ -753,6 +869,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nullQueueName = exports.QueueName = void 0;
 class QueueName {
     constructor(value) {
+        // TODO: validation. Issue -> https://github.com/Nautilus-Cyberneering/git-queue/issues/39
         this.value = value;
     }
     isNull() {
@@ -790,8 +907,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Queue = void 0;
+const commit_subject_parser_1 = __nccwpck_require__(386);
 const committed_message_1 = __nccwpck_require__(6537);
 const message_1 = __nccwpck_require__(3307);
+const errors_1 = __nccwpck_require__(9292);
 const commit_body_1 = __nccwpck_require__(3801);
 const commit_hash_1 = __nccwpck_require__(5533);
 const commit_info_1 = __nccwpck_require__(4136);
@@ -835,10 +954,10 @@ class Queue {
         });
     }
     commitBelongsToQueue(commitSubject) {
-        if (!commit_subject_1.CommitSubject.belongsToAnyQueue(commitSubject)) {
+        if (!(0, commit_subject_parser_1.commitSubjectBelongsToAQueue)(commitSubject)) {
             return false;
         }
-        return new commit_subject_1.CommitSubject(commitSubject).belongsToQueue(this.name);
+        return commit_subject_parser_1.CommitSubjectParser.parseText(commitSubject).belongsToQueue(this.name);
     }
     getMessages() {
         return this.committedMessages;
@@ -857,13 +976,13 @@ class Queue {
     }
     guardThatThereIsNoPendingJobs() {
         if (!this.getNextJob().isEmpty()) {
-            throw new Error(`Can't create a new job. There is already a pending job in commit: ${this.getNextJob().commitHash()}`);
+            throw new errors_1.PendingJobsLimitReachedError(this.getNextJob().commitHash().toString());
         }
     }
     guardThatThereIsAPendingJob() {
         const pendingJob = this.getNextJob();
         if (pendingJob.isEmpty()) {
-            throw new Error(`Can't mark job as finished. There isn't any pending job`);
+            throw new errors_1.NoPendingJobsFoundError(this.name.toString());
         }
         return pendingJob;
     }

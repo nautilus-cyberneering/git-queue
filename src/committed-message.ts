@@ -1,6 +1,7 @@
 import {CommitInfo, nullCommitInfo} from './commit-info'
 import {CommitHash} from './commit-hash'
 import {CommitSubjectParser} from './commit-subject-parser'
+import {InvalidMessageKeyError} from './errors'
 
 export abstract class CommittedMessage {
   commit: CommitInfo
@@ -21,7 +22,7 @@ export abstract class CommittedMessage {
         return new JobFinishedCommittedMessage(commit)
       }
     }
-    throw new Error(`Invalid message key: ${messageKey}`)
+    throw new InvalidMessageKeyError(messageKey.toString())
   }
 
   commitInfo(): CommitInfo {

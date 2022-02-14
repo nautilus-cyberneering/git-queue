@@ -2,6 +2,7 @@ export class QueueName {
   value: string
 
   constructor(value: string) {
+    // TODO: validation. Issue -> https://github.com/Nautilus-Cyberneering/git-queue/issues/39
     this.value = value
   }
 

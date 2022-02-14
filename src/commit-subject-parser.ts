@@ -1,3 +1,8 @@
+import {
+  MissingCommitHashInJobReferenceError,
+  MissingMessageKeyInCommitSubjectError,
+  MissingQueueNameInCommitSubjectError
+} from './errors'
 import {CommitHash} from './commit-hash'
 import {CommitSubject} from './commit-subject'
 import {MessageKey} from './message-key'
@@ -49,7 +54,13 @@ export class CommitSubjectParser {
     const parts = this.text.split(COMMIT_SUBJECT_DELIMITER)
 
     if (parts[1] === undefined) {
-      throw new Error(`Missing queue name in commit subject: ${this.text}`)
+      throw new MissingQueueNameInCommitSubjectError(this.text)
+    }
+
+    const queueName = parts[1].trim()
+
+    if (queueName === '') {
+      throw new MissingQueueNameInCommitSubjectError(this.text)
     }
 
     return new QueueName(parts[1].trim())
@@ -64,7 +75,7 @@ export class CommitSubjectParser {
     )
 
     if (messageKey === '') {
-      throw new Error(`Missing message key in commit subject: ${this.text}`)
+      throw new MissingMessageKeyInCommitSubjectError(this.text)
     }
 
     return new MessageKey(
@@ -73,15 +84,15 @@ export class CommitSubjectParser {
   }
 
   getJobRef(): CommitHash {
-    const queuePrefix = this.text.indexOf(COMMIT_SUBJECT_JOB_REF_PREFIX)
-    const jobRef = this.text
-      .substring(queuePrefix + COMMIT_SUBJECT_JOB_REF_PREFIX.length)
+    const jobRef = this.text.indexOf(COMMIT_SUBJECT_JOB_REF_PREFIX)
+    const commitHash = this.text
+      .substring(jobRef + COMMIT_SUBJECT_JOB_REF_PREFIX.length)
       .trim()
 
-    if (jobRef === '') {
-      throw new Error(`Missing jor reference in commit subject: ${this.text}`)
+    if (commitHash === '') {
+      throw new MissingCommitHashInJobReferenceError(this.text)
     }
 
-    return new CommitHash(jobRef)
+    return new CommitHash(commitHash)
   }
 }

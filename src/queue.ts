@@ -9,6 +9,7 @@ import {
 } from './committed-message'
 import {GitResponseError, SimpleGit} from 'simple-git'
 import {JobFinishedMessage, Message, NewJobMessage} from './message'
+import {NoPendingJobsFoundError, PendingJobsLimitReachedError} from './errors'
 
 import {CommitBody} from './commit-body'
 import {CommitHash} from './commit-hash'
@@ -101,8 +102,8 @@ export class Queue {
 
   guardThatThereIsNoPendingJobs(): void {
     if (!this.getNextJob().isEmpty()) {
-      throw new Error(
-        `Can't create a new job. There is already a pending job in commit: ${this.getNextJob().commitHash()}`
+      throw new PendingJobsLimitReachedError(
+        this.getNextJob().commitHash().toString()
       )
     }
   }
@@ -110,7 +111,7 @@ export class Queue {
   guardThatThereIsAPendingJob(): CommittedMessage {
     const pendingJob = this.getNextJob()
     if (pendingJob.isEmpty()) {
-      throw new Error(`Can't mark job as finished. There isn't any pending job`)
+      throw new NoPendingJobsFoundError(this.name.toString())
     }
     return pendingJob
   }
