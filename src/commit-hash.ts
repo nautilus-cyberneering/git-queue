@@ -2,6 +2,7 @@ export class CommitHash {
   value: string
 
   constructor(value: string) {
+    // TODO: validation
     this.value = value
   }
 

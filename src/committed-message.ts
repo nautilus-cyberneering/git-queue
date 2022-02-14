@@ -1,6 +1,6 @@
 import {CommitInfo, nullCommitInfo} from './commit-info'
 import {CommitHash} from './commit-hash'
-import {CommitSubject} from './commit-subject'
+import {CommitSubjectParser} from './commit-subject-parser'
 
 export abstract class CommittedMessage {
   commit: CommitInfo
@@ -10,7 +10,9 @@ export abstract class CommittedMessage {
   }
 
   static fromCommitInfo(commit: CommitInfo): CommittedMessage {
-    const messageKey = new CommitSubject(commit.message).getMessageKey()
+    const messageKey = CommitSubjectParser.parseText(
+      commit.message
+    ).getMessageKey()
     switch (messageKey.toString()) {
       case '🈺': {
         return new NewJobCommittedMessage(commit)

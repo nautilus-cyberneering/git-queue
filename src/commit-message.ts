@@ -1,5 +1,6 @@
 import {CommitBody} from './commit-body'
 import {CommitSubject} from './commit-subject'
+import {CommitSubjectParser} from './commit-subject-parser'
 
 export class CommitMessage {
   subject: CommitSubject
@@ -11,7 +12,10 @@ export class CommitMessage {
   }
 
   static fromText(subject: string, body: string): CommitMessage {
-    return new CommitMessage(new CommitSubject(subject), new CommitBody(body))
+    return new CommitMessage(
+      CommitSubjectParser.parseText(subject),
+      new CommitBody(body)
+    )
   }
 
   equalsTo(other: CommitMessage): boolean {

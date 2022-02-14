@@ -1,4 +1,8 @@
 import {
+  CommitSubjectParser,
+  commitSubjectBelongsToAQueue
+} from './commit-subject-parser'
+import {
   CommittedMessage,
   NewJobCommittedMessage,
   nullMessage
@@ -68,10 +72,12 @@ export class Queue {
   }
 
   commitBelongsToQueue(commitSubject: string): boolean {
-    if (!CommitSubject.belongsToAnyQueue(commitSubject)) {
+    if (!commitSubjectBelongsToAQueue(commitSubject)) {
       return false
     }
-    return new CommitSubject(commitSubject).belongsToQueue(this.name)
+    return CommitSubjectParser.parseText(commitSubject).belongsToQueue(
+      this.name
+    )
   }
 
   getMessages(): readonly CommittedMessage[] {

@@ -8,12 +8,20 @@ import {CommitHash} from '../../src/commit-hash'
 import {CommitInfo} from '../../src/commit-info'
 import {DefaultLogFields} from 'simple-git'
 
+function dummyNewJobCommitSubjectText(): string {
+  return '📝🈺: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+}
+
+function dummyJobFinishedCommitSubjectText(): string {
+  return '📝✅: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+}
+
 describe('Queue', () => {
   it('should build a new-job message from a commit', async () => {
     const commit: DefaultLogFields = {
       hash: 'not relevant',
       date: 'not relevant',
-      message: '📝🈺: ',
+      message: dummyNewJobCommitSubjectText(),
       refs: 'not relevant',
       body: 'not relevant',
       author_name: 'not relevant',
@@ -31,7 +39,7 @@ describe('Queue', () => {
     const commit: DefaultLogFields = {
       hash: '8324b0720e4312e0a933a74e840bc2f042999452',
       date: 'not relevant',
-      message: '📝🈺: ',
+      message: dummyNewJobCommitSubjectText(),
       refs: 'not relevant',
       body: 'not relevant',
       author_name: 'not relevant',
@@ -53,7 +61,7 @@ describe('Queue', () => {
     const commit: DefaultLogFields = {
       hash: 'not relevant',
       date: 'not relevant',
-      message: '📝✅: ',
+      message: dummyJobFinishedCommitSubjectText(),
       refs: 'not relevant',
       body: 'not relevant',
       author_name: 'not relevant',
@@ -71,7 +79,7 @@ describe('Queue', () => {
     const commit: DefaultLogFields = {
       hash: 'not relevant',
       date: 'not relevant',
-      message: '📝✅: ',
+      message: dummyNewJobCommitSubjectText(),
       refs: 'not relevant',
       body: '--PAYLOAD--',
       author_name: 'not relevant',
@@ -89,7 +97,7 @@ describe('Queue', () => {
     const commit: DefaultLogFields = {
       hash: 'not relevant',
       date: 'not relevant',
-      message: '📝✅: ',
+      message: dummyNewJobCommitSubjectText(),
       refs: 'not relevant',
       body: '  --PAYLOAD--  ',
       author_name: 'not relevant',
