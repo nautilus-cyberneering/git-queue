@@ -16,10 +16,10 @@ export class CommitOptions {
   forSimpleGit(): TaskOptions {
     return {
       '--allow-empty': null,
-      ...(!this.author.isEmpty() && {
+      ...(!this.author.isNull() && {
         '--author': `"${this.author.toString()}"`
       }),
-      ...(!this.gpgSig.isEmpty() && {
+      ...(!this.gpgSig.isNull() && {
         '--gpg-sign': this.gpgSig.toString()
       }),
       ...(this.noGpgSig && {'--no-gpg-sign': null})
@@ -28,10 +28,10 @@ export class CommitOptions {
 
   toString(): string {
     const allowEmpty = '--allow-empty'
-    const author = this.author.isEmpty()
+    const author = this.author.isNull()
       ? ''
       : `--author="${this.author.toString()}"`
-    const gpgSig = this.gpgSig.isEmpty()
+    const gpgSig = this.gpgSig.isNull()
       ? ''
       : `--gpg-sign=${this.gpgSig.toString()}`
     const noGpgSig = this.noGpgSig ? '--no-gpg-sign' : ''

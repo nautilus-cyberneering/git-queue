@@ -2,8 +2,9 @@ import {CommitInfo, nullCommitInfo} from './commit-info'
 import {CommitHash} from './commit-hash'
 import {CommitSubjectParser} from './commit-subject-parser'
 import {InvalidMessageKeyError} from './errors'
+import {Nullable} from './nullable'
 
-export abstract class CommittedMessage {
+export abstract class CommittedMessage implements Nullable {
   commit: CommitInfo
 
   constructor(commit: CommitInfo) {
@@ -37,7 +38,7 @@ export abstract class CommittedMessage {
     return this.commit.body.trim()
   }
 
-  isEmpty(): boolean {
+  isNull(): boolean {
     return this instanceof NullCommittedMessage
   }
 }

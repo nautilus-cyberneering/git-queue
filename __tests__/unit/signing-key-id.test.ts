@@ -1,4 +1,4 @@
-import {SigningKeyId, emptySigningKeyId} from '../../src/signing-key-id'
+import {SigningKeyId, nullSigningKeyId} from '../../src/signing-key-id'
 
 describe('SigningKeyId', () => {
   it('should contain id of a GPG signing key', () => {
@@ -16,8 +16,8 @@ describe('SigningKeyId', () => {
   })
 
   it('could be empty', () => {
-    const signingKeyId = emptySigningKeyId()
+    const signingKeyId = nullSigningKeyId()
 
-    expect(signingKeyId.isEmpty()).toBe(true)
+    expect(signingKeyId.isNull()).toBe(true)
   })
 })

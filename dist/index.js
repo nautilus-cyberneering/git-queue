@@ -30,7 +30,7 @@ class CommitAuthor {
     toString() {
         return this.emailAddress.toString();
     }
-    isEmpty() {
+    isNull() {
         return (this.getName() === NO_AUTHOR_NAME && this.getEmail() === NO_AUTHOR_EMAIL);
     }
 }
@@ -174,18 +174,18 @@ class CommitOptions {
         this.noGpgSig = noGpgSig;
     }
     forSimpleGit() {
-        return Object.assign(Object.assign(Object.assign({ '--allow-empty': null }, (!this.author.isEmpty() && {
+        return Object.assign(Object.assign(Object.assign({ '--allow-empty': null }, (!this.author.isNull() && {
             '--author': `"${this.author.toString()}"`
-        })), (!this.gpgSig.isEmpty() && {
+        })), (!this.gpgSig.isNull() && {
             '--gpg-sign': this.gpgSig.toString()
         })), (this.noGpgSig && { '--no-gpg-sign': null }));
     }
     toString() {
         const allowEmpty = '--allow-empty';
-        const author = this.author.isEmpty()
+        const author = this.author.isNull()
             ? ''
             : `--author="${this.author.toString()}"`;
-        const gpgSig = this.gpgSig.isEmpty()
+        const gpgSig = this.gpgSig.isNull()
             ? ''
             : `--gpg-sign=${this.gpgSig.toString()}`;
         const noGpgSig = this.noGpgSig ? '--no-gpg-sign' : '';
@@ -355,7 +355,7 @@ class CommittedMessage {
     payload() {
         return this.commit.body.trim();
     }
-    isEmpty() {
+    isNull() {
         return this instanceof NullCommittedMessage;
     }
 }
@@ -722,7 +722,7 @@ function getSigningKeyId(signingKeyId) {
         if (signingKeyId) {
             return new signing_key_id_1.SigningKeyId(signingKeyId);
         }
-        return (0, signing_key_id_1.emptySigningKeyId)();
+        return (0, signing_key_id_1.nullSigningKeyId)();
     });
 }
 function getCommitOptions(inputs) {
@@ -761,8 +761,8 @@ function run() {
                 case ACTION_NEXT_JOB: {
                     const nextJob = queue.getNextJob();
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
-                        context.setOutput('job_found', !nextJob.isEmpty());
-                        if (!nextJob.isEmpty()) {
+                        context.setOutput('job_found', !nextJob.isNull());
+                        if (!nextJob.isNull()) {
                             context.setOutput('job_commit', nextJob.commitHash().toString());
                             context.setOutput('job_payload', nextJob.payload());
                             core.info(`job_commit: ${nextJob.commitHash()}`);
@@ -975,13 +975,13 @@ class Queue {
             : (0, committed_message_1.nullMessage)();
     }
     guardThatThereIsNoPendingJobs() {
-        if (!this.getNextJob().isEmpty()) {
+        if (!this.getNextJob().isNull()) {
             throw new errors_1.PendingJobsLimitReachedError(this.getNextJob().commitHash().toString());
         }
     }
     guardThatThereIsAPendingJob() {
         const pendingJob = this.getNextJob();
-        if (pendingJob.isEmpty()) {
+        if (pendingJob.isNull()) {
             throw new errors_1.NoPendingJobsFoundError(this.name.toString());
         }
         return pendingJob;
@@ -1039,7 +1039,7 @@ exports.Queue = Queue;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.emptySigningKeyId = exports.SigningKeyId = void 0;
+exports.nullSigningKeyId = exports.SigningKeyId = void 0;
 class SigningKeyId {
     constructor(id) {
         this.id = id;
@@ -1050,15 +1050,15 @@ class SigningKeyId {
     toString() {
         return this.id;
     }
-    isEmpty() {
+    isNull() {
         return this.id === '';
     }
 }
 exports.SigningKeyId = SigningKeyId;
-function emptySigningKeyId() {
+function nullSigningKeyId() {
     return new SigningKeyId('');
 }
-exports.emptySigningKeyId = emptySigningKeyId;
+exports.nullSigningKeyId = nullSigningKeyId;
 
 
 /***/ }),

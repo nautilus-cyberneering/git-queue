@@ -101,7 +101,7 @@ export class Queue {
   }
 
   guardThatThereIsNoPendingJobs(): void {
-    if (!this.getNextJob().isEmpty()) {
+    if (!this.getNextJob().isNull()) {
       throw new PendingJobsLimitReachedError(
         this.getNextJob().commitHash().toString()
       )
@@ -110,7 +110,7 @@ export class Queue {
 
   guardThatThereIsAPendingJob(): CommittedMessage {
     const pendingJob = this.getNextJob()
-    if (pendingJob.isEmpty()) {
+    if (pendingJob.isNull()) {
       throw new NoPendingJobsFoundError(this.name.toString())
     }
     return pendingJob

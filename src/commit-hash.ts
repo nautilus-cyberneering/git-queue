@@ -1,4 +1,6 @@
-export class CommitHash {
+import {Nullable} from './nullable'
+
+export class CommitHash implements Nullable {
   value: string
 
   constructor(value: string) {

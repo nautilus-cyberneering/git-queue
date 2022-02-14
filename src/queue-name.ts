@@ -1,4 +1,6 @@
-export class QueueName {
+import {Nullable} from './nullable'
+
+export class QueueName implements Nullable {
   value: string
 
   constructor(value: string) {

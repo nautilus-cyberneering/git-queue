@@ -1,4 +1,6 @@
-export class SigningKeyId {
+import {Nullable} from './nullable'
+
+export class SigningKeyId implements Nullable {
   id: string
 
   constructor(id: string) {
@@ -13,11 +15,11 @@ export class SigningKeyId {
     return this.id
   }
 
-  isEmpty(): boolean {
+  isNull(): boolean {
     return this.id === ''
   }
 }
 
-export function emptySigningKeyId(): SigningKeyId {
+export function nullSigningKeyId(): SigningKeyId {
   return new SigningKeyId('')
 }

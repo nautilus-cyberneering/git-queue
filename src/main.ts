@@ -2,7 +2,7 @@ import * as context from './context'
 import * as core from '@actions/core'
 
 import {CommitAuthor, emptyCommitAuthor} from './commit-author'
-import {SigningKeyId, emptySigningKeyId} from './signing-key-id'
+import {SigningKeyId, nullSigningKeyId} from './signing-key-id'
 
 import {CommitOptions} from './commit-options'
 import {Inputs} from './context'
@@ -33,7 +33,7 @@ async function getSigningKeyId(signingKeyId: string): Promise<SigningKeyId> {
   if (signingKeyId) {
     return new SigningKeyId(signingKeyId)
   }
-  return emptySigningKeyId()
+  return nullSigningKeyId()
 }
 
 async function getCommitOptions(inputs: Inputs): Promise<CommitOptions> {
@@ -91,9 +91,9 @@ async function run(): Promise<void> {
         const nextJob = queue.getNextJob()
 
         await core.group(`Setting outputs`, async () => {
-          context.setOutput('job_found', !nextJob.isEmpty())
+          context.setOutput('job_found', !nextJob.isNull())
 
-          if (!nextJob.isEmpty()) {
+          if (!nextJob.isNull()) {
             context.setOutput('job_commit', nextJob.commitHash().toString())
             context.setOutput('job_payload', nextJob.payload())
 

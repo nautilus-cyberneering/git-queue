@@ -75,7 +75,7 @@ describe('Queue', () => {
 
     const nextJob = queue.getNextJob()
 
-    expect(nextJob.isEmpty()).toBe(true)
+    expect(nextJob.isNull()).toBe(true)
   })
 
   it('should allow to specify the commit author', async () => {

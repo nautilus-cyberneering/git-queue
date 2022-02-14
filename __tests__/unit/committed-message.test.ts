@@ -114,7 +114,7 @@ describe('Queue', () => {
   it('should have an special empty message which represents NO message', async () => {
     const message = nullMessage()
 
-    expect(message.isEmpty()).toBe(true)
+    expect(message.isNull()).toBe(true)
   })
 
   it('should throw an error when trying to build a message from a no-queue commit', async () => {
