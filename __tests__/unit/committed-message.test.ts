@@ -35,6 +35,34 @@ describe('Queue', () => {
     expect(message).toBeInstanceOf(NewJobCommittedMessage)
   })
 
+  it('should return the commit info', async () => {
+    const commit: DefaultLogFields = {
+      hash: 'f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
+      date: 'not relevant',
+      message: dummyNewJobCommitSubjectText(),
+      refs: 'not relevant',
+      body: 'not relevant',
+      author_name: 'not relevant',
+      author_email: 'not relevant'
+    }
+
+    const message = CommittedMessage.fromCommitInfo(
+      CommitInfo.fromDefaultLogFields(commit)
+    )
+
+    const expectedCommitInfo = new CommitInfo(
+      new CommitHash('f1a69d48a01cc130a64aeac5eaf762e4ba685de7'),
+      'not relevant',
+      dummyNewJobCommitSubjectText(),
+      'not relevant',
+      'not relevant',
+      'not relevant',
+      'not relevant'
+    )
+
+    expect(message.commitInfo().equalsTo(expectedCommitInfo)).toBe(true)
+  })
+
   it('should return the hash of the commit where the message was stored', async () => {
     const commit: DefaultLogFields = {
       hash: '8324b0720e4312e0a933a74e840bc2f042999452',
@@ -123,6 +151,27 @@ describe('Queue', () => {
         hash: 'not relevant',
         date: 'not relevant',
         message: 'NO VALID COMMIT SUBJECT',
+        refs: 'not relevant',
+        body: 'not relevant',
+        author_name: 'not relevant',
+        author_email: 'not relevant'
+      }
+
+      return CommittedMessage.fromCommitInfo(
+        CommitInfo.fromDefaultLogFields(commit)
+      )
+    }
+
+    expect(fn).toThrow(Error)
+  })
+
+  it('should throw an error when trying to build a message with an invalid message key', async () => {
+    const fn = (): CommittedMessage => {
+      const commit: DefaultLogFields = {
+        hash: 'not relevant',
+        date: 'not relevant',
+        message:
+          '📝INVALID: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
         refs: 'not relevant',
         body: 'not relevant',
         author_name: 'not relevant',

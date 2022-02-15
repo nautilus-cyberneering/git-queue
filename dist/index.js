@@ -121,6 +121,15 @@ class CommitInfo {
     static fromDefaultLogFields(defaultLogFields) {
         return new CommitInfo(new commit_hash_1.CommitHash(defaultLogFields.hash), defaultLogFields.date, defaultLogFields.message, defaultLogFields.refs, defaultLogFields.body, defaultLogFields.author_name, defaultLogFields.author_email);
     }
+    equalsTo(other) {
+        return (this.hash.equalsTo(other.hash) &&
+            this.date === other.date &&
+            this.message === other.message &&
+            this.refs === other.refs &&
+            this.body === other.body &&
+            this.authorName === other.authorName &&
+            this.authorEmail === other.authorEmail);
+    }
 }
 exports.CommitInfo = CommitInfo;
 function nullCommitInfo() {
@@ -1010,7 +1019,7 @@ class Queue {
             const commitResult = yield this.git.commit(commitMessage.forSimpleGit(), this.commitOptions.forSimpleGit());
             yield this.loadMessagesFromGit();
             const committedMessage = this.findCommittedMessageByCommit(new commit_hash_1.CommitHash(commitResult.commit));
-            return committedMessage.commit;
+            return committedMessage.commitInfo();
         });
     }
     findCommittedMessageByCommit(commitHash) {

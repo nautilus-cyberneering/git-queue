@@ -39,6 +39,18 @@ export class CommitInfo {
       defaultLogFields.author_email
     )
   }
+
+  equalsTo(other: CommitInfo): boolean {
+    return (
+      this.hash.equalsTo(other.hash) &&
+      this.date === other.date &&
+      this.message === other.message &&
+      this.refs === other.refs &&
+      this.body === other.body &&
+      this.authorName === other.authorName &&
+      this.authorEmail === other.authorEmail
+    )
+  }
 }
 
 export function nullCommitInfo(): CommitInfo {

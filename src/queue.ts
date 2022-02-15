@@ -154,7 +154,7 @@ export class Queue {
     const committedMessage = this.findCommittedMessageByCommit(
       new CommitHash(commitResult.commit)
     )
-    return committedMessage.commit
+    return committedMessage.commitInfo()
   }
 
   findCommittedMessageByCommit(commitHash: CommitHash): CommittedMessage {

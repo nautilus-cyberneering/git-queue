@@ -5,7 +5,7 @@ import {InvalidMessageKeyError} from './errors'
 import {Nullable} from './nullable'
 
 export abstract class CommittedMessage implements Nullable {
-  commit: CommitInfo
+  private readonly commit: CommitInfo
 
   constructor(commit: CommitInfo) {
     this.commit = commit
