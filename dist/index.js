@@ -1,7 +1,7 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 606:
+/***/ 1606:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -30,7 +30,7 @@ class CommitAuthor {
     toString() {
         return this.emailAddress.toString();
     }
-    isEmpty() {
+    isNull() {
         return (this.getName() === NO_AUTHOR_NAME && this.getEmail() === NO_AUTHOR_EMAIL);
     }
 }
@@ -39,6 +39,123 @@ function emptyCommitAuthor() {
     return CommitAuthor.fromNameAndEmail(NO_AUTHOR_NAME, NO_AUTHOR_EMAIL);
 }
 exports.emptyCommitAuthor = emptyCommitAuthor;
+
+
+/***/ }),
+
+/***/ 3801:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CommitBody = void 0;
+class CommitBody {
+    constructor(text) {
+        this.text = text;
+    }
+    toString() {
+        return this.text;
+    }
+    equalsTo(other) {
+        return this.text === other.text;
+    }
+}
+exports.CommitBody = CommitBody;
+
+
+/***/ }),
+
+/***/ 5533:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.nullCommitHash = exports.CommitHash = void 0;
+class CommitHash {
+    constructor(value) {
+        // TODO: validation
+        this.value = value;
+    }
+    getHash() {
+        return this.value;
+    }
+    isNull() {
+        return this.value === '';
+    }
+    equalsTo(other) {
+        return this.value === other.value;
+    }
+    toString() {
+        return this.value;
+    }
+}
+exports.CommitHash = CommitHash;
+function nullCommitHash() {
+    return new CommitHash('');
+}
+exports.nullCommitHash = nullCommitHash;
+
+
+/***/ }),
+
+/***/ 4136:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.nullCommitInfo = exports.CommitInfo = void 0;
+const commit_hash_1 = __nccwpck_require__(5533);
+class CommitInfo {
+    constructor(hash, date, message, refs, body, authorName, authorEmail) {
+        this.hash = hash;
+        this.date = date;
+        this.message = message;
+        this.refs = refs;
+        this.body = body;
+        this.authorName = authorName;
+        this.authorEmail = authorEmail;
+    }
+    static fromDefaultLogFields(defaultLogFields) {
+        return new CommitInfo(new commit_hash_1.CommitHash(defaultLogFields.hash), defaultLogFields.date, defaultLogFields.message, defaultLogFields.refs, defaultLogFields.body, defaultLogFields.author_name, defaultLogFields.author_email);
+    }
+}
+exports.CommitInfo = CommitInfo;
+function nullCommitInfo() {
+    return new CommitInfo((0, commit_hash_1.nullCommitHash)(), '', '', '', '', '', '');
+}
+exports.nullCommitInfo = nullCommitInfo;
+
+
+/***/ }),
+
+/***/ 1961:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CommitMessage = void 0;
+const commit_body_1 = __nccwpck_require__(3801);
+const commit_subject_parser_1 = __nccwpck_require__(386);
+class CommitMessage {
+    constructor(subject, body) {
+        this.subject = subject;
+        this.body = body;
+    }
+    static fromText(subject, body) {
+        return new CommitMessage(commit_subject_parser_1.CommitSubjectParser.parseText(subject), new commit_body_1.CommitBody(body));
+    }
+    equalsTo(other) {
+        return (this.subject.equalsTo(other.subject) && this.body.equalsTo(other.body));
+    }
+    forSimpleGit() {
+        return [this.subject.toString(), this.body.toString()];
+    }
+}
+exports.CommitMessage = CommitMessage;
 
 
 /***/ }),
@@ -57,18 +174,18 @@ class CommitOptions {
         this.noGpgSig = noGpgSig;
     }
     forSimpleGit() {
-        return Object.assign(Object.assign(Object.assign({ '--allow-empty': null }, (!this.author.isEmpty() && {
+        return Object.assign(Object.assign(Object.assign({ '--allow-empty': null }, (!this.author.isNull() && {
             '--author': `"${this.author.toString()}"`
-        })), (!this.gpgSig.isEmpty() && {
+        })), (!this.gpgSig.isNull() && {
             '--gpg-sign': this.gpgSig.toString()
         })), (this.noGpgSig && { '--no-gpg-sign': null }));
     }
     toString() {
         const allowEmpty = '--allow-empty';
-        const author = this.author.isEmpty()
+        const author = this.author.isNull()
             ? ''
             : `--author="${this.author.toString()}"`;
-        const gpgSig = this.gpgSig.isEmpty()
+        const gpgSig = this.gpgSig.isNull()
             ? ''
             : `--gpg-sign=${this.gpgSig.toString()}`;
         const noGpgSig = this.noGpgSig ? '--no-gpg-sign' : '';
@@ -80,36 +197,187 @@ exports.CommitOptions = CommitOptions;
 
 /***/ }),
 
-/***/ 873:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ 386:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.nullCommit = exports.Commit = void 0;
-class Commit {
-    constructor(hash) {
-        this.hash = hash;
+exports.CommitSubjectParser = exports.commitSubjectBelongsToAQueue = exports.COMMIT_SUBJECT_JOB_REF_PREFIX = exports.COMMIT_SUBJECT_DELIMITER = exports.COMMIT_SUBJECT_PREFIX = void 0;
+const errors_1 = __nccwpck_require__(9292);
+const commit_hash_1 = __nccwpck_require__(5533);
+const commit_subject_1 = __nccwpck_require__(8798);
+const message_key_1 = __nccwpck_require__(493);
+const queue_name_1 = __nccwpck_require__(7894);
+exports.COMMIT_SUBJECT_PREFIX = '📝';
+exports.COMMIT_SUBJECT_DELIMITER = ':';
+exports.COMMIT_SUBJECT_JOB_REF_PREFIX = 'job.ref.';
+function commitSubjectBelongsToAQueue(subject) {
+    return CommitSubjectParser.commitSubjectBelongsToAQueue(subject);
+}
+exports.commitSubjectBelongsToAQueue = commitSubjectBelongsToAQueue;
+class CommitSubjectParser {
+    constructor(text) {
+        this.text = text;
+    }
+    static commitSubjectBelongsToAQueue(subject) {
+        return subject.startsWith(exports.COMMIT_SUBJECT_PREFIX);
+    }
+    static parseText(text) {
+        const parser = new CommitSubjectParser(text);
+        return new commit_subject_1.CommitSubject(parser.getMessageKey(), parser.getQueueName(), parser.getJobRef());
+    }
+    static toText(commitSubject) {
+        const jobRef = commitSubject.getJobRef().isNull()
+            ? ''
+            : `${exports.COMMIT_SUBJECT_DELIMITER} ${exports.COMMIT_SUBJECT_JOB_REF_PREFIX}${commitSubject
+                .getJobRef()
+                .toString()}`;
+        return `${exports.COMMIT_SUBJECT_PREFIX}${commitSubject
+            .getMessageKey()
+            .toString()}${exports.COMMIT_SUBJECT_DELIMITER} ${commitSubject
+            .getQueueName()
+            .toString()}${jobRef}`;
+    }
+    getQueueName() {
+        const parts = this.text.split(exports.COMMIT_SUBJECT_DELIMITER);
+        if (parts[1] === undefined) {
+            throw new errors_1.MissingQueueNameInCommitSubjectError(this.text);
+        }
+        const queueName = parts[1].trim();
+        if (queueName === '') {
+            throw new errors_1.MissingQueueNameInCommitSubjectError(this.text);
+        }
+        return new queue_name_1.QueueName(parts[1].trim());
+    }
+    getMessageKey() {
+        const queuePrefix = this.text.indexOf(exports.COMMIT_SUBJECT_PREFIX);
+        const colonPos = this.text.indexOf(exports.COMMIT_SUBJECT_DELIMITER);
+        const messageKey = this.text.substring(queuePrefix + exports.COMMIT_SUBJECT_PREFIX.length, colonPos);
+        if (messageKey === '') {
+            throw new errors_1.MissingMessageKeyInCommitSubjectError(this.text);
+        }
+        return new message_key_1.MessageKey(this.text.substring(queuePrefix + exports.COMMIT_SUBJECT_PREFIX.length, colonPos));
+    }
+    getJobRef() {
+        const jobRef = this.text.indexOf(exports.COMMIT_SUBJECT_JOB_REF_PREFIX);
+        const commitHash = this.text
+            .substring(jobRef + exports.COMMIT_SUBJECT_JOB_REF_PREFIX.length)
+            .trim();
+        if (commitHash === '') {
+            throw new errors_1.MissingCommitHashInJobReferenceError(this.text);
+        }
+        return new commit_hash_1.CommitHash(commitHash);
     }
 }
-exports.Commit = Commit;
-function nullCommit() {
-    return {
-        hash: '',
-        date: '',
-        message: '',
-        refs: '',
-        body: '',
-        author_name: '',
-        author_email: ''
-    };
-}
-exports.nullCommit = nullCommit;
+exports.CommitSubjectParser = CommitSubjectParser;
 
 
 /***/ }),
 
-/***/ 842:
+/***/ 8798:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CommitSubject = void 0;
+const commit_subject_parser_1 = __nccwpck_require__(386);
+/* The first line of a commit message.
+ * Format: {COMMIT_SUBJECT_PREFIX}{MESSAGE_KEY}: {QUEUE_NAME}: job.ref.{COMMIT_HASH}
+ * Example: 📝✅: queue_name: job.ref.1e31b549c630f806961a291b4e3d4a1471f37490
+ */
+class CommitSubject {
+    constructor(messageKey, queueName, jobRef) {
+        this.messageKey = messageKey;
+        this.queueName = queueName;
+        this.jobRef = jobRef;
+    }
+    static fromMessageAndQueueName(message, queueName) {
+        return new CommitSubject(message.getKey(), queueName, message.getJobRef());
+    }
+    toString() {
+        return commit_subject_parser_1.CommitSubjectParser.toText(this);
+    }
+    equalsTo(other) {
+        return this.toString() === other.toString();
+    }
+    belongsToQueue(queueName) {
+        return this.queueName.equalsTo(queueName);
+    }
+    getMessageKey() {
+        return this.messageKey;
+    }
+    getQueueName() {
+        return this.queueName;
+    }
+    getJobRef() {
+        return this.jobRef;
+    }
+}
+exports.CommitSubject = CommitSubject;
+
+
+/***/ }),
+
+/***/ 6537:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.nullMessage = exports.JobFinishedCommittedMessage = exports.NewJobCommittedMessage = exports.NullCommittedMessage = exports.CommittedMessage = void 0;
+const commit_info_1 = __nccwpck_require__(4136);
+const commit_subject_parser_1 = __nccwpck_require__(386);
+const errors_1 = __nccwpck_require__(9292);
+class CommittedMessage {
+    constructor(commit) {
+        this.commit = commit;
+    }
+    static fromCommitInfo(commit) {
+        const messageKey = commit_subject_parser_1.CommitSubjectParser.parseText(commit.message).getMessageKey();
+        switch (messageKey.toString()) {
+            case '🈺': {
+                return new NewJobCommittedMessage(commit);
+            }
+            case '✅': {
+                return new JobFinishedCommittedMessage(commit);
+            }
+        }
+        throw new errors_1.InvalidMessageKeyError(messageKey.toString());
+    }
+    commitInfo() {
+        return this.commit;
+    }
+    commitHash() {
+        return this.commit.hash;
+    }
+    payload() {
+        return this.commit.body.trim();
+    }
+    isNull() {
+        return this instanceof NullCommittedMessage;
+    }
+}
+exports.CommittedMessage = CommittedMessage;
+class NullCommittedMessage extends CommittedMessage {
+}
+exports.NullCommittedMessage = NullCommittedMessage;
+class NewJobCommittedMessage extends CommittedMessage {
+}
+exports.NewJobCommittedMessage = NewJobCommittedMessage;
+class JobFinishedCommittedMessage extends CommittedMessage {
+}
+exports.JobFinishedCommittedMessage = JobFinishedCommittedMessage;
+function nullMessage() {
+    return new NullCommittedMessage((0, commit_info_1.nullCommitInfo)());
+}
+exports.nullMessage = nullMessage;
+
+
+/***/ }),
+
+/***/ 3842:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -144,8 +412,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.setOutput = exports.getInputs = void 0;
-const core = __importStar(__nccwpck_require__(186));
-const command_1 = __nccwpck_require__(351);
+const core = __importStar(__nccwpck_require__(2186));
+const command_1 = __nccwpck_require__(7351);
 function getInputs() {
     return __awaiter(this, void 0, void 0, function* () {
         return {
@@ -252,7 +520,7 @@ exports.emailIsValid = emailIsValid;
 
 /***/ }),
 
-/***/ 434:
+/***/ 8751:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -281,6 +549,59 @@ function getErrorMessage(error) {
     return toErrorWithMessage(error).message;
 }
 exports.getErrorMessage = getErrorMessage;
+
+
+/***/ }),
+
+/***/ 9292:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NoPendingJobsFoundError = exports.PendingJobsLimitReachedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+class MissingQueueNameInCommitSubjectError extends Error {
+    constructor(commitSubject) {
+        super(`Missing queue name in commit subject: ${commitSubject}`);
+        Object.setPrototypeOf(this, MissingQueueNameInCommitSubjectError.prototype);
+    }
+}
+exports.MissingQueueNameInCommitSubjectError = MissingQueueNameInCommitSubjectError;
+class MissingMessageKeyInCommitSubjectError extends Error {
+    constructor(commitSubject) {
+        super(`Missing message key in commit subject: ${commitSubject}`);
+        Object.setPrototypeOf(this, MissingMessageKeyInCommitSubjectError.prototype);
+    }
+}
+exports.MissingMessageKeyInCommitSubjectError = MissingMessageKeyInCommitSubjectError;
+class MissingCommitHashInJobReferenceError extends Error {
+    constructor(commitSubject) {
+        super(`Missing commit hash in job reference in commit subject: ${commitSubject}`);
+        Object.setPrototypeOf(this, MissingMessageKeyInCommitSubjectError.prototype);
+    }
+}
+exports.MissingCommitHashInJobReferenceError = MissingCommitHashInJobReferenceError;
+class InvalidMessageKeyError extends Error {
+    constructor(messageKey) {
+        super(`Invalid message key: ${messageKey}`);
+        Object.setPrototypeOf(this, InvalidMessageKeyError.prototype);
+    }
+}
+exports.InvalidMessageKeyError = InvalidMessageKeyError;
+class PendingJobsLimitReachedError extends Error {
+    constructor(commitHash) {
+        super(`Can't create a new job. There is already a pending job in commit: ${commitHash}`);
+        Object.setPrototypeOf(this, PendingJobsLimitReachedError.prototype);
+    }
+}
+exports.PendingJobsLimitReachedError = PendingJobsLimitReachedError;
+class NoPendingJobsFoundError extends Error {
+    constructor(queueName) {
+        super(`Can't mark job as finished. There isn't any pending job in queue: ${queueName}`);
+        Object.setPrototypeOf(this, NoPendingJobsFoundError.prototype);
+    }
+}
+exports.NoPendingJobsFoundError = NoPendingJobsFoundError;
 
 
 /***/ }),
@@ -320,8 +641,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getGnupgHome = void 0;
-const os = __importStar(__nccwpck_require__(37));
-const path = __importStar(__nccwpck_require__(17));
+const os = __importStar(__nccwpck_require__(2037));
+const path = __importStar(__nccwpck_require__(1017));
 const getGnupgHome = () => __awaiter(void 0, void 0, void 0, function* () {
     if (process.env.GNUPGHOME) {
         return process.env.GNUPGHOME;
@@ -337,7 +658,7 @@ exports.getGnupgHome = getGnupgHome;
 
 /***/ }),
 
-/***/ 109:
+/***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -371,21 +692,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const context = __importStar(__nccwpck_require__(842));
-const core = __importStar(__nccwpck_require__(186));
-const commit_author_1 = __nccwpck_require__(606);
-const signing_key_id_1 = __nccwpck_require__(869);
+const context = __importStar(__nccwpck_require__(3842));
+const core = __importStar(__nccwpck_require__(2186));
+const commit_author_1 = __nccwpck_require__(1606);
+const signing_key_id_1 = __nccwpck_require__(9869);
 const commit_options_1 = __nccwpck_require__(360);
-const queue_1 = __nccwpck_require__(65);
-const simple_git_factory_1 = __nccwpck_require__(649);
-const error_1 = __nccwpck_require__(434);
+const queue_1 = __nccwpck_require__(7065);
+const queue_name_1 = __nccwpck_require__(7894);
+const simple_git_factory_1 = __nccwpck_require__(9649);
+const error_1 = __nccwpck_require__(8751);
 const gpg_env_1 = __nccwpck_require__(314);
 const ACTION_CREATE_JOB = 'create-job';
 const ACTION_NEXT_JOB = 'next-job';
-const ACTION_MARK_JOB_AS_DONE = 'mark-job-as-done';
+const ACTION_FINISH_JOB = 'finish-job';
 function actionOptions() {
-    const options = [ACTION_CREATE_JOB, ACTION_NEXT_JOB, ACTION_MARK_JOB_AS_DONE];
-    return options.toString();
+    const options = [ACTION_CREATE_JOB, ACTION_NEXT_JOB, ACTION_FINISH_JOB];
+    return options.join(', ');
 }
 function getCommitAuthor(commitAuthor) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -400,7 +722,7 @@ function getSigningKeyId(signingKeyId) {
         if (signingKeyId) {
             return new signing_key_id_1.SigningKeyId(signingKeyId);
         }
-        return (0, signing_key_id_1.emptySigningKeyId)();
+        return (0, signing_key_id_1.nullSigningKeyId)();
     });
 }
 function getCommitOptions(inputs) {
@@ -423,14 +745,14 @@ function run() {
                 core.info(`gnupg_home_dir: ${gnuPGHomeDir}`);
             }));
             const git = yield (0, simple_git_factory_1.createInstance)(gitRepoDir);
-            const queue = yield queue_1.Queue.create(inputs.queueName, gitRepoDir, git);
+            const queue = yield queue_1.Queue.create(new queue_name_1.QueueName(inputs.queueName), gitRepoDir, git);
             const commitOptions = yield getCommitOptions(inputs);
             switch (inputs.action) {
                 case ACTION_CREATE_JOB: {
                     const createJobCommit = yield queue.createJob(inputs.jobPayload, commitOptions);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_created', true);
-                        context.setOutput('job_commit', createJobCommit.hash);
+                        context.setOutput('job_commit', createJobCommit.hash.toString());
                         core.info(`job_created: true`);
                         core.info(`job_commit: ${createJobCommit.hash}`);
                     }));
@@ -439,9 +761,9 @@ function run() {
                 case ACTION_NEXT_JOB: {
                     const nextJob = queue.getNextJob();
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
-                        context.setOutput('job_found', !nextJob.isEmpty());
-                        if (!nextJob.isEmpty()) {
-                            context.setOutput('job_commit', nextJob.commitHash());
+                        context.setOutput('job_found', !nextJob.isNull());
+                        if (!nextJob.isNull()) {
+                            context.setOutput('job_commit', nextJob.commitHash().toString());
                             context.setOutput('job_payload', nextJob.payload());
                             core.info(`job_commit: ${nextJob.commitHash()}`);
                             core.info(`job_payload: ${nextJob.payload()}`);
@@ -449,19 +771,18 @@ function run() {
                     }));
                     break;
                 }
-                case ACTION_MARK_JOB_AS_DONE: {
-                    const markJobAsDoneCommit = yield queue.markJobAsDone(inputs.jobPayload, commitOptions);
+                case ACTION_FINISH_JOB: {
+                    const markJobAsFinishedCommit = yield queue.markJobAsFinished(inputs.jobPayload, commitOptions);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
-                        // TODO: 'commit_created' or 'job_marked_as_done' or 'job_updated' instead of 'job_created'
-                        context.setOutput('job_created', true);
-                        context.setOutput('job_commit', markJobAsDoneCommit.hash);
-                        core.info(`job_created: true`);
-                        core.info(`job_commit: ${markJobAsDoneCommit.hash}`);
+                        context.setOutput('job_finished', true);
+                        context.setOutput('job_commit', markJobAsFinishedCommit.hash.toString());
+                        core.info(`job_finished: true`);
+                        core.info(`job_commit: ${markJobAsFinishedCommit.hash}`);
                     }));
                     break;
                 }
                 default: {
-                    core.error(`Invalid action. Actions can only be: ${actionOptions}`);
+                    core.error(`Invalid action. Actions can only be: ${actionOptions()}`);
                 }
             }
         }
@@ -475,33 +796,102 @@ run();
 
 /***/ }),
 
-/***/ 307:
+/***/ 493:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MarkJobAsDoneMessage = exports.CreateJobMessage = exports.Message = void 0;
-class Message {
-    constructor(payload) {
-        this.payload = payload;
+exports.MessageKey = void 0;
+class MessageKey {
+    constructor(id) {
+        this.id = id;
     }
-    getPayload() {
-        return this.payload;
+    equalsTo(other) {
+        return this.id === other.id;
+    }
+    toString() {
+        return this.id;
     }
 }
-exports.Message = Message;
-class CreateJobMessage extends Message {
-}
-exports.CreateJobMessage = CreateJobMessage;
-class MarkJobAsDoneMessage extends Message {
-}
-exports.MarkJobAsDoneMessage = MarkJobAsDoneMessage;
+exports.MessageKey = MessageKey;
 
 
 /***/ }),
 
-/***/ 65:
+/***/ 3307:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.JobFinishedMessage = exports.NewJobMessage = exports.Message = void 0;
+const commit_hash_1 = __nccwpck_require__(5533);
+const message_key_1 = __nccwpck_require__(493);
+class Message {
+    constructor(payload, jobRef = (0, commit_hash_1.nullCommitHash)()) {
+        this.payload = payload;
+        this.jobRef = jobRef;
+    }
+    getPayload() {
+        return this.payload;
+    }
+    getJobRef() {
+        return this.jobRef;
+    }
+    hasJobRef() {
+        return !this.jobRef.isNull();
+    }
+}
+exports.Message = Message;
+class NewJobMessage extends Message {
+    getKey() {
+        return new message_key_1.MessageKey('🈺');
+    }
+}
+exports.NewJobMessage = NewJobMessage;
+class JobFinishedMessage extends Message {
+    getKey() {
+        return new message_key_1.MessageKey('✅');
+    }
+}
+exports.JobFinishedMessage = JobFinishedMessage;
+
+
+/***/ }),
+
+/***/ 7894:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.nullQueueName = exports.QueueName = void 0;
+class QueueName {
+    constructor(value) {
+        // TODO: validation. Issue -> https://github.com/Nautilus-Cyberneering/git-queue/issues/39
+        this.value = value;
+    }
+    isNull() {
+        return this.value === '';
+    }
+    equalsTo(other) {
+        return this.value === other.value;
+    }
+    toString() {
+        return this.value;
+    }
+}
+exports.QueueName = QueueName;
+function nullQueueName() {
+    return new QueueName('');
+}
+exports.nullQueueName = nullQueueName;
+
+
+/***/ }),
+
+/***/ 7065:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -517,15 +907,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Queue = void 0;
-const stored_message_1 = __nccwpck_require__(683);
-const message_1 = __nccwpck_require__(307);
-const commit_1 = __nccwpck_require__(873);
+const commit_subject_parser_1 = __nccwpck_require__(386);
+const committed_message_1 = __nccwpck_require__(6537);
+const message_1 = __nccwpck_require__(3307);
+const errors_1 = __nccwpck_require__(9292);
+const commit_body_1 = __nccwpck_require__(3801);
+const commit_hash_1 = __nccwpck_require__(5533);
+const commit_info_1 = __nccwpck_require__(4136);
+const commit_message_1 = __nccwpck_require__(1961);
+const commit_subject_1 = __nccwpck_require__(8798);
 class Queue {
     constructor(name, gitRepoDir, git) {
         this.name = name;
         this.gitRepoDir = gitRepoDir;
         this.git = git;
-        this.storedMessages = [];
+        this.committedMessages = [];
     }
     static create(name, gitRepoDir, git) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -544,8 +940,8 @@ class Queue {
             const currentBranch = status.current;
             try {
                 const gitLog = yield this.git.log();
-                const commits = gitLog.all.filter(commit => this.commitBelongsToQueue(commit));
-                this.storedMessages = commits.map(commit => (0, stored_message_1.messageFactoryFromCommit)(commit));
+                const commits = gitLog.all.filter(commit => this.commitBelongsToQueue(commit.message));
+                this.committedMessages = commits.map(commit => committed_message_1.CommittedMessage.fromCommitInfo(commit_info_1.CommitInfo.fromDefaultLogFields(commit)));
             }
             catch (err) {
                 if (err.message.includes(`fatal: your current branch '${currentBranch}' does not have any commits yet`)) {
@@ -557,74 +953,79 @@ class Queue {
             }
         });
     }
-    commitBelongsToQueue(commit) {
-        return commit.message.endsWith(this.name) ? true : false;
+    commitBelongsToQueue(commitSubject) {
+        if (!(0, commit_subject_parser_1.commitSubjectBelongsToAQueue)(commitSubject)) {
+            return false;
+        }
+        return commit_subject_parser_1.CommitSubjectParser.parseText(commitSubject).belongsToQueue(this.name);
     }
     getMessages() {
-        return this.storedMessages;
+        return this.committedMessages;
     }
     getLatestMessage() {
-        return this.isEmpty() ? (0, stored_message_1.nullMessage)() : this.storedMessages[0];
+        return this.isEmpty() ? (0, committed_message_1.nullMessage)() : this.committedMessages[0];
     }
     isEmpty() {
-        return this.storedMessages.length === 0;
+        return this.committedMessages.length === 0;
     }
     getNextJob() {
         const latestMessage = this.getLatestMessage();
-        return latestMessage instanceof stored_message_1.StoredCreateJobMessage
+        return latestMessage instanceof committed_message_1.NewJobCommittedMessage
             ? latestMessage
-            : (0, stored_message_1.nullMessage)();
+            : (0, committed_message_1.nullMessage)();
     }
     guardThatThereIsNoPendingJobs() {
-        if (!this.getNextJob().isEmpty()) {
-            throw new Error(`Can't create a new job. There is already a pending job in commit: ${this.getNextJob().commitHash()}`);
+        if (!this.getNextJob().isNull()) {
+            throw new errors_1.PendingJobsLimitReachedError(this.getNextJob().commitHash().toString());
         }
     }
     guardThatThereIsAPendingJob() {
-        if (this.getNextJob().isEmpty()) {
-            throw new Error(`Can't mark job as done. There isn't any pending job`);
+        const pendingJob = this.getNextJob();
+        if (pendingJob.isNull()) {
+            throw new errors_1.NoPendingJobsFoundError(this.name.toString());
         }
+        return pendingJob;
     }
     createJob(payload, commitOptions) {
         return __awaiter(this, void 0, void 0, function* () {
             this.guardThatThereIsNoPendingJobs();
-            const message = new message_1.CreateJobMessage(payload);
+            const message = new message_1.NewJobMessage(payload);
             return this.commitMessage(message, commitOptions);
         });
     }
-    markJobAsDone(payload, commitOptions) {
+    markJobAsFinished(payload, commitOptions) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.guardThatThereIsAPendingJob();
-            const message = new message_1.MarkJobAsDoneMessage(payload);
+            const pendingJob = this.guardThatThereIsAPendingJob();
+            const message = new message_1.JobFinishedMessage(payload, pendingJob.commitHash());
             return this.commitMessage(message, commitOptions);
         });
     }
     commitMessage(message, commitOptions) {
         return __awaiter(this, void 0, void 0, function* () {
             const commitMessage = this.buildCommitMessage(message);
-            const commitResult = yield this.git.commit(commitMessage, commitOptions.forSimpleGit());
+            const commitResult = yield this.git.commit(commitMessage.forSimpleGit(), commitOptions.forSimpleGit());
             yield this.loadMessagesFromGit();
-            return new commit_1.Commit(commitResult.commit);
+            const committedMessage = this.findCommittedMessageByCommit(new commit_hash_1.CommitHash(commitResult.commit));
+            return committedMessage.commit;
         });
+    }
+    findCommittedMessageByCommit(commitHash) {
+        const commits = this.committedMessages.filter(message => message.commitHash().equalsTo(commitHash));
+        if (commits.length === 0) {
+            return (0, committed_message_1.nullMessage)();
+        }
+        return commits[0];
     }
     buildCommitMessage(message) {
         const commitSubject = this.buildCommitSubject(message);
-        const commitBody = message.getPayload();
-        const commitMessage = [commitSubject, commitBody];
-        return commitMessage;
+        const commitBody = this.buildCommitBody(message);
+        return new commit_message_1.CommitMessage(commitSubject, commitBody);
     }
     buildCommitSubject(message) {
-        let commitSubject;
-        if (message instanceof message_1.CreateJobMessage) {
-            commitSubject = `${stored_message_1.CREATE_JOB_SUBJECT_PREFIX}${this.name}`;
-        }
-        else if (message instanceof message_1.MarkJobAsDoneMessage) {
-            commitSubject = `${stored_message_1.MARK_JOB_AS_DONE_SUBJECT_PREFIX}${this.name}`;
-        }
-        else {
-            throw Error(`Invalid Message type: ${typeof message}`);
-        }
-        return commitSubject;
+        return commit_subject_1.CommitSubject.fromMessageAndQueueName(message, this.name);
+    }
+    buildCommitBody(message) {
+        return new commit_body_1.CommitBody(message.getPayload());
     }
 }
 exports.Queue = Queue;
@@ -632,34 +1033,37 @@ exports.Queue = Queue;
 
 /***/ }),
 
-/***/ 869:
+/***/ 9869:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.emptySigningKeyId = exports.SigningKeyId = void 0;
+exports.nullSigningKeyId = exports.SigningKeyId = void 0;
 class SigningKeyId {
     constructor(id) {
         this.id = id;
     }
+    equalsTo(other) {
+        return this.id === other.id;
+    }
     toString() {
         return this.id;
     }
-    isEmpty() {
+    isNull() {
         return this.id === '';
     }
 }
 exports.SigningKeyId = SigningKeyId;
-function emptySigningKeyId() {
+function nullSigningKeyId() {
     return new SigningKeyId('');
 }
-exports.emptySigningKeyId = emptySigningKeyId;
+exports.nullSigningKeyId = nullSigningKeyId;
 
 
 /***/ }),
 
-/***/ 649:
+/***/ 9649:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -678,7 +1082,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createInstance = void 0;
-const simple_git_1 = __importDefault(__nccwpck_require__(959));
+const simple_git_1 = __importDefault(__nccwpck_require__(4959));
 function getGitConfig(key, git) {
     return __awaiter(this, void 0, void 0, function* () {
         const option = yield git.getConfig(key);
@@ -737,60 +1141,7 @@ exports.createInstance = createInstance;
 
 /***/ }),
 
-/***/ 683:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.messageFactoryFromCommit = exports.nullMessage = exports.StoredMarkJobAsDoneMessage = exports.StoredCreateJobMessage = exports.NullMessage = exports.StoredMessage = exports.MARK_JOB_AS_DONE_SUBJECT_PREFIX = exports.CREATE_JOB_SUBJECT_PREFIX = void 0;
-const commit_1 = __nccwpck_require__(873);
-exports.CREATE_JOB_SUBJECT_PREFIX = 'CLAIM LOCK: JOB: ';
-exports.MARK_JOB_AS_DONE_SUBJECT_PREFIX = 'RELEASE LOCK: JOB DONE: ';
-class StoredMessage {
-    constructor(commit) {
-        this.commit = commit;
-    }
-    commitHash() {
-        return this.commit.hash;
-    }
-    payload() {
-        return this.commit.body.trim();
-    }
-    isEmpty() {
-        return this instanceof NullMessage;
-    }
-}
-exports.StoredMessage = StoredMessage;
-class NullMessage extends StoredMessage {
-}
-exports.NullMessage = NullMessage;
-class StoredCreateJobMessage extends StoredMessage {
-}
-exports.StoredCreateJobMessage = StoredCreateJobMessage;
-class StoredMarkJobAsDoneMessage extends StoredMessage {
-}
-exports.StoredMarkJobAsDoneMessage = StoredMarkJobAsDoneMessage;
-function nullMessage() {
-    return new NullMessage((0, commit_1.nullCommit)());
-}
-exports.nullMessage = nullMessage;
-function messageFactoryFromCommit(commit) {
-    const commitSubject = commit.message;
-    if (commitSubject.startsWith(exports.CREATE_JOB_SUBJECT_PREFIX)) {
-        return new StoredCreateJobMessage(commit);
-    }
-    if (commitSubject.startsWith(exports.MARK_JOB_AS_DONE_SUBJECT_PREFIX)) {
-        return new StoredMarkJobAsDoneMessage(commit);
-    }
-    throw new Error(`Queue message not found in commit: ${commit.hash}`);
-}
-exports.messageFactoryFromCommit = messageFactoryFromCommit;
-
-
-/***/ }),
-
-/***/ 351:
+/***/ 7351:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -816,8 +1167,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.issue = exports.issueCommand = void 0;
-const os = __importStar(__nccwpck_require__(37));
-const utils_1 = __nccwpck_require__(278);
+const os = __importStar(__nccwpck_require__(2037));
+const utils_1 = __nccwpck_require__(5278);
 /**
  * Commands
  *
@@ -889,7 +1240,7 @@ function escapeProperty(s) {
 
 /***/ }),
 
-/***/ 186:
+/***/ 2186:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -924,12 +1275,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getIDToken = exports.getState = exports.saveState = exports.group = exports.endGroup = exports.startGroup = exports.info = exports.notice = exports.warning = exports.error = exports.debug = exports.isDebug = exports.setFailed = exports.setCommandEcho = exports.setOutput = exports.getBooleanInput = exports.getMultilineInput = exports.getInput = exports.addPath = exports.setSecret = exports.exportVariable = exports.ExitCode = void 0;
-const command_1 = __nccwpck_require__(351);
+const command_1 = __nccwpck_require__(7351);
 const file_command_1 = __nccwpck_require__(717);
-const utils_1 = __nccwpck_require__(278);
-const os = __importStar(__nccwpck_require__(37));
-const path = __importStar(__nccwpck_require__(17));
-const oidc_utils_1 = __nccwpck_require__(41);
+const utils_1 = __nccwpck_require__(5278);
+const os = __importStar(__nccwpck_require__(2037));
+const path = __importStar(__nccwpck_require__(1017));
+const oidc_utils_1 = __nccwpck_require__(8041);
 /**
  * The code to exit an action
  */
@@ -1237,9 +1588,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.issueCommand = void 0;
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const fs = __importStar(__nccwpck_require__(147));
-const os = __importStar(__nccwpck_require__(37));
-const utils_1 = __nccwpck_require__(278);
+const fs = __importStar(__nccwpck_require__(7147));
+const os = __importStar(__nccwpck_require__(2037));
+const utils_1 = __nccwpck_require__(5278);
 function issueCommand(command, message) {
     const filePath = process.env[`GITHUB_${command}`];
     if (!filePath) {
@@ -1257,7 +1608,7 @@ exports.issueCommand = issueCommand;
 
 /***/ }),
 
-/***/ 41:
+/***/ 8041:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -1273,9 +1624,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OidcClient = void 0;
-const http_client_1 = __nccwpck_require__(925);
-const auth_1 = __nccwpck_require__(702);
-const core_1 = __nccwpck_require__(186);
+const http_client_1 = __nccwpck_require__(9925);
+const auth_1 = __nccwpck_require__(3702);
+const core_1 = __nccwpck_require__(2186);
 class OidcClient {
     static createHttpClient(allowRetry = true, maxRetry = 10) {
         const requestOptions = {
@@ -1341,7 +1692,7 @@ exports.OidcClient = OidcClient;
 
 /***/ }),
 
-/***/ 278:
+/***/ 5278:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -1388,7 +1739,7 @@ exports.toCommandProperties = toCommandProperties;
 
 /***/ }),
 
-/***/ 702:
+/***/ 3702:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -1454,15 +1805,15 @@ exports.PersonalAccessTokenCredentialHandler = PersonalAccessTokenCredentialHand
 
 /***/ }),
 
-/***/ 925:
+/***/ 9925:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const http = __nccwpck_require__(685);
-const https = __nccwpck_require__(687);
-const pm = __nccwpck_require__(443);
+const http = __nccwpck_require__(3685);
+const https = __nccwpck_require__(5687);
+const pm = __nccwpck_require__(6443);
 let tunnel;
 var HttpCodes;
 (function (HttpCodes) {
@@ -1881,7 +2232,7 @@ class HttpClient {
         if (useProxy) {
             // If using proxy, need tunnel
             if (!tunnel) {
-                tunnel = __nccwpck_require__(294);
+                tunnel = __nccwpck_require__(4294);
             }
             const agentOptions = {
                 maxSockets: maxSockets,
@@ -1999,7 +2350,7 @@ exports.HttpClient = HttpClient;
 
 /***/ }),
 
-/***/ 443:
+/***/ 6443:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -2064,7 +2415,7 @@ exports.checkBypass = checkBypass;
 
 /***/ }),
 
-/***/ 751:
+/***/ 4751:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -2073,12 +2424,12 @@ function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-__export(__nccwpck_require__(825));
+__export(__nccwpck_require__(2825));
 //# sourceMappingURL=index.js.map
 
 /***/ }),
 
-/***/ 825:
+/***/ 2825:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -2087,8 +2438,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const fs_1 = __nccwpck_require__(147);
-const debug_1 = __importDefault(__nccwpck_require__(237));
+const fs_1 = __nccwpck_require__(7147);
+const debug_1 = __importDefault(__nccwpck_require__(8237));
 const log = debug_1.default('@kwsites/file-exists');
 function check(path, isFile, isDirectory) {
     log(`checking %s`, path);
@@ -2140,7 +2491,7 @@ exports.READABLE = exports.FILE + exports.FOLDER;
 
 /***/ }),
 
-/***/ 819:
+/***/ 9819:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -2206,7 +2557,7 @@ exports["default"] = deferred;
 
 /***/ }),
 
-/***/ 222:
+/***/ 8222:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /* eslint-env browser */
@@ -2463,7 +2814,7 @@ function localstorage() {
 	}
 }
 
-module.exports = __nccwpck_require__(243)(exports);
+module.exports = __nccwpck_require__(6243)(exports);
 
 const {formatters} = module.exports;
 
@@ -2482,7 +2833,7 @@ formatters.j = function (v) {
 
 /***/ }),
 
-/***/ 243:
+/***/ 6243:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 
@@ -2763,7 +3114,7 @@ module.exports = setup;
 
 /***/ }),
 
-/***/ 237:
+/***/ 8237:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 /**
@@ -2772,23 +3123,23 @@ module.exports = setup;
  */
 
 if (typeof process === 'undefined' || process.type === 'renderer' || process.browser === true || process.__nwjs) {
-	module.exports = __nccwpck_require__(222);
+	module.exports = __nccwpck_require__(8222);
 } else {
-	module.exports = __nccwpck_require__(332);
+	module.exports = __nccwpck_require__(5332);
 }
 
 
 /***/ }),
 
-/***/ 332:
+/***/ 5332:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /**
  * Module dependencies.
  */
 
-const tty = __nccwpck_require__(224);
-const util = __nccwpck_require__(837);
+const tty = __nccwpck_require__(6224);
+const util = __nccwpck_require__(3837);
 
 /**
  * This is the Node.js implementation of `debug()`.
@@ -2814,7 +3165,7 @@ exports.colors = [6, 2, 3, 4, 5, 1];
 try {
 	// Optional dependency (as in, doesn't need to be installed, NOT like optionalDependencies in package.json)
 	// eslint-disable-next-line import/no-extraneous-dependencies
-	const supportsColor = __nccwpck_require__(318);
+	const supportsColor = __nccwpck_require__(9318);
 
 	if (supportsColor && (supportsColor.stderr || supportsColor).level >= 2) {
 		exports.colors = [
@@ -3022,7 +3373,7 @@ function init(debug) {
 	}
 }
 
-module.exports = __nccwpck_require__(243)(exports);
+module.exports = __nccwpck_require__(6243)(exports);
 
 const {formatters} = module.exports;
 
@@ -3050,7 +3401,7 @@ formatters.O = function (v) {
 
 /***/ }),
 
-/***/ 621:
+/***/ 1621:
 /***/ ((module) => {
 
 "use strict";
@@ -3235,7 +3586,7 @@ function plural(ms, msAbs, n, name) {
 
 /***/ }),
 
-/***/ 959:
+/***/ 4959:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 var __create = Object.create;
@@ -3482,7 +3833,7 @@ function delay(duration = 0) {
 var import_file_exists, NULL, NOOP, objectToString;
 var init_util = __esm({
   "src/lib/utils/util.ts"() {
-    import_file_exists = __nccwpck_require__(751);
+    import_file_exists = __nccwpck_require__(4751);
     NULL = "\0";
     NOOP = () => {
     };
@@ -4400,7 +4751,7 @@ function completionDetectionPlugin({
 var import_promise_deferred, never;
 var init_completion_detection_plugin = __esm({
   "src/lib/plugins/completion-detection.plugin.ts"() {
-    import_promise_deferred = __nccwpck_require__(819);
+    import_promise_deferred = __nccwpck_require__(9819);
     init_utils();
     never = (0, import_promise_deferred.deferred)().promise;
   }
@@ -4647,7 +4998,7 @@ function createLogger(label, verbose, initialStep, infoDebugger = createLog()) {
 var import_debug;
 var init_git_logger = __esm({
   "src/lib/git-logger.ts"() {
-    import_debug = __toESM(__nccwpck_require__(237));
+    import_debug = __toESM(__nccwpck_require__(8237));
     init_utils();
     import_debug.default.formatters.L = (value) => String(filterHasLength(value) ? value.length : "-");
     import_debug.default.formatters.B = (value) => {
@@ -4748,7 +5099,7 @@ function onDataReceived(target, name, logger, output) {
 var import_child_process, GitExecutorChain;
 var init_git_executor_chain = __esm({
   "src/lib/runners/git-executor-chain.ts"() {
-    import_child_process = __nccwpck_require__(81);
+    import_child_process = __nccwpck_require__(2081);
     init_git_error();
     init_task();
     init_utils();
@@ -5900,7 +6251,7 @@ var import_promise_deferred2, createScheduledTask, Scheduler;
 var init_scheduler = __esm({
   "src/lib/runners/scheduler.ts"() {
     init_utils();
-    import_promise_deferred2 = __nccwpck_require__(819);
+    import_promise_deferred2 = __nccwpck_require__(9819);
     init_git_logger();
     createScheduledTask = (() => {
       let id = 0;
@@ -7111,14 +7462,14 @@ module.exports = esModuleFactory2(gitExportFactory2(gitInstanceFactory2, { gitP:
 
 /***/ }),
 
-/***/ 318:
+/***/ 9318:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
-const os = __nccwpck_require__(37);
-const tty = __nccwpck_require__(224);
-const hasFlag = __nccwpck_require__(621);
+const os = __nccwpck_require__(2037);
+const tty = __nccwpck_require__(6224);
+const hasFlag = __nccwpck_require__(1621);
 
 const {env} = process;
 
@@ -7254,27 +7605,27 @@ module.exports = {
 
 /***/ }),
 
-/***/ 294:
+/***/ 4294:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-module.exports = __nccwpck_require__(219);
+module.exports = __nccwpck_require__(4219);
 
 
 /***/ }),
 
-/***/ 219:
+/***/ 4219:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-var net = __nccwpck_require__(808);
-var tls = __nccwpck_require__(404);
-var http = __nccwpck_require__(685);
-var https = __nccwpck_require__(687);
-var events = __nccwpck_require__(361);
-var assert = __nccwpck_require__(491);
-var util = __nccwpck_require__(837);
+var net = __nccwpck_require__(1808);
+var tls = __nccwpck_require__(4404);
+var http = __nccwpck_require__(3685);
+var https = __nccwpck_require__(5687);
+var events = __nccwpck_require__(2361);
+var assert = __nccwpck_require__(9491);
+var util = __nccwpck_require__(3837);
 
 
 exports.httpOverHttp = httpOverHttp;
@@ -7534,7 +7885,7 @@ exports.debug = debug; // for test
 
 /***/ }),
 
-/***/ 491:
+/***/ 9491:
 /***/ ((module) => {
 
 "use strict";
@@ -7542,7 +7893,7 @@ module.exports = require("assert");
 
 /***/ }),
 
-/***/ 81:
+/***/ 2081:
 /***/ ((module) => {
 
 "use strict";
@@ -7550,7 +7901,7 @@ module.exports = require("child_process");
 
 /***/ }),
 
-/***/ 361:
+/***/ 2361:
 /***/ ((module) => {
 
 "use strict";
@@ -7558,7 +7909,7 @@ module.exports = require("events");
 
 /***/ }),
 
-/***/ 147:
+/***/ 7147:
 /***/ ((module) => {
 
 "use strict";
@@ -7566,7 +7917,7 @@ module.exports = require("fs");
 
 /***/ }),
 
-/***/ 685:
+/***/ 3685:
 /***/ ((module) => {
 
 "use strict";
@@ -7574,7 +7925,7 @@ module.exports = require("http");
 
 /***/ }),
 
-/***/ 687:
+/***/ 5687:
 /***/ ((module) => {
 
 "use strict";
@@ -7582,7 +7933,7 @@ module.exports = require("https");
 
 /***/ }),
 
-/***/ 808:
+/***/ 1808:
 /***/ ((module) => {
 
 "use strict";
@@ -7590,7 +7941,7 @@ module.exports = require("net");
 
 /***/ }),
 
-/***/ 37:
+/***/ 2037:
 /***/ ((module) => {
 
 "use strict";
@@ -7598,7 +7949,7 @@ module.exports = require("os");
 
 /***/ }),
 
-/***/ 17:
+/***/ 1017:
 /***/ ((module) => {
 
 "use strict";
@@ -7606,7 +7957,7 @@ module.exports = require("path");
 
 /***/ }),
 
-/***/ 404:
+/***/ 4404:
 /***/ ((module) => {
 
 "use strict";
@@ -7614,7 +7965,7 @@ module.exports = require("tls");
 
 /***/ }),
 
-/***/ 224:
+/***/ 6224:
 /***/ ((module) => {
 
 "use strict";
@@ -7622,7 +7973,7 @@ module.exports = require("tty");
 
 /***/ }),
 
-/***/ 837:
+/***/ 3837:
 /***/ ((module) => {
 
 "use strict";
@@ -7672,7 +8023,7 @@ module.exports = require("util");
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(109);
+/******/ 	var __webpack_exports__ = __nccwpck_require__(3109);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
 /******/ })()

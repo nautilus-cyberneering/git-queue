@@ -1,32 +1,39 @@
 import {
-  CREATE_JOB_SUBJECT_PREFIX,
-  MARK_JOB_AS_DONE_SUBJECT_PREFIX,
-  StoredCreateJobMessage,
-  StoredMessage,
-  messageFactoryFromCommit,
+  CommitSubjectParser,
+  commitSubjectBelongsToAQueue
+} from './commit-subject-parser'
+import {
+  CommittedMessage,
+  NewJobCommittedMessage,
   nullMessage
-} from './stored-message'
-import {CreateJobMessage, MarkJobAsDoneMessage, Message} from './message'
-import {DefaultLogFields, GitResponseError, SimpleGit} from 'simple-git'
+} from './committed-message'
+import {GitResponseError, SimpleGit} from 'simple-git'
+import {JobFinishedMessage, Message, NewJobMessage} from './message'
+import {NoPendingJobsFoundError, PendingJobsLimitReachedError} from './errors'
 
-import {Commit} from './commit'
+import {CommitBody} from './commit-body'
+import {CommitHash} from './commit-hash'
+import {CommitInfo} from './commit-info'
+import {CommitMessage} from './commit-message'
 import {CommitOptions} from './commit-options'
+import {CommitSubject} from './commit-subject'
+import {QueueName} from './queue-name'
 
 export class Queue {
-  name: string
+  name: QueueName
   gitRepoDir: string
   git: SimpleGit
-  storedMessages: readonly StoredMessage[]
+  committedMessages: readonly CommittedMessage[]
 
-  private constructor(name: string, gitRepoDir: string, git: SimpleGit) {
+  private constructor(name: QueueName, gitRepoDir: string, git: SimpleGit) {
     this.name = name
     this.gitRepoDir = gitRepoDir
     this.git = git
-    this.storedMessages = []
+    this.committedMessages = []
   }
 
   static async create(
-    name: string,
+    name: QueueName,
     gitRepoDir: string,
     git: SimpleGit
   ): Promise<Queue> {
@@ -47,10 +54,10 @@ export class Queue {
     try {
       const gitLog = await this.git.log()
       const commits = gitLog.all.filter(commit =>
-        this.commitBelongsToQueue(commit)
+        this.commitBelongsToQueue(commit.message)
       )
-      this.storedMessages = commits.map(commit =>
-        messageFactoryFromCommit(commit)
+      this.committedMessages = commits.map(commit =>
+        CommittedMessage.fromCommitInfo(CommitInfo.fromDefaultLogFields(commit))
       )
     } catch (err) {
       if (
@@ -65,61 +72,68 @@ export class Queue {
     }
   }
 
-  commitBelongsToQueue(commit: DefaultLogFields): boolean {
-    return commit.message.endsWith(this.name) ? true : false
+  commitBelongsToQueue(commitSubject: string): boolean {
+    if (!commitSubjectBelongsToAQueue(commitSubject)) {
+      return false
+    }
+    return CommitSubjectParser.parseText(commitSubject).belongsToQueue(
+      this.name
+    )
   }
 
-  getMessages(): readonly StoredMessage[] {
-    return this.storedMessages
+  getMessages(): readonly CommittedMessage[] {
+    return this.committedMessages
   }
 
-  getLatestMessage(): StoredMessage {
-    return this.isEmpty() ? nullMessage() : this.storedMessages[0]
+  getLatestMessage(): CommittedMessage {
+    return this.isEmpty() ? nullMessage() : this.committedMessages[0]
   }
 
   isEmpty(): boolean {
-    return this.storedMessages.length === 0
+    return this.committedMessages.length === 0
   }
 
-  getNextJob(): StoredMessage {
+  getNextJob(): CommittedMessage {
     const latestMessage = this.getLatestMessage()
-    return latestMessage instanceof StoredCreateJobMessage
+    return latestMessage instanceof NewJobCommittedMessage
       ? latestMessage
       : nullMessage()
   }
 
   guardThatThereIsNoPendingJobs(): void {
-    if (!this.getNextJob().isEmpty()) {
-      throw new Error(
-        `Can't create a new job. There is already a pending job in commit: ${this.getNextJob().commitHash()}`
+    if (!this.getNextJob().isNull()) {
+      throw new PendingJobsLimitReachedError(
+        this.getNextJob().commitHash().toString()
       )
     }
   }
 
-  guardThatThereIsAPendingJob(): void {
-    if (this.getNextJob().isEmpty()) {
-      throw new Error(`Can't mark job as done. There isn't any pending job`)
+  guardThatThereIsAPendingJob(): CommittedMessage {
+    const pendingJob = this.getNextJob()
+    if (pendingJob.isNull()) {
+      throw new NoPendingJobsFoundError(this.name.toString())
     }
+    return pendingJob
   }
 
   async createJob(
     payload: string,
     commitOptions: CommitOptions
-  ): Promise<Commit> {
+  ): Promise<CommitInfo> {
     this.guardThatThereIsNoPendingJobs()
 
-    const message = new CreateJobMessage(payload)
+    const message = new NewJobMessage(payload)
 
     return this.commitMessage(message, commitOptions)
   }
 
-  async markJobAsDone(
+  async markJobAsFinished(
     payload: string,
     commitOptions: CommitOptions
-  ): Promise<Commit> {
-    this.guardThatThereIsAPendingJob()
+  ): Promise<CommitInfo> {
+    const pendingJob = this.guardThatThereIsAPendingJob()
 
-    const message = new MarkJobAsDoneMessage(payload)
+    const message = new JobFinishedMessage(payload, pendingJob.commitHash())
 
     return this.commitMessage(message, commitOptions)
   }
@@ -127,35 +141,42 @@ export class Queue {
   async commitMessage(
     message: Message,
     commitOptions: CommitOptions
-  ): Promise<Commit> {
+  ): Promise<CommitInfo> {
     const commitMessage = this.buildCommitMessage(message)
     const commitResult = await this.git.commit(
-      commitMessage,
+      commitMessage.forSimpleGit(),
       commitOptions.forSimpleGit()
     )
     await this.loadMessagesFromGit()
-    return new Commit(commitResult.commit)
+    const committedMessage = this.findCommittedMessageByCommit(
+      new CommitHash(commitResult.commit)
+    )
+    return committedMessage.commit
   }
 
-  buildCommitMessage(message: Message): string[] {
-    const commitSubject = this.buildCommitSubject(message)
+  findCommittedMessageByCommit(commitHash: CommitHash): CommittedMessage {
+    const commits = this.committedMessages.filter(message =>
+      message.commitHash().equalsTo(commitHash)
+    )
 
-    const commitBody = message.getPayload()
-
-    const commitMessage = [commitSubject, commitBody]
-
-    return commitMessage
-  }
-
-  buildCommitSubject(message: Message): string {
-    let commitSubject: string
-    if (message instanceof CreateJobMessage) {
-      commitSubject = `${CREATE_JOB_SUBJECT_PREFIX}${this.name}`
-    } else if (message instanceof MarkJobAsDoneMessage) {
-      commitSubject = `${MARK_JOB_AS_DONE_SUBJECT_PREFIX}${this.name}`
-    } else {
-      throw Error(`Invalid Message type: ${typeof message}`)
+    if (commits.length === 0) {
+      return nullMessage()
     }
-    return commitSubject
+
+    return commits[0]
+  }
+
+  buildCommitMessage(message: Message): CommitMessage {
+    const commitSubject = this.buildCommitSubject(message)
+    const commitBody = this.buildCommitBody(message)
+    return new CommitMessage(commitSubject, commitBody)
+  }
+
+  buildCommitSubject(message: Message): CommitSubject {
+    return CommitSubject.fromMessageAndQueueName(message, this.name)
+  }
+
+  buildCommitBody(message: Message): CommitBody {
+    return new CommitBody(message.getPayload())
   }
 }

@@ -64,6 +64,27 @@ describe('GitHub Action', () => {
     )
   })
 
+  it('should return an error for invalid actions', async () => {
+    const gitRepoDir = await createInitializedTempGitDir()
+
+    const env = {
+      ...process.env,
+      INPUT_QUEUE_NAME: 'QUEUE-NAME',
+      INPUT_GIT_REPO_DIR: gitRepoDir,
+      INPUT_ACTION: 'INVALID ACTION',
+      INPUT_JOB_PAYLOAD: dummyPayload(),
+      INPUT_GIT_COMMIT_NO_GPG_SIGN: true
+    }
+
+    const output = executeAction(env)
+
+    expect(output).toEqual(
+      expect.stringContaining(
+        `::error::Invalid action. Actions can only be: create-job, next-job, finish-job`
+      )
+    )
+  })
+
   it('should create a new job', async () => {
     const gitRepoDir = await createInitializedTempGitDir()
 
@@ -111,7 +132,7 @@ describe('GitHub Action', () => {
     )
   })
 
-  it('should mark the pending job as done', async () => {
+  it('should mark the pending job as finished', async () => {
     const gitRepoDir = await createInitializedTempGitDir()
 
     createJob(gitRepoDir)
@@ -120,14 +141,14 @@ describe('GitHub Action', () => {
       ...process.env,
       INPUT_QUEUE_NAME: 'QUEUE-NAME',
       INPUT_GIT_REPO_DIR: gitRepoDir,
-      INPUT_ACTION: 'mark-job-as-done',
+      INPUT_ACTION: 'finish-job',
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
     }
 
     const output = executeAction(env)
 
     expect(output).toEqual(
-      expect.stringContaining('::set-output name=job_created::true')
+      expect.stringContaining('::set-output name=job_finished::true')
     )
     expect(output).toEqual(
       expect.stringContaining('::set-output name=job_commit::')

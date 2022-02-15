@@ -1,14 +1,38 @@
+import {CommitHash, nullCommitHash} from './commit-hash'
+import {MessageKey} from './message-key'
+
 export abstract class Message {
   payload: string
+  jobRef: CommitHash
 
-  constructor(payload: string) {
+  constructor(payload: string, jobRef: CommitHash = nullCommitHash()) {
     this.payload = payload
+    this.jobRef = jobRef
   }
 
   getPayload(): string {
     return this.payload
   }
+
+  getJobRef(): CommitHash {
+    return this.jobRef
+  }
+
+  hasJobRef(): boolean {
+    return !this.jobRef.isNull()
+  }
+
+  abstract getKey(): MessageKey
 }
 
-export class CreateJobMessage extends Message {}
-export class MarkJobAsDoneMessage extends Message {}
+export class NewJobMessage extends Message {
+  getKey(): MessageKey {
+    return new MessageKey('🈺')
+  }
+}
+
+export class JobFinishedMessage extends Message {
+  getKey(): MessageKey {
+    return new MessageKey('✅')
+  }
+}

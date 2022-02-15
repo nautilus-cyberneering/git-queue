@@ -1,19 +1,25 @@
-export class SigningKeyId {
+import {Nullable} from './nullable'
+
+export class SigningKeyId implements Nullable {
   id: string
 
   constructor(id: string) {
     this.id = id
   }
 
+  equalsTo(other: SigningKeyId): boolean {
+    return this.id === other.id
+  }
+
   toString(): string {
     return this.id
   }
 
-  isEmpty(): boolean {
+  isNull(): boolean {
     return this.id === ''
   }
 }
 
-export function emptySigningKeyId(): SigningKeyId {
+export function nullSigningKeyId(): SigningKeyId {
   return new SigningKeyId('')
 }

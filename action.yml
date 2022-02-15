@@ -8,7 +8,7 @@ inputs:
     description: 'Queue name. It cannot contain special characters or white spaces'
     required: true
   action:
-    description: 'The action you want to perform. Options: next-job, create-job, mark-job-as-done'
+    description: 'The action you want to perform. Options: next-job, create-job, finish-job'
     required: true
   job_payload:
     description: 'Job payload. It can be any string'
@@ -33,6 +33,8 @@ inputs:
 outputs:
   job_created:
     description: 'Boolean, true if the job was created successfully'
+  job_finished:
+    description: 'Boolean, true if the job was finished successfully'
   job_commit:
     description: 'The commit hash of the newly created commits, when the action creates a new commit'
   job_payload:

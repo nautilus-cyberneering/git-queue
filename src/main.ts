@@ -2,11 +2,12 @@ import * as context from './context'
 import * as core from '@actions/core'
 
 import {CommitAuthor, emptyCommitAuthor} from './commit-author'
-import {SigningKeyId, emptySigningKeyId} from './signing-key-id'
+import {SigningKeyId, nullSigningKeyId} from './signing-key-id'
 
 import {CommitOptions} from './commit-options'
 import {Inputs} from './context'
 import {Queue} from './queue'
+import {QueueName} from './queue-name'
 
 import {createInstance} from './simple-git-factory'
 import {getErrorMessage} from './error'
@@ -14,11 +15,11 @@ import {getGnupgHome} from './gpg-env'
 
 const ACTION_CREATE_JOB = 'create-job'
 const ACTION_NEXT_JOB = 'next-job'
-const ACTION_MARK_JOB_AS_DONE = 'mark-job-as-done'
+const ACTION_FINISH_JOB = 'finish-job'
 
 function actionOptions(): string {
-  const options = [ACTION_CREATE_JOB, ACTION_NEXT_JOB, ACTION_MARK_JOB_AS_DONE]
-  return options.toString()
+  const options = [ACTION_CREATE_JOB, ACTION_NEXT_JOB, ACTION_FINISH_JOB]
+  return options.join(', ')
 }
 
 async function getCommitAuthor(commitAuthor: string): Promise<CommitAuthor> {
@@ -32,7 +33,7 @@ async function getSigningKeyId(signingKeyId: string): Promise<SigningKeyId> {
   if (signingKeyId) {
     return new SigningKeyId(signingKeyId)
   }
-  return emptySigningKeyId()
+  return nullSigningKeyId()
 }
 
 async function getCommitOptions(inputs: Inputs): Promise<CommitOptions> {
@@ -61,7 +62,11 @@ async function run(): Promise<void> {
 
     const git = await createInstance(gitRepoDir)
 
-    const queue = await Queue.create(inputs.queueName, gitRepoDir, git)
+    const queue = await Queue.create(
+      new QueueName(inputs.queueName),
+      gitRepoDir,
+      git
+    )
 
     const commitOptions = await getCommitOptions(inputs)
 
@@ -74,7 +79,7 @@ async function run(): Promise<void> {
 
         await core.group(`Setting outputs`, async () => {
           context.setOutput('job_created', true)
-          context.setOutput('job_commit', createJobCommit.hash)
+          context.setOutput('job_commit', createJobCommit.hash.toString())
 
           core.info(`job_created: true`)
           core.info(`job_commit: ${createJobCommit.hash}`)
@@ -86,10 +91,10 @@ async function run(): Promise<void> {
         const nextJob = queue.getNextJob()
 
         await core.group(`Setting outputs`, async () => {
-          context.setOutput('job_found', !nextJob.isEmpty())
+          context.setOutput('job_found', !nextJob.isNull())
 
-          if (!nextJob.isEmpty()) {
-            context.setOutput('job_commit', nextJob.commitHash())
+          if (!nextJob.isNull()) {
+            context.setOutput('job_commit', nextJob.commitHash().toString())
             context.setOutput('job_payload', nextJob.payload())
 
             core.info(`job_commit: ${nextJob.commitHash()}`)
@@ -99,25 +104,27 @@ async function run(): Promise<void> {
 
         break
       }
-      case ACTION_MARK_JOB_AS_DONE: {
-        const markJobAsDoneCommit = await queue.markJobAsDone(
+      case ACTION_FINISH_JOB: {
+        const markJobAsFinishedCommit = await queue.markJobAsFinished(
           inputs.jobPayload,
           commitOptions
         )
 
         await core.group(`Setting outputs`, async () => {
-          // TODO: 'commit_created' or 'job_marked_as_done' or 'job_updated' instead of 'job_created'
-          context.setOutput('job_created', true)
-          context.setOutput('job_commit', markJobAsDoneCommit.hash)
+          context.setOutput('job_finished', true)
+          context.setOutput(
+            'job_commit',
+            markJobAsFinishedCommit.hash.toString()
+          )
 
-          core.info(`job_created: true`)
-          core.info(`job_commit: ${markJobAsDoneCommit.hash}`)
+          core.info(`job_finished: true`)
+          core.info(`job_commit: ${markJobAsFinishedCommit.hash}`)
         })
 
         break
       }
       default: {
-        core.error(`Invalid action. Actions can only be: ${actionOptions}`)
+        core.error(`Invalid action. Actions can only be: ${actionOptions()}`)
       }
     }
   } catch (error) {
