@@ -14,6 +14,12 @@ describe('EmailAddress', () => {
     expect(emailAddress.toString()).toBe('A Committer <committer@example.com>')
   })
 
+  it('should print the email address even when it does not have a display name', () => {
+    const emailAddress = new EmailAddress('committer@example.com')
+
+    expect(emailAddress.toString()).toBe('committer@example.com')
+  })
+
   it('should fail when you try to build a bad formatted email address', () => {
     const a1 = (): EmailAddress => new EmailAddress('abc_NO_AT_example.com')
     expect(a1).toThrow(Error)
