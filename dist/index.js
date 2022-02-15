@@ -615,6 +615,27 @@ exports.NoPendingJobsFoundError = NoPendingJobsFoundError;
 
 /***/ }),
 
+/***/ 7775:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GitRepoDir = void 0;
+class GitRepoDir {
+    constructor(dirPath) {
+        // TODO: validate dir path
+        this.dirPath = dirPath;
+    }
+    getDirPath() {
+        return this.dirPath;
+    }
+}
+exports.GitRepoDir = GitRepoDir;
+
+
+/***/ }),
+
 /***/ 314:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -706,6 +727,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const commit_author_1 = __nccwpck_require__(1606);
 const signing_key_id_1 = __nccwpck_require__(9869);
 const commit_options_1 = __nccwpck_require__(360);
+const git_repo_dir_1 = __nccwpck_require__(7775);
 const queue_1 = __nccwpck_require__(7065);
 const queue_name_1 = __nccwpck_require__(7894);
 const simple_git_factory_1 = __nccwpck_require__(9649);
@@ -755,7 +777,7 @@ function run() {
             }));
             const git = yield (0, simple_git_factory_1.createInstance)(gitRepoDir);
             const commitOptions = yield getCommitOptions(inputs);
-            const queue = yield queue_1.Queue.create(new queue_name_1.QueueName(inputs.queueName), gitRepoDir, git, commitOptions);
+            const queue = yield queue_1.Queue.create(new queue_name_1.QueueName(inputs.queueName), new git_repo_dir_1.GitRepoDir(gitRepoDir), git, commitOptions);
             switch (inputs.action) {
                 case ACTION_CREATE_JOB: {
                     const createJobCommit = yield queue.createJob(inputs.jobPayload);

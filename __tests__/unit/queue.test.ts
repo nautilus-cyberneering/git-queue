@@ -8,6 +8,7 @@ import {
 
 import {CommitAuthor} from '../../src/commit-author'
 import {CommitOptions} from '../../src/commit-options'
+import {GitRepoDir} from '../../src/git-repo-dir'
 import {Queue} from '../../src/queue'
 import {QueueName} from '../../src/queue-name'
 import {SigningKeyId} from '../../src/signing-key-id'
@@ -53,7 +54,7 @@ async function createTestQueue(commitOptions: CommitOptions): Promise<Queue> {
 
   const queue = await Queue.create(
     new QueueName('QUEUE NAME'),
-    gitRepoDir,
+    new GitRepoDir(gitRepoDir),
     git,
     commitOptions
   )
@@ -88,7 +89,7 @@ describe('Queue', () => {
 
     await queue.createJob(dummyPayload())
 
-    const output = gitLogForLatestCommit(queue.getGitRepoDir())
+    const output = gitLogForLatestCommit(queue.getGitRepoDir().getDirPath())
 
     expect(output.includes('Author: A committer <committer@example.com>')).toBe(
       true
@@ -118,7 +119,7 @@ describe('Queue', () => {
 
     const queue = await Queue.create(
       new QueueName('QUEUE NAME'),
-      gitRepoDir,
+      new GitRepoDir(gitRepoDir),
       git,
       commitOptionsForTestsUsingSignature()
     )

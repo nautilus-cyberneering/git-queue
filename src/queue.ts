@@ -17,18 +17,19 @@ import {CommitInfo} from './commit-info'
 import {CommitMessage} from './commit-message'
 import {CommitOptions} from './commit-options'
 import {CommitSubject} from './commit-subject'
+import {GitRepoDir} from './git-repo-dir'
 import {QueueName} from './queue-name'
 
 export class Queue {
   private readonly name: QueueName
-  private readonly gitRepoDir: string
+  private readonly gitRepoDir: GitRepoDir
   private readonly git: SimpleGit
   private readonly commitOptions: CommitOptions
   private committedMessages: readonly CommittedMessage[]
 
   private constructor(
     name: QueueName,
-    gitRepoDir: string,
+    gitRepoDir: GitRepoDir,
     git: SimpleGit,
     commitOptions: CommitOptions
   ) {
@@ -41,7 +42,7 @@ export class Queue {
 
   static async create(
     name: QueueName,
-    gitRepoDir: string,
+    gitRepoDir: GitRepoDir,
     git: SimpleGit,
     commitOptions: CommitOptions
   ): Promise<Queue> {
@@ -80,7 +81,7 @@ export class Queue {
     }
   }
 
-  getGitRepoDir(): string {
+  getGitRepoDir(): GitRepoDir {
     return this.gitRepoDir
   }
 
