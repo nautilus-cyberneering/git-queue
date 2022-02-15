@@ -1,7 +1,7 @@
 import * as context from './context'
 import * as core from '@actions/core'
 
-import {CommitAuthor, emptyCommitAuthor} from './commit-author'
+import {CommitAuthor, nullCommitAuthor} from './commit-author'
 import {SigningKeyId, nullSigningKeyId} from './signing-key-id'
 
 import {CommitOptions} from './commit-options'
@@ -26,7 +26,7 @@ async function getCommitAuthor(commitAuthor: string): Promise<CommitAuthor> {
   if (commitAuthor) {
     return CommitAuthor.fromEmailAddressString(commitAuthor)
   }
-  return emptyCommitAuthor()
+  return nullCommitAuthor()
 }
 
 async function getSigningKeyId(signingKeyId: string): Promise<SigningKeyId> {
@@ -62,20 +62,18 @@ async function run(): Promise<void> {
 
     const git = await createInstance(gitRepoDir)
 
+    const commitOptions = await getCommitOptions(inputs)
+
     const queue = await Queue.create(
       new QueueName(inputs.queueName),
       gitRepoDir,
-      git
+      git,
+      commitOptions
     )
-
-    const commitOptions = await getCommitOptions(inputs)
 
     switch (inputs.action) {
       case ACTION_CREATE_JOB: {
-        const createJobCommit = await queue.createJob(
-          inputs.jobPayload,
-          commitOptions
-        )
+        const createJobCommit = await queue.createJob(inputs.jobPayload)
 
         await core.group(`Setting outputs`, async () => {
           context.setOutput('job_created', true)
@@ -106,8 +104,7 @@ async function run(): Promise<void> {
       }
       case ACTION_FINISH_JOB: {
         const markJobAsFinishedCommit = await queue.markJobAsFinished(
-          inputs.jobPayload,
-          commitOptions
+          inputs.jobPayload
         )
 
         await core.group(`Setting outputs`, async () => {

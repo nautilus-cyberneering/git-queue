@@ -23,21 +23,29 @@ export class Queue {
   name: QueueName
   gitRepoDir: string
   git: SimpleGit
+  commitOptions: CommitOptions
   committedMessages: readonly CommittedMessage[]
 
-  private constructor(name: QueueName, gitRepoDir: string, git: SimpleGit) {
+  private constructor(
+    name: QueueName,
+    gitRepoDir: string,
+    git: SimpleGit,
+    commitOptions: CommitOptions
+  ) {
     this.name = name
     this.gitRepoDir = gitRepoDir
     this.git = git
+    this.commitOptions = commitOptions
     this.committedMessages = []
   }
 
   static async create(
     name: QueueName,
     gitRepoDir: string,
-    git: SimpleGit
+    git: SimpleGit,
+    commitOptions: CommitOptions
   ): Promise<Queue> {
-    const queue = new Queue(name, gitRepoDir, git)
+    const queue = new Queue(name, gitRepoDir, git, commitOptions)
     await queue.loadMessagesFromGit()
     return queue
   }
@@ -116,36 +124,27 @@ export class Queue {
     return pendingJob
   }
 
-  async createJob(
-    payload: string,
-    commitOptions: CommitOptions
-  ): Promise<CommitInfo> {
+  async createJob(payload: string): Promise<CommitInfo> {
     this.guardThatThereIsNoPendingJobs()
 
     const message = new NewJobMessage(payload)
 
-    return this.commitMessage(message, commitOptions)
+    return this.commitMessage(message)
   }
 
-  async markJobAsFinished(
-    payload: string,
-    commitOptions: CommitOptions
-  ): Promise<CommitInfo> {
+  async markJobAsFinished(payload: string): Promise<CommitInfo> {
     const pendingJob = this.guardThatThereIsAPendingJob()
 
     const message = new JobFinishedMessage(payload, pendingJob.commitHash())
 
-    return this.commitMessage(message, commitOptions)
+    return this.commitMessage(message)
   }
 
-  async commitMessage(
-    message: Message,
-    commitOptions: CommitOptions
-  ): Promise<CommitInfo> {
+  async commitMessage(message: Message): Promise<CommitInfo> {
     const commitMessage = this.buildCommitMessage(message)
     const commitResult = await this.git.commit(
       commitMessage.forSimpleGit(),
-      commitOptions.forSimpleGit()
+      this.commitOptions.forSimpleGit()
     )
     await this.loadMessagesFromGit()
     const committedMessage = this.findCommittedMessageByCommit(

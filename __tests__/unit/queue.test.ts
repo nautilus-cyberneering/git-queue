@@ -46,21 +46,26 @@ async function newSimpleGitWithCommitterIdentity(
   return git
 }
 
-async function createTestQueue(): Promise<Queue> {
+async function createTestQueue(commitOptions: CommitOptions): Promise<Queue> {
   const gitRepoDir = await createInitializedTempGitDir()
 
   const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
 
-  const queue = await Queue.create(new QueueName('QUEUE NAME'), gitRepoDir, git)
+  const queue = await Queue.create(
+    new QueueName('QUEUE NAME'),
+    gitRepoDir,
+    git,
+    commitOptions
+  )
 
   return queue
 }
 
 describe('Queue', () => {
   it('should dispatch a new job', async () => {
-    const queue = await createTestQueue()
+    const queue = await createTestQueue(commitOptionsForTests())
 
-    await queue.createJob(dummyPayload(), commitOptionsForTests())
+    await queue.createJob(dummyPayload())
 
     const nextJob = queue.getNextJob()
 
@@ -68,10 +73,10 @@ describe('Queue', () => {
   })
 
   it('should mark a job as finished', async () => {
-    const queue = await createTestQueue()
+    const queue = await createTestQueue(commitOptionsForTests())
 
-    await queue.createJob(dummyPayload(), commitOptionsForTests())
-    await queue.markJobAsFinished(dummyPayload(), commitOptionsForTests())
+    await queue.createJob(dummyPayload())
+    await queue.markJobAsFinished(dummyPayload())
 
     const nextJob = queue.getNextJob()
 
@@ -79,9 +84,9 @@ describe('Queue', () => {
   })
 
   it('should allow to specify the commit author', async () => {
-    const queue = await createTestQueue()
+    const queue = await createTestQueue(commitOptionsForTests())
 
-    await queue.createJob(dummyPayload(), commitOptionsForTests())
+    await queue.createJob(dummyPayload())
 
     const output = gitLogForLatestCommit(queue.gitRepoDir)
 
@@ -91,12 +96,9 @@ describe('Queue', () => {
   })
 
   it('should find an stored message by its commit hash', async () => {
-    const queue = await createTestQueue()
+    const queue = await createTestQueue(commitOptionsForTests())
 
-    const commit = await queue.createJob(
-      dummyPayload(),
-      commitOptionsForTests()
-    )
+    const commit = await queue.createJob(dummyPayload())
 
     const committedMessage = queue.findCommittedMessageByCommit(commit.hash)
 
@@ -117,10 +119,11 @@ describe('Queue', () => {
     const queue = await Queue.create(
       new QueueName('QUEUE NAME'),
       gitRepoDir,
-      git
+      git,
+      commitOptionsForTestsUsingSignature()
     )
 
-    await queue.createJob(dummyPayload(), commitOptionsForTestsUsingSignature())
+    await queue.createJob(dummyPayload())
 
     const output = gitLogForLatestCommit(gitRepoDir)
 

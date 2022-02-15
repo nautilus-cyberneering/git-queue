@@ -7,7 +7,7 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.emptyCommitAuthor = exports.CommitAuthor = void 0;
+exports.nullCommitAuthor = exports.CommitAuthor = void 0;
 const email_address_1 = __nccwpck_require__(732);
 const NO_AUTHOR_NAME = '--no-author--';
 const NO_AUTHOR_EMAIL = 'no-author@no-author.com';
@@ -35,10 +35,10 @@ class CommitAuthor {
     }
 }
 exports.CommitAuthor = CommitAuthor;
-function emptyCommitAuthor() {
+function nullCommitAuthor() {
     return CommitAuthor.fromNameAndEmail(NO_AUTHOR_NAME, NO_AUTHOR_EMAIL);
 }
-exports.emptyCommitAuthor = emptyCommitAuthor;
+exports.nullCommitAuthor = nullCommitAuthor;
 
 
 /***/ }),
@@ -714,7 +714,7 @@ function getCommitAuthor(commitAuthor) {
         if (commitAuthor) {
             return commit_author_1.CommitAuthor.fromEmailAddressString(commitAuthor);
         }
-        return (0, commit_author_1.emptyCommitAuthor)();
+        return (0, commit_author_1.nullCommitAuthor)();
     });
 }
 function getSigningKeyId(signingKeyId) {
@@ -745,11 +745,11 @@ function run() {
                 core.info(`gnupg_home_dir: ${gnuPGHomeDir}`);
             }));
             const git = yield (0, simple_git_factory_1.createInstance)(gitRepoDir);
-            const queue = yield queue_1.Queue.create(new queue_name_1.QueueName(inputs.queueName), gitRepoDir, git);
             const commitOptions = yield getCommitOptions(inputs);
+            const queue = yield queue_1.Queue.create(new queue_name_1.QueueName(inputs.queueName), gitRepoDir, git, commitOptions);
             switch (inputs.action) {
                 case ACTION_CREATE_JOB: {
-                    const createJobCommit = yield queue.createJob(inputs.jobPayload, commitOptions);
+                    const createJobCommit = yield queue.createJob(inputs.jobPayload);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_created', true);
                         context.setOutput('job_commit', createJobCommit.hash.toString());
@@ -772,7 +772,7 @@ function run() {
                     break;
                 }
                 case ACTION_FINISH_JOB: {
-                    const markJobAsFinishedCommit = yield queue.markJobAsFinished(inputs.jobPayload, commitOptions);
+                    const markJobAsFinishedCommit = yield queue.markJobAsFinished(inputs.jobPayload);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_finished', true);
                         context.setOutput('job_commit', markJobAsFinishedCommit.hash.toString());
@@ -917,15 +917,16 @@ const commit_info_1 = __nccwpck_require__(4136);
 const commit_message_1 = __nccwpck_require__(1961);
 const commit_subject_1 = __nccwpck_require__(8798);
 class Queue {
-    constructor(name, gitRepoDir, git) {
+    constructor(name, gitRepoDir, git, commitOptions) {
         this.name = name;
         this.gitRepoDir = gitRepoDir;
         this.git = git;
+        this.commitOptions = commitOptions;
         this.committedMessages = [];
     }
-    static create(name, gitRepoDir, git) {
+    static create(name, gitRepoDir, git, commitOptions) {
         return __awaiter(this, void 0, void 0, function* () {
-            const queue = new Queue(name, gitRepoDir, git);
+            const queue = new Queue(name, gitRepoDir, git, commitOptions);
             yield queue.loadMessagesFromGit();
             return queue;
         });
@@ -986,24 +987,24 @@ class Queue {
         }
         return pendingJob;
     }
-    createJob(payload, commitOptions) {
+    createJob(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             this.guardThatThereIsNoPendingJobs();
             const message = new message_1.NewJobMessage(payload);
-            return this.commitMessage(message, commitOptions);
+            return this.commitMessage(message);
         });
     }
-    markJobAsFinished(payload, commitOptions) {
+    markJobAsFinished(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const pendingJob = this.guardThatThereIsAPendingJob();
             const message = new message_1.JobFinishedMessage(payload, pendingJob.commitHash());
-            return this.commitMessage(message, commitOptions);
+            return this.commitMessage(message);
         });
     }
-    commitMessage(message, commitOptions) {
+    commitMessage(message) {
         return __awaiter(this, void 0, void 0, function* () {
             const commitMessage = this.buildCommitMessage(message);
-            const commitResult = yield this.git.commit(commitMessage.forSimpleGit(), commitOptions.forSimpleGit());
+            const commitResult = yield this.git.commit(commitMessage.forSimpleGit(), this.commitOptions.forSimpleGit());
             yield this.loadMessagesFromGit();
             const committedMessage = this.findCommittedMessageByCommit(new commit_hash_1.CommitHash(commitResult.commit));
             return committedMessage.commit;

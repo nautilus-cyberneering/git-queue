@@ -38,6 +38,6 @@ export class CommitAuthor implements Nullable {
   }
 }
 
-export function emptyCommitAuthor(): CommitAuthor {
+export function nullCommitAuthor(): CommitAuthor {
   return CommitAuthor.fromNameAndEmail(NO_AUTHOR_NAME, NO_AUTHOR_EMAIL)
 }
