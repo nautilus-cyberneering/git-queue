@@ -2,7 +2,7 @@ import * as cp from 'child_process'
 import * as gpg from './gpg'
 import * as openpgp from './openpgp'
 
-import {SimpleGit} from 'simple-git/typings/simple-git.d'
+import {SimpleGit} from 'simple-git'
 import {createTempDir} from 'jest-fixtures'
 import simpleGit from 'simple-git'
 import {testConfiguration} from './config'

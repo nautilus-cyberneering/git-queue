@@ -1082,7 +1082,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createInstance = void 0;
-const simple_git_1 = __importDefault(__nccwpck_require__(4959));
+const simple_git_1 = __importDefault(__nccwpck_require__(9103));
 function getGitConfig(key, git) {
     return __awaiter(this, void 0, void 0, function* () {
         const option = yield git.getConfig(key);
@@ -3586,7 +3586,7 @@ function plural(ms, msAbs, n, name) {
 
 /***/ }),
 
-/***/ 4959:
+/***/ 9103:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 var __create = Object.create;
@@ -5538,17 +5538,16 @@ function prettyFormat(format, splitter) {
   ];
 }
 function userOptions(input) {
-  const output = __spreadValues({}, input);
-  Object.keys(input).forEach((key) => {
-    if (key in excludeOptions) {
-      delete output[key];
+  return Object.keys(input).reduce((out, key) => {
+    if (!(key in excludeOptions)) {
+      out[key] = input[key];
     }
-  });
-  return output;
+    return out;
+  }, {});
 }
 function parseLogOptions(opt = {}, customArgs = []) {
-  const splitter = opt.splitter || SPLITTER;
-  const format = opt.format || {
+  const splitter = filterType(opt.splitter, filterString, SPLITTER);
+  const format = !filterPrimitives(opt.format) && opt.format ? opt.format : {
     hash: "%H",
     date: opt.strictDate === false ? "%ai" : "%aI",
     message: "%s",
@@ -5571,7 +5570,7 @@ function parseLogOptions(opt = {}, customArgs = []) {
     const rangeOperator = opt.symmetric !== false ? "..." : "..";
     suffix.push(`${opt.from}${rangeOperator}${opt.to}`);
   }
-  if (opt.file) {
+  if (filterString(opt.file)) {
     suffix.push("--follow", opt.file);
   }
   appendTaskOptions(userOptions(opt), command);
@@ -6080,9 +6079,9 @@ var init_StatusSummary = __esm({
         this.current = null;
         this.tracking = null;
         this.detached = false;
-      }
-      isClean() {
-        return !this.files.length;
+        this.isClean = () => {
+          return !this.files.length;
+        };
       }
     };
     parsers5 = new Map([
