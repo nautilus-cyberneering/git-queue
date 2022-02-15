@@ -20,11 +20,11 @@ import {CommitSubject} from './commit-subject'
 import {QueueName} from './queue-name'
 
 export class Queue {
-  name: QueueName
-  gitRepoDir: string
-  git: SimpleGit
-  commitOptions: CommitOptions
-  committedMessages: readonly CommittedMessage[]
+  private readonly name: QueueName
+  private readonly gitRepoDir: string
+  private readonly git: SimpleGit
+  private readonly commitOptions: CommitOptions
+  private committedMessages: readonly CommittedMessage[]
 
   private constructor(
     name: QueueName,
@@ -78,6 +78,10 @@ export class Queue {
         throw err
       }
     }
+  }
+
+  getGitRepoDir(): string {
+    return this.gitRepoDir
   }
 
   commitBelongsToQueue(commitSubject: string): boolean {

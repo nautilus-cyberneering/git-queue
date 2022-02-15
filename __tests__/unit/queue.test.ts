@@ -88,7 +88,7 @@ describe('Queue', () => {
 
     await queue.createJob(dummyPayload())
 
-    const output = gitLogForLatestCommit(queue.gitRepoDir)
+    const output = gitLogForLatestCommit(queue.getGitRepoDir())
 
     expect(output.includes('Author: A committer <committer@example.com>')).toBe(
       true

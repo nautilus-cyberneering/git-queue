@@ -954,6 +954,9 @@ class Queue {
             }
         });
     }
+    getGitRepoDir() {
+        return this.gitRepoDir;
+    }
     commitBelongsToQueue(commitSubject) {
         if (!(0, commit_subject_parser_1.commitSubjectBelongsToAQueue)(commitSubject)) {
             return false;
