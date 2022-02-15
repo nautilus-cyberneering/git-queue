@@ -8,6 +8,7 @@ import {
 
 import {CommitAuthor} from '../../src/commit-author'
 import {CommitOptions} from '../../src/commit-options'
+import {GitRepo} from '../../src/git-repo'
 import {GitRepoDir} from '../../src/git-repo-dir'
 import {Queue} from '../../src/queue'
 import {QueueName} from '../../src/queue-name'
@@ -52,10 +53,11 @@ async function createTestQueue(commitOptions: CommitOptions): Promise<Queue> {
 
   const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
 
+  const gitRepo = new GitRepo(new GitRepoDir(gitRepoDir), git)
+
   const queue = await Queue.create(
     new QueueName('QUEUE NAME'),
-    new GitRepoDir(gitRepoDir),
-    git,
+    gitRepo,
     commitOptions
   )
 
@@ -117,10 +119,11 @@ describe('Queue', () => {
 
     git.env('GNUPGHOME', gnuPGHomeDir)
 
+    const gitRepo = new GitRepo(new GitRepoDir(gitRepoDir), git)
+
     const queue = await Queue.create(
       new QueueName('QUEUE NAME'),
-      new GitRepoDir(gitRepoDir),
-      git,
+      gitRepo,
       commitOptionsForTestsUsingSignature()
     )
 

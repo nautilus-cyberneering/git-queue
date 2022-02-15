@@ -7,9 +7,13 @@ import {
   NewJobCommittedMessage,
   nullMessage
 } from './committed-message'
-import {GitResponseError, SimpleGit} from 'simple-git'
+import {DefaultLogFields, ListLogLine, LogResult} from 'simple-git'
+import {
+  GitDirNotInitializedError,
+  NoPendingJobsFoundError,
+  PendingJobsLimitReachedError
+} from './errors'
 import {JobFinishedMessage, Message, NewJobMessage} from './message'
-import {NoPendingJobsFoundError, PendingJobsLimitReachedError} from './errors'
 
 import {CommitBody} from './commit-body'
 import {CommitHash} from './commit-hash'
@@ -18,70 +22,71 @@ import {CommitMessage} from './commit-message'
 import {CommitOptions} from './commit-options'
 import {CommitSubject} from './commit-subject'
 import {CommittedMessageLog} from './committed-message-log'
+import {GitRepo} from './git-repo'
 import {GitRepoDir} from './git-repo-dir'
 import {QueueName} from './queue-name'
 
 export class Queue {
   private readonly name: QueueName
-  private readonly gitRepoDir: GitRepoDir
-  private readonly git: SimpleGit
+  private readonly gitRepo: GitRepo
   private readonly commitOptions: CommitOptions
   private committedMessages: CommittedMessageLog
 
   private constructor(
     name: QueueName,
-    gitRepoDir: GitRepoDir,
-    git: SimpleGit,
+    gitRepo: GitRepo,
     commitOptions: CommitOptions
   ) {
     this.name = name
-    this.gitRepoDir = gitRepoDir
-    this.git = git
+    this.gitRepo = gitRepo
     this.commitOptions = commitOptions
     this.committedMessages = CommittedMessageLog.fromGitLogCommits([])
   }
 
   static async create(
     name: QueueName,
-    gitRepoDir: GitRepoDir,
-    git: SimpleGit,
+    gitRepo: GitRepo,
     commitOptions: CommitOptions
   ): Promise<Queue> {
-    const queue = new Queue(name, gitRepoDir, git, commitOptions)
+    const queue = new Queue(name, gitRepo, commitOptions)
     await queue.loadMessagesFromGit()
     return queue
   }
 
-  async loadMessagesFromGit(): Promise<void> {
-    const isRepo = await this.git.checkIsRepo()
-    if (!isRepo) {
-      throw Error(`Invalid git dir: ${this.gitRepoDir}`)
-    }
-
-    const status = await this.git.status()
-    const currentBranch = status.current
-
-    try {
-      const gitLog = await this.git.log()
-      const commits = gitLog.all.filter(commit =>
-        this.commitBelongsToQueue(commit.message)
-      )
-      this.committedMessages = CommittedMessageLog.fromGitLogCommits(commits)
-    } catch (err) {
-      if (
-        (err as GitResponseError).message.includes(
-          `fatal: your current branch '${currentBranch}' does not have any commits yet`
-        )
-      ) {
-        // no commits yet
-      } else {
-        throw err
-      }
+  guardThatGitRepoHasBeenInitialized(): void {
+    const isInitialized = this.gitRepo.isInitialized()
+    if (!isInitialized) {
+      throw new GitDirNotInitializedError(this.gitRepo.getDirPath())
     }
   }
 
+  private filterQueueCommits(
+    gitLog: LogResult<DefaultLogFields>
+  ): (DefaultLogFields & ListLogLine)[] {
+    return gitLog.all.filter(commit =>
+      this.commitBelongsToQueue(commit.message)
+    )
+  }
+
+  async loadMessagesFromGit(): Promise<void> {
+    this.guardThatGitRepoHasBeenInitialized()
+
+    const noCommits = !(await this.gitRepo.hasCommits()) ? true : false
+
+    if (noCommits) {
+      return
+    }
+
+    const allCommits = await this.gitRepo.log()
+
+    const thisQueueCommits = this.filterQueueCommits(allCommits)
+
+    this.committedMessages =
+      CommittedMessageLog.fromGitLogCommits(thisQueueCommits)
+  }
+
   getGitRepoDir(): GitRepoDir {
-    return this.gitRepoDir
+    return this.gitRepo.getDir()
   }
 
   commitBelongsToQueue(commitSubject: string): boolean {
@@ -146,14 +151,18 @@ export class Queue {
 
   async commitMessage(message: Message): Promise<CommitInfo> {
     const commitMessage = this.buildCommitMessage(message)
-    const commitResult = await this.git.commit(
-      commitMessage.forSimpleGit(),
-      this.commitOptions.forSimpleGit()
+
+    const commitResult = await this.gitRepo.commit(
+      commitMessage,
+      this.commitOptions
     )
+
     await this.loadMessagesFromGit()
+
     const committedMessage = this.findCommittedMessageByCommit(
       new CommitHash(commitResult.commit)
     )
+
     return committedMessage.commitInfo()
   }
 

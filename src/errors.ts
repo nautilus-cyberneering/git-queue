@@ -45,3 +45,10 @@ export class NoPendingJobsFoundError extends Error {
     Object.setPrototypeOf(this, NoPendingJobsFoundError.prototype)
   }
 }
+
+export class GitDirNotInitializedError extends Error {
+  constructor(dir: string) {
+    super(`Git dir: ${dir} has not been initialized`)
+    Object.setPrototypeOf(this, GitDirNotInitializedError.prototype)
+  }
+}

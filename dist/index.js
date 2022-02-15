@@ -617,7 +617,7 @@ exports.getErrorMessage = getErrorMessage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.NoPendingJobsFoundError = exports.PendingJobsLimitReachedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+exports.GitDirNotInitializedError = exports.NoPendingJobsFoundError = exports.PendingJobsLimitReachedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
 class MissingQueueNameInCommitSubjectError extends Error {
     constructor(commitSubject) {
         super(`Missing queue name in commit subject: ${commitSubject}`);
@@ -660,6 +660,13 @@ class NoPendingJobsFoundError extends Error {
     }
 }
 exports.NoPendingJobsFoundError = NoPendingJobsFoundError;
+class GitDirNotInitializedError extends Error {
+    constructor(dir) {
+        super(`Git dir: ${dir} has not been initialized`);
+        Object.setPrototypeOf(this, GitDirNotInitializedError.prototype);
+    }
+}
+exports.GitDirNotInitializedError = GitDirNotInitializedError;
 
 
 /***/ }),
@@ -679,8 +686,95 @@ class GitRepoDir {
     getDirPath() {
         return this.dirPath;
     }
+    equalsTo(other) {
+        return this.dirPath === other.dirPath;
+    }
 }
 exports.GitRepoDir = GitRepoDir;
+
+
+/***/ }),
+
+/***/ 8432:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GitRepo = void 0;
+const simple_git_1 = __nccwpck_require__(9103);
+class GitRepo {
+    constructor(dir, git) {
+        this.dir = dir;
+        this.git = git;
+    }
+    isInitialized() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (yield this.git.checkIsRepo(simple_git_1.CheckRepoActions.IS_REPO_ROOT))
+                ? true
+                : false;
+        });
+    }
+    getDir() {
+        return this.dir;
+    }
+    getDirPath() {
+        return this.dir.getDirPath();
+    }
+    getGit() {
+        return this.git;
+    }
+    init() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.git.init();
+        });
+    }
+    getCurrentBranch() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const status = yield this.git.status();
+            return status.current;
+        });
+    }
+    log() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.git.log();
+        });
+    }
+    hasCommits() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // TODO: find a better way to check if the repo has commits
+            const currentBranch = yield this.getCurrentBranch();
+            try {
+                yield this.log();
+            }
+            catch (err) {
+                if (err.message.includes(`fatal: your current branch '${currentBranch}' does not have any commits yet`)) {
+                    // No commits yet
+                    return false;
+                }
+                else {
+                    throw err;
+                }
+            }
+            return true;
+        });
+    }
+    commit(commitMessage, commitOptions) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.git.commit(commitMessage.forSimpleGit(), commitOptions.forSimpleGit());
+        });
+    }
+}
+exports.GitRepo = GitRepo;
 
 
 /***/ }),
@@ -776,6 +870,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const commit_author_1 = __nccwpck_require__(1606);
 const signing_key_id_1 = __nccwpck_require__(9869);
 const commit_options_1 = __nccwpck_require__(360);
+const git_repo_1 = __nccwpck_require__(8432);
 const git_repo_dir_1 = __nccwpck_require__(7775);
 const queue_1 = __nccwpck_require__(7065);
 const queue_name_1 = __nccwpck_require__(7894);
@@ -826,7 +921,8 @@ function run() {
             }));
             const git = yield (0, simple_git_factory_1.createInstance)(gitRepoDir);
             const commitOptions = yield getCommitOptions(inputs);
-            const queue = yield queue_1.Queue.create(new queue_name_1.QueueName(inputs.queueName), new git_repo_dir_1.GitRepoDir(gitRepoDir), git, commitOptions);
+            const gitRepo = new git_repo_1.GitRepo(new git_repo_dir_1.GitRepoDir(gitRepoDir), git);
+            const queue = yield queue_1.Queue.create(new queue_name_1.QueueName(inputs.queueName), gitRepo, commitOptions);
             switch (inputs.action) {
                 case ACTION_CREATE_JOB: {
                     const createJobCommit = yield queue.createJob(inputs.jobPayload);
@@ -989,53 +1085,51 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Queue = void 0;
 const commit_subject_parser_1 = __nccwpck_require__(386);
 const committed_message_1 = __nccwpck_require__(6537);
-const message_1 = __nccwpck_require__(3307);
 const errors_1 = __nccwpck_require__(9292);
+const message_1 = __nccwpck_require__(3307);
 const commit_body_1 = __nccwpck_require__(3801);
 const commit_hash_1 = __nccwpck_require__(5533);
 const commit_message_1 = __nccwpck_require__(1961);
 const commit_subject_1 = __nccwpck_require__(8798);
 const committed_message_log_1 = __nccwpck_require__(6472);
 class Queue {
-    constructor(name, gitRepoDir, git, commitOptions) {
+    constructor(name, gitRepo, commitOptions) {
         this.name = name;
-        this.gitRepoDir = gitRepoDir;
-        this.git = git;
+        this.gitRepo = gitRepo;
         this.commitOptions = commitOptions;
         this.committedMessages = committed_message_log_1.CommittedMessageLog.fromGitLogCommits([]);
     }
-    static create(name, gitRepoDir, git, commitOptions) {
+    static create(name, gitRepo, commitOptions) {
         return __awaiter(this, void 0, void 0, function* () {
-            const queue = new Queue(name, gitRepoDir, git, commitOptions);
+            const queue = new Queue(name, gitRepo, commitOptions);
             yield queue.loadMessagesFromGit();
             return queue;
         });
     }
+    guardThatGitRepoHasBeenInitialized() {
+        const isInitialized = this.gitRepo.isInitialized();
+        if (!isInitialized) {
+            throw new errors_1.GitDirNotInitializedError(this.gitRepo.getDirPath());
+        }
+    }
+    filterQueueCommits(gitLog) {
+        return gitLog.all.filter(commit => this.commitBelongsToQueue(commit.message));
+    }
     loadMessagesFromGit() {
         return __awaiter(this, void 0, void 0, function* () {
-            const isRepo = yield this.git.checkIsRepo();
-            if (!isRepo) {
-                throw Error(`Invalid git dir: ${this.gitRepoDir}`);
+            this.guardThatGitRepoHasBeenInitialized();
+            const noCommits = !(yield this.gitRepo.hasCommits()) ? true : false;
+            if (noCommits) {
+                return;
             }
-            const status = yield this.git.status();
-            const currentBranch = status.current;
-            try {
-                const gitLog = yield this.git.log();
-                const commits = gitLog.all.filter(commit => this.commitBelongsToQueue(commit.message));
-                this.committedMessages = committed_message_log_1.CommittedMessageLog.fromGitLogCommits(commits);
-            }
-            catch (err) {
-                if (err.message.includes(`fatal: your current branch '${currentBranch}' does not have any commits yet`)) {
-                    // no commits yet
-                }
-                else {
-                    throw err;
-                }
-            }
+            const allCommits = yield this.gitRepo.log();
+            const thisQueueCommits = this.filterQueueCommits(allCommits);
+            this.committedMessages =
+                committed_message_log_1.CommittedMessageLog.fromGitLogCommits(thisQueueCommits);
         });
     }
     getGitRepoDir() {
-        return this.gitRepoDir;
+        return this.gitRepo.getDir();
     }
     commitBelongsToQueue(commitSubject) {
         if (!(0, commit_subject_parser_1.commitSubjectBelongsToAQueue)(commitSubject)) {
@@ -1087,7 +1181,7 @@ class Queue {
     commitMessage(message) {
         return __awaiter(this, void 0, void 0, function* () {
             const commitMessage = this.buildCommitMessage(message);
-            const commitResult = yield this.git.commit(commitMessage.forSimpleGit(), this.commitOptions.forSimpleGit());
+            const commitResult = yield this.gitRepo.commit(commitMessage, this.commitOptions);
             yield this.loadMessagesFromGit();
             const committedMessage = this.findCommittedMessageByCommit(new commit_hash_1.CommitHash(commitResult.commit));
             return committedMessage.commitInfo();

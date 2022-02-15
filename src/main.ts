@@ -5,6 +5,7 @@ import {CommitAuthor, nullCommitAuthor} from './commit-author'
 import {SigningKeyId, nullSigningKeyId} from './signing-key-id'
 
 import {CommitOptions} from './commit-options'
+import {GitRepo} from './git-repo'
 import {GitRepoDir} from './git-repo-dir'
 import {Inputs} from './context'
 import {Queue} from './queue'
@@ -65,10 +66,11 @@ async function run(): Promise<void> {
 
     const commitOptions = await getCommitOptions(inputs)
 
+    const gitRepo = new GitRepo(new GitRepoDir(gitRepoDir), git)
+
     const queue = await Queue.create(
       new QueueName(inputs.queueName),
-      new GitRepoDir(gitRepoDir),
-      git,
+      gitRepo,
       commitOptions
     )
 
