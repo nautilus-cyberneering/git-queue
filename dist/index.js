@@ -1112,6 +1112,18 @@ class Queue {
             throw new errors_1.GitDirNotInitializedError(this.gitRepo.getDirPath());
         }
     }
+    guardThatThereAreNoPendingJobs() {
+        if (!this.getNextJob().isNull()) {
+            throw new errors_1.PendingJobsLimitReachedError(this.getNextJob().commitHash().toString());
+        }
+    }
+    guardThatThereIsAPendingJob() {
+        const pendingJob = this.getNextJob();
+        if (pendingJob.isNull()) {
+            throw new errors_1.NoPendingJobsFoundError(this.name.toString());
+        }
+        return pendingJob;
+    }
     filterQueueCommits(gitLog) {
         return gitLog.all.filter(commit => this.commitBelongsToQueue(commit.message));
     }
@@ -1128,14 +1140,26 @@ class Queue {
                 committed_message_log_1.CommittedMessageLog.fromGitLogCommits(thisQueueCommits);
         });
     }
-    getGitRepoDir() {
-        return this.gitRepo.getDir();
-    }
     commitBelongsToQueue(commitSubject) {
         if (!(0, commit_subject_parser_1.commitSubjectBelongsToAQueue)(commitSubject)) {
             return false;
         }
         return commit_subject_parser_1.CommitSubjectParser.parseText(commitSubject).belongsToQueue(this.name);
+    }
+    commitMessage(message) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const commitMessage = this.buildCommitMessage(message);
+            const commitResult = yield this.gitRepo.commit(commitMessage, this.commitOptions);
+            yield this.loadMessagesFromGit();
+            const committedMessage = this.findCommittedMessageByCommit(new commit_hash_1.CommitHash(commitResult.commit));
+            return committedMessage.commitInfo();
+        });
+    }
+    buildCommitMessage(message) {
+        return new commit_message_1.CommitMessage(commit_subject_1.CommitSubject.fromMessageAndQueueName(message, this.name), commit_body_1.CommitBody.fromMessage(message));
+    }
+    getGitRepoDir() {
+        return this.gitRepo.getDir();
     }
     getMessages() {
         return this.committedMessages.getMessages();
@@ -1152,21 +1176,12 @@ class Queue {
             ? latestMessage
             : (0, committed_message_1.nullMessage)();
     }
-    guardThatThereIsNoPendingJobs() {
-        if (!this.getNextJob().isNull()) {
-            throw new errors_1.PendingJobsLimitReachedError(this.getNextJob().commitHash().toString());
-        }
-    }
-    guardThatThereIsAPendingJob() {
-        const pendingJob = this.getNextJob();
-        if (pendingJob.isNull()) {
-            throw new errors_1.NoPendingJobsFoundError(this.name.toString());
-        }
-        return pendingJob;
+    findCommittedMessageByCommit(commitHash) {
+        return this.committedMessages.findByCommit(commitHash);
     }
     createJob(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.guardThatThereIsNoPendingJobs();
+            this.guardThatThereAreNoPendingJobs();
             const message = new message_1.NewJobMessage(payload);
             return this.commitMessage(message);
         });
@@ -1177,21 +1192,6 @@ class Queue {
             const message = new message_1.JobFinishedMessage(payload, pendingJob.commitHash());
             return this.commitMessage(message);
         });
-    }
-    commitMessage(message) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const commitMessage = this.buildCommitMessage(message);
-            const commitResult = yield this.gitRepo.commit(commitMessage, this.commitOptions);
-            yield this.loadMessagesFromGit();
-            const committedMessage = this.findCommittedMessageByCommit(new commit_hash_1.CommitHash(commitResult.commit));
-            return committedMessage.commitInfo();
-        });
-    }
-    findCommittedMessageByCommit(commitHash) {
-        return this.committedMessages.findByCommit(commitHash);
-    }
-    buildCommitMessage(message) {
-        return new commit_message_1.CommitMessage(commit_subject_1.CommitSubject.fromMessageAndQueueName(message, this.name), commit_body_1.CommitBody.fromMessage(message));
     }
 }
 exports.Queue = Queue;
