@@ -8,33 +8,41 @@ function dummyNewJobCommitSubjectText(): string {
   return '📝🈺: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
 }
 
+function dummySimpleGitCommit(hash = 'not relevant'): DefaultLogFields {
+  return {
+    hash,
+    date: 'not relevant',
+    message: dummyNewJobCommitSubjectText(),
+    refs: 'not relevant',
+    body: 'not relevant',
+    author_name: 'not relevant',
+    author_email: 'not relevant'
+  }
+}
+
+function dummySimpleGitCommitWithHash(hash: string): DefaultLogFields {
+  return {
+    hash,
+    date: 'not relevant',
+    message: dummyNewJobCommitSubjectText(),
+    refs: 'not relevant',
+    body: 'not relevant',
+    author_name: 'not relevant',
+    author_email: 'not relevant'
+  }
+}
+
 describe('CommittedMessageLog', () => {
   it('should be instantiate from an array of commits (DefaultLogFields)', async () => {
-    const commit: DefaultLogFields = {
-      hash: 'not relevant',
-      date: 'not relevant',
-      message: dummyNewJobCommitSubjectText(),
-      refs: 'not relevant',
-      body: 'not relevant',
-      author_name: 'not relevant',
-      author_email: 'not relevant'
-    }
-
-    const committedMessageLog = CommittedMessageLog.fromGitLogCommits([commit])
+    const committedMessageLog = CommittedMessageLog.fromGitLogCommits([
+      dummySimpleGitCommit()
+    ])
 
     expect(committedMessageLog).toBeInstanceOf(CommittedMessageLog)
   })
 
   it('should return the committed messages', async () => {
-    const commit: DefaultLogFields = {
-      hash: 'not relevant',
-      date: 'not relevant',
-      message: dummyNewJobCommitSubjectText(),
-      refs: 'not relevant',
-      body: 'not relevant',
-      author_name: 'not relevant',
-      author_email: 'not relevant'
-    }
+    const commit = dummySimpleGitCommit()
 
     const committedMessageLog = CommittedMessageLog.fromGitLogCommits([commit])
 
@@ -52,25 +60,12 @@ describe('CommittedMessageLog', () => {
   })
 
   it('should return the latest committed message', async () => {
-    const commit1: DefaultLogFields = {
-      hash: 'f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
-      date: 'not relevant',
-      message: dummyNewJobCommitSubjectText(),
-      refs: 'not relevant',
-      body: 'not relevant',
-      author_name: 'not relevant',
-      author_email: 'not relevant'
-    }
-
-    const commit2: DefaultLogFields = {
-      hash: '2ab1cce1479d25966e2dba5be89849a71264a192',
-      date: 'not relevant',
-      message: dummyNewJobCommitSubjectText(),
-      refs: 'not relevant',
-      body: 'not relevant',
-      author_name: 'not relevant',
-      author_email: 'not relevant'
-    }
+    const commit1 = dummySimpleGitCommitWithHash(
+      'f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+    )
+    const commit2 = dummySimpleGitCommitWithHash(
+      '2ab1cce1479d25966e2dba5be89849a71264a192'
+    )
 
     const committedMessageLog = CommittedMessageLog.fromGitLogCommits([
       commit1,
@@ -93,15 +88,9 @@ describe('CommittedMessageLog', () => {
   })
 
   it('should find a message by commit hash', async () => {
-    const commit: DefaultLogFields = {
-      hash: 'f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
-      date: 'not relevant',
-      message: dummyNewJobCommitSubjectText(),
-      refs: 'not relevant',
-      body: 'not relevant',
-      author_name: 'not relevant',
-      author_email: 'not relevant'
-    }
+    const commit = dummySimpleGitCommitWithHash(
+      'f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+    )
 
     const committedMessageLog = CommittedMessageLog.fromGitLogCommits([commit])
 
@@ -119,15 +108,9 @@ describe('CommittedMessageLog', () => {
   })
 
   it('should return a null message if it can not find a message by its commit hash', async () => {
-    const commit: DefaultLogFields = {
-      hash: 'f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
-      date: 'not relevant',
-      message: dummyNewJobCommitSubjectText(),
-      refs: 'not relevant',
-      body: 'not relevant',
-      author_name: 'not relevant',
-      author_email: 'not relevant'
-    }
+    const commit = dummySimpleGitCommitWithHash(
+      'f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+    )
 
     const committedMessageLog = CommittedMessageLog.fromGitLogCommits([commit])
 
