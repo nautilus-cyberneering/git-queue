@@ -329,6 +329,49 @@ exports.CommitSubject = CommitSubject;
 
 /***/ }),
 
+/***/ 6472:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CommittedMessageLog = void 0;
+const committed_message_1 = __nccwpck_require__(6537);
+const commit_info_1 = __nccwpck_require__(4136);
+/**
+ * A readonly list of ordered commit messages.
+ * A memory version of `git log` command containing only queue commits.
+ */
+class CommittedMessageLog {
+    constructor(messages) {
+        this.messages = messages;
+    }
+    static fromGitLogCommits(commits) {
+        const committedMessages = commits.map(commit => committed_message_1.CommittedMessage.fromCommitInfo(commit_info_1.CommitInfo.fromDefaultLogFields(commit)));
+        return new CommittedMessageLog(committedMessages);
+    }
+    getMessages() {
+        return this.messages;
+    }
+    isEmpty() {
+        return this.messages.length === 0;
+    }
+    getLatestMessage() {
+        return this.isEmpty() ? (0, committed_message_1.nullMessage)() : this.messages[0];
+    }
+    findByCommit(commitHash) {
+        const commits = this.messages.filter(message => message.commitHash().equalsTo(commitHash));
+        if (commits.length === 0) {
+            return (0, committed_message_1.nullMessage)();
+        }
+        return commits[0];
+    }
+}
+exports.CommittedMessageLog = CommittedMessageLog;
+
+
+/***/ }),
+
 /***/ 6537:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -366,6 +409,9 @@ class CommittedMessage {
     }
     isNull() {
         return this instanceof NullCommittedMessage;
+    }
+    equalsTo(other) {
+        return this.commit.equalsTo(other.commitInfo());
     }
 }
 exports.CommittedMessage = CommittedMessage;
@@ -944,16 +990,16 @@ const message_1 = __nccwpck_require__(3307);
 const errors_1 = __nccwpck_require__(9292);
 const commit_body_1 = __nccwpck_require__(3801);
 const commit_hash_1 = __nccwpck_require__(5533);
-const commit_info_1 = __nccwpck_require__(4136);
 const commit_message_1 = __nccwpck_require__(1961);
 const commit_subject_1 = __nccwpck_require__(8798);
+const committed_message_log_1 = __nccwpck_require__(6472);
 class Queue {
     constructor(name, gitRepoDir, git, commitOptions) {
         this.name = name;
         this.gitRepoDir = gitRepoDir;
         this.git = git;
         this.commitOptions = commitOptions;
-        this.committedMessages = [];
+        this.committedMessages = committed_message_log_1.CommittedMessageLog.fromGitLogCommits([]);
     }
     static create(name, gitRepoDir, git, commitOptions) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -973,7 +1019,7 @@ class Queue {
             try {
                 const gitLog = yield this.git.log();
                 const commits = gitLog.all.filter(commit => this.commitBelongsToQueue(commit.message));
-                this.committedMessages = commits.map(commit => committed_message_1.CommittedMessage.fromCommitInfo(commit_info_1.CommitInfo.fromDefaultLogFields(commit)));
+                this.committedMessages = committed_message_log_1.CommittedMessageLog.fromGitLogCommits(commits);
             }
             catch (err) {
                 if (err.message.includes(`fatal: your current branch '${currentBranch}' does not have any commits yet`)) {
@@ -995,13 +1041,13 @@ class Queue {
         return commit_subject_parser_1.CommitSubjectParser.parseText(commitSubject).belongsToQueue(this.name);
     }
     getMessages() {
-        return this.committedMessages;
+        return this.committedMessages.getMessages();
     }
     getLatestMessage() {
-        return this.isEmpty() ? (0, committed_message_1.nullMessage)() : this.committedMessages[0];
+        return this.committedMessages.getLatestMessage();
     }
     isEmpty() {
-        return this.committedMessages.length === 0;
+        return this.committedMessages.isEmpty();
     }
     getNextJob() {
         const latestMessage = this.getLatestMessage();
@@ -1045,11 +1091,7 @@ class Queue {
         });
     }
     findCommittedMessageByCommit(commitHash) {
-        const commits = this.committedMessages.filter(message => message.commitHash().equalsTo(commitHash));
-        if (commits.length === 0) {
-            return (0, committed_message_1.nullMessage)();
-        }
-        return commits[0];
+        return this.committedMessages.findByCommit(commitHash);
     }
     buildCommitMessage(message) {
         const commitSubject = this.buildCommitSubject(message);

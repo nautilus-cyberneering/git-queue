@@ -17,6 +17,7 @@ import {CommitInfo} from './commit-info'
 import {CommitMessage} from './commit-message'
 import {CommitOptions} from './commit-options'
 import {CommitSubject} from './commit-subject'
+import {CommittedMessageLog} from './committed-message-log'
 import {GitRepoDir} from './git-repo-dir'
 import {QueueName} from './queue-name'
 
@@ -25,7 +26,7 @@ export class Queue {
   private readonly gitRepoDir: GitRepoDir
   private readonly git: SimpleGit
   private readonly commitOptions: CommitOptions
-  private committedMessages: readonly CommittedMessage[]
+  private committedMessages: CommittedMessageLog
 
   private constructor(
     name: QueueName,
@@ -37,7 +38,7 @@ export class Queue {
     this.gitRepoDir = gitRepoDir
     this.git = git
     this.commitOptions = commitOptions
-    this.committedMessages = []
+    this.committedMessages = CommittedMessageLog.fromGitLogCommits([])
   }
 
   static async create(
@@ -65,9 +66,7 @@ export class Queue {
       const commits = gitLog.all.filter(commit =>
         this.commitBelongsToQueue(commit.message)
       )
-      this.committedMessages = commits.map(commit =>
-        CommittedMessage.fromCommitInfo(CommitInfo.fromDefaultLogFields(commit))
-      )
+      this.committedMessages = CommittedMessageLog.fromGitLogCommits(commits)
     } catch (err) {
       if (
         (err as GitResponseError).message.includes(
@@ -95,15 +94,15 @@ export class Queue {
   }
 
   getMessages(): readonly CommittedMessage[] {
-    return this.committedMessages
+    return this.committedMessages.getMessages()
   }
 
   getLatestMessage(): CommittedMessage {
-    return this.isEmpty() ? nullMessage() : this.committedMessages[0]
+    return this.committedMessages.getLatestMessage()
   }
 
   isEmpty(): boolean {
-    return this.committedMessages.length === 0
+    return this.committedMessages.isEmpty()
   }
 
   getNextJob(): CommittedMessage {
@@ -159,15 +158,7 @@ export class Queue {
   }
 
   findCommittedMessageByCommit(commitHash: CommitHash): CommittedMessage {
-    const commits = this.committedMessages.filter(message =>
-      message.commitHash().equalsTo(commitHash)
-    )
-
-    if (commits.length === 0) {
-      return nullMessage()
-    }
-
-    return commits[0]
+    return this.committedMessages.findByCommit(commitHash)
   }
 
   buildCommitMessage(message: Message): CommitMessage {

@@ -41,6 +41,10 @@ export abstract class CommittedMessage implements Nullable {
   isNull(): boolean {
     return this instanceof NullCommittedMessage
   }
+
+  equalsTo(other: CommittedMessage): boolean {
+    return this.commit.equalsTo(other.commitInfo())
+  }
 }
 
 export class NullCommittedMessage extends CommittedMessage {}
