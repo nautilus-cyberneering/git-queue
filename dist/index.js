@@ -54,6 +54,9 @@ class CommitBody {
     constructor(text) {
         this.text = text;
     }
+    static fromMessage(message) {
+        return new CommitBody(message.getPayload());
+    }
     toString() {
         return this.text;
     }
@@ -1094,15 +1097,7 @@ class Queue {
         return this.committedMessages.findByCommit(commitHash);
     }
     buildCommitMessage(message) {
-        const commitSubject = this.buildCommitSubject(message);
-        const commitBody = this.buildCommitBody(message);
-        return new commit_message_1.CommitMessage(commitSubject, commitBody);
-    }
-    buildCommitSubject(message) {
-        return commit_subject_1.CommitSubject.fromMessageAndQueueName(message, this.name);
-    }
-    buildCommitBody(message) {
-        return new commit_body_1.CommitBody(message.getPayload());
+        return new commit_message_1.CommitMessage(commit_subject_1.CommitSubject.fromMessageAndQueueName(message, this.name), commit_body_1.CommitBody.fromMessage(message));
     }
 }
 exports.Queue = Queue;

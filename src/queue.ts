@@ -162,16 +162,9 @@ export class Queue {
   }
 
   buildCommitMessage(message: Message): CommitMessage {
-    const commitSubject = this.buildCommitSubject(message)
-    const commitBody = this.buildCommitBody(message)
-    return new CommitMessage(commitSubject, commitBody)
-  }
-
-  buildCommitSubject(message: Message): CommitSubject {
-    return CommitSubject.fromMessageAndQueueName(message, this.name)
-  }
-
-  buildCommitBody(message: Message): CommitBody {
-    return new CommitBody(message.getPayload())
+    return new CommitMessage(
+      CommitSubject.fromMessageAndQueueName(message, this.name),
+      CommitBody.fromMessage(message)
+    )
   }
 }
