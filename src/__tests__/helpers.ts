@@ -4,10 +4,11 @@ import * as openpgp from './openpgp'
 
 import simpleGit, {SimpleGit} from 'simple-git'
 
-import {createTempDir} from 'jest-fixtures'
-import {testConfiguration} from './config'
 import {GitRepo} from '../git-repo'
 import {GitRepoDir} from '../git-repo-dir'
+
+import {createTempDir} from 'jest-fixtures'
+import {testConfiguration} from './config'
 
 export async function createTempEmptyDir(): Promise<string> {
   const tempGitDirPath = await createTempDir()
