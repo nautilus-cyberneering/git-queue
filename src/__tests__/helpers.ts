@@ -6,6 +6,8 @@ import simpleGit, {SimpleGit} from 'simple-git'
 
 import {createTempDir} from 'jest-fixtures'
 import {testConfiguration} from './config'
+import {GitRepo} from '../git-repo'
+import {GitRepoDir} from '../git-repo-dir'
 
 export async function createTempEmptyDir(): Promise<string> {
   const tempGitDirPath = await createTempDir()
@@ -33,11 +35,28 @@ export async function newSimpleGit(baseDir: string): Promise<SimpleGit> {
   return simpleGit(baseDir)
 }
 
+export async function newSimpleGitWithCommitterIdentity(
+  gitRepoDir: string
+): Promise<SimpleGit> {
+  const git = await newSimpleGit(gitRepoDir)
+  git.addConfig('user.name', testConfiguration().git.user.name)
+  git.addConfig('user.email', testConfiguration().git.user.email)
+  return git
+}
+
 export async function createInitializedTempGitDir(): Promise<string> {
   const gitRepoDir = await createTempEmptyDir()
   const git = await newSimpleGit(gitRepoDir)
   await git.init()
   return gitRepoDir
+}
+
+export async function createInitializedGitRepo(): Promise<GitRepo> {
+  const gitRepoDirPath = await createInitializedTempGitDir()
+  const git = await newSimpleGitWithCommitterIdentity(gitRepoDirPath)
+  const gitRepo = new GitRepo(new GitRepoDir(gitRepoDirPath), git)
+  await gitRepo.init()
+  return gitRepo
 }
 
 export function dummyPayload(): string {

@@ -745,13 +745,13 @@ class GitRepo {
     getDirPath() {
         return this.dir.getDirPath();
     }
-    getGit() {
-        return this.git;
-    }
     init() {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.git.init();
         });
+    }
+    env(name, value) {
+        this.git.env(name, value);
     }
     getCurrentBranch() {
         return __awaiter(this, void 0, void 0, function* () {

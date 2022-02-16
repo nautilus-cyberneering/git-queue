@@ -24,15 +24,6 @@ describe('GitRepo', () => {
     expect(gitRepo.getDir().equalsTo(gitRepoDir)).toBe(true)
   })
 
-  it('should contain a git command wrapper', async () => {
-    const gitRepoDir = new GitRepoDir('./')
-    const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
-
-    const gitRepo = new GitRepo(gitRepoDir, git)
-
-    expect(gitRepo.getGit()).toBeDefined()
-  })
-
   it('could init a git repo', async () => {
     const gitRepoDir = new GitRepoDir(await createTempEmptyDir())
     const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
