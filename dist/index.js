@@ -1045,6 +1045,9 @@ class Message {
 }
 exports.Message = Message;
 class NewJobMessage extends Message {
+    constructor(payload) {
+        super(payload, (0, commit_hash_1.nullCommitHash)());
+    }
     getKey() {
         return new message_key_1.MessageKey('🈺');
     }
