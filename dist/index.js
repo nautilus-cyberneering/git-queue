@@ -341,6 +341,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommittedMessageLog = void 0;
 const committed_message_1 = __nccwpck_require__(6537);
 const commit_info_1 = __nccwpck_require__(4136);
+const commit_subject_parser_1 = __nccwpck_require__(386);
 /**
  * A readonly list of ordered commit messages.
  * A memory version of `git log` command containing only queue commits.
@@ -349,8 +350,12 @@ class CommittedMessageLog {
     constructor(messages) {
         this.messages = messages;
     }
-    static fromGitLogCommits(commits) {
-        const committedMessages = commits.map(commit => committed_message_1.CommittedMessage.fromCommitInfo(commit_info_1.CommitInfo.fromDefaultLogFields(commit)));
+    static filterQueueCommits(commits) {
+        return commits.filter(commit => (0, commit_subject_parser_1.commitSubjectBelongsToAQueue)(commit.message));
+    }
+    static fromGitLogCommits(allCommits) {
+        const onlyQueueCommits = this.filterQueueCommits(allCommits);
+        const committedMessages = onlyQueueCommits.map(commit => committed_message_1.CommittedMessage.fromCommitInfo(commit_info_1.CommitInfo.fromDefaultLogFields(commit)));
         return new CommittedMessageLog(committedMessages);
     }
     getMessages() {
@@ -368,6 +373,10 @@ class CommittedMessageLog {
             return (0, committed_message_1.nullMessage)();
         }
         return commits[0];
+    }
+    filterCommitsByQueue(queueName) {
+        const filteredMessages = this.messages.filter(committedMessage => committedMessage.belongsToQueue(queueName));
+        return new CommittedMessageLog(filteredMessages);
     }
 }
 exports.CommittedMessageLog = CommittedMessageLog;
@@ -407,6 +416,9 @@ class CommittedMessage {
     commitHash() {
         return this.commit.hash;
     }
+    commitSubject() {
+        return commit_subject_parser_1.CommitSubjectParser.parseText(this.commit.message);
+    }
     payload() {
         return this.commit.body.trim();
     }
@@ -415,6 +427,9 @@ class CommittedMessage {
     }
     equalsTo(other) {
         return this.commit.equalsTo(other.commitInfo());
+    }
+    belongsToQueue(queueName) {
+        return this.commitSubject().belongsToQueue(queueName);
     }
 }
 exports.CommittedMessage = CommittedMessage;
@@ -1095,7 +1110,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Queue = void 0;
-const commit_subject_parser_1 = __nccwpck_require__(386);
 const committed_message_1 = __nccwpck_require__(6537);
 const errors_1 = __nccwpck_require__(9292);
 const message_1 = __nccwpck_require__(3307);
@@ -1136,9 +1150,6 @@ class Queue {
         }
         return pendingJob;
     }
-    filterQueueCommits(gitLog) {
-        return gitLog.all.filter(commit => this.commitBelongsToQueue(commit.message));
-    }
     loadMessagesFromGit() {
         return __awaiter(this, void 0, void 0, function* () {
             this.guardThatGitRepoHasBeenInitialized();
@@ -1146,17 +1157,10 @@ class Queue {
             if (noCommits) {
                 return;
             }
-            const allCommits = yield this.gitRepo.log();
-            const thisQueueCommits = this.filterQueueCommits(allCommits);
-            this.committedMessages =
-                committed_message_log_1.CommittedMessageLog.fromGitLogCommits(thisQueueCommits);
+            const logCommits = yield this.gitRepo.log();
+            const allMessages = committed_message_log_1.CommittedMessageLog.fromGitLogCommits(logCommits.all);
+            this.committedMessages = allMessages.filterCommitsByQueue(this.name);
         });
-    }
-    commitBelongsToQueue(commitSubject) {
-        if (!(0, commit_subject_parser_1.commitSubjectBelongsToAQueue)(commitSubject)) {
-            return false;
-        }
-        return commit_subject_parser_1.CommitSubjectParser.parseText(commitSubject).belongsToQueue(this.name);
     }
     commitMessage(message) {
         return __awaiter(this, void 0, void 0, function* () {

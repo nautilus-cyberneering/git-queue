@@ -1,8 +1,10 @@
 import {CommitInfo, nullCommitInfo} from './commit-info'
 import {CommitHash} from './commit-hash'
+import {CommitSubject} from './commit-subject'
 import {CommitSubjectParser} from './commit-subject-parser'
 import {InvalidMessageKeyError} from './errors'
 import {Nullable} from './nullable'
+import {QueueName} from './queue-name'
 
 export abstract class CommittedMessage implements Nullable {
   private readonly commit: CommitInfo
@@ -34,6 +36,10 @@ export abstract class CommittedMessage implements Nullable {
     return this.commit.hash
   }
 
+  commitSubject(): CommitSubject {
+    return CommitSubjectParser.parseText(this.commit.message)
+  }
+
   payload(): string {
     return this.commit.body.trim()
   }
@@ -44,6 +50,10 @@ export abstract class CommittedMessage implements Nullable {
 
   equalsTo(other: CommittedMessage): boolean {
     return this.commit.equalsTo(other.commitInfo())
+  }
+
+  belongsToQueue(queueName: QueueName): boolean {
+    return this.commitSubject().belongsToQueue(queueName)
   }
 }
 
