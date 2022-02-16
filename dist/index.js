@@ -884,7 +884,7 @@ function actionOptions() {
     const options = [ACTION_CREATE_JOB, ACTION_NEXT_JOB, ACTION_FINISH_JOB];
     return options.join(', ');
 }
-function getCommitAuthor(commitAuthor) {
+function getCommitAuthorFromInputs(commitAuthor) {
     return __awaiter(this, void 0, void 0, function* () {
         if (commitAuthor) {
             return commit_author_1.CommitAuthor.fromEmailAddressString(commitAuthor);
@@ -892,7 +892,7 @@ function getCommitAuthor(commitAuthor) {
         return (0, commit_author_1.nullCommitAuthor)();
     });
 }
-function getSigningKeyId(signingKeyId) {
+function getSigningKeyIdFromInputs(signingKeyId) {
     return __awaiter(this, void 0, void 0, function* () {
         if (signingKeyId) {
             return new signing_key_id_1.SigningKeyId(signingKeyId);
@@ -900,28 +900,40 @@ function getSigningKeyId(signingKeyId) {
         return (0, signing_key_id_1.nullSigningKeyId)();
     });
 }
-function getCommitOptions(inputs) {
+function getGitRepoDirFromInputs(gitRepoDir, cwd) {
     return __awaiter(this, void 0, void 0, function* () {
-        const author = yield getCommitAuthor(inputs.gitCommitAuthor);
-        const gpgSign = yield getSigningKeyId(inputs.gitCommitGpgSign);
+        if (gitRepoDir !== '') {
+            return new git_repo_dir_1.GitRepoDir(gitRepoDir);
+        }
+        return new git_repo_dir_1.GitRepoDir(cwd);
+    });
+}
+function getCommitOptionsFromInputs(inputs) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const author = yield getCommitAuthorFromInputs(inputs.gitCommitAuthor);
+        const gpgSign = yield getSigningKeyIdFromInputs(inputs.gitCommitGpgSign);
         const noGpgSig = inputs.gitCommitNoGpgSign;
         return new commit_options_1.CommitOptions(author, gpgSign, noGpgSig);
+    });
+}
+function printDebugInfo(gitRepoDir, gnuPGHomeDir) {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield core.group(`Debug info`, () => __awaiter(this, void 0, void 0, function* () {
+            core.info(`git_repo_dir: ${gitRepoDir.getDirPath()}`);
+            core.info(`gnupg_home_dir: ${gnuPGHomeDir}`);
+        }));
     });
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const inputs = yield context.getInputs();
-            const gitRepoDir = inputs.gitRepoDir !== '' ? inputs.gitRepoDir : process.cwd();
+            const gitRepoDir = yield getGitRepoDirFromInputs(inputs.gitRepoDir, process.cwd());
+            const commitOptions = yield getCommitOptionsFromInputs(inputs);
             const gnuPGHomeDir = yield (0, gpg_env_1.getGnupgHome)();
-            yield core.group(`Debug info`, () => __awaiter(this, void 0, void 0, function* () {
-                core.info(`git_repo_dir input: ${inputs.gitRepoDir} ${typeof inputs.gitRepoDir}`);
-                core.info(`git_repo_dir: ${gitRepoDir}`);
-                core.info(`gnupg_home_dir: ${gnuPGHomeDir}`);
-            }));
-            const git = yield (0, simple_git_factory_1.createInstance)(gitRepoDir);
-            const commitOptions = yield getCommitOptions(inputs);
-            const gitRepo = new git_repo_1.GitRepo(new git_repo_dir_1.GitRepoDir(gitRepoDir), git);
+            yield printDebugInfo(gitRepoDir, gnuPGHomeDir);
+            const git = yield (0, simple_git_factory_1.createGitInstance)(gitRepoDir);
+            const gitRepo = new git_repo_1.GitRepo(gitRepoDir, git);
             const queue = yield queue_1.Queue.create(new queue_name_1.QueueName(inputs.queueName), gitRepo, commitOptions);
             switch (inputs.action) {
                 case ACTION_CREATE_JOB: {
@@ -1247,7 +1259,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createInstance = void 0;
+exports.createGitInstance = void 0;
 const simple_git_1 = __importDefault(__nccwpck_require__(9103));
 function getGitConfig(key, git) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -1258,9 +1270,9 @@ function getGitConfig(key, git) {
         return null;
     });
 }
-function createInstance(gitRepoDir) {
+function createGitInstance(gitRepoDir) {
     return __awaiter(this, void 0, void 0, function* () {
-        const git = (0, simple_git_1.default)(gitRepoDir);
+        const git = (0, simple_git_1.default)(gitRepoDir.getDirPath());
         /*
          * We need to pass the env vars to the child git process
          * because the user might want to use some env vars like:
@@ -1302,7 +1314,7 @@ function createInstance(gitRepoDir) {
         return git;
     });
 }
-exports.createInstance = createInstance;
+exports.createGitInstance = createGitInstance;
 
 
 /***/ }),

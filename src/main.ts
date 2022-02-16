@@ -11,7 +11,7 @@ import {Inputs} from './context'
 import {Queue} from './queue'
 import {QueueName} from './queue-name'
 
-import {createInstance} from './simple-git-factory'
+import {createGitInstance} from './simple-git-factory'
 import {getErrorMessage} from './error'
 import {getGnupgHome} from './gpg-env'
 
@@ -24,49 +24,72 @@ function actionOptions(): string {
   return options.join(', ')
 }
 
-async function getCommitAuthor(commitAuthor: string): Promise<CommitAuthor> {
+async function getCommitAuthorFromInputs(
+  commitAuthor: string
+): Promise<CommitAuthor> {
   if (commitAuthor) {
     return CommitAuthor.fromEmailAddressString(commitAuthor)
   }
   return nullCommitAuthor()
 }
 
-async function getSigningKeyId(signingKeyId: string): Promise<SigningKeyId> {
+async function getSigningKeyIdFromInputs(
+  signingKeyId: string
+): Promise<SigningKeyId> {
   if (signingKeyId) {
     return new SigningKeyId(signingKeyId)
   }
   return nullSigningKeyId()
 }
 
-async function getCommitOptions(inputs: Inputs): Promise<CommitOptions> {
-  const author = await getCommitAuthor(inputs.gitCommitAuthor)
-  const gpgSign = await getSigningKeyId(inputs.gitCommitGpgSign)
+async function getGitRepoDirFromInputs(
+  gitRepoDir: string,
+  cwd: string
+): Promise<GitRepoDir> {
+  if (gitRepoDir !== '') {
+    return new GitRepoDir(gitRepoDir)
+  }
+  return new GitRepoDir(cwd)
+}
+
+async function getCommitOptionsFromInputs(
+  inputs: Inputs
+): Promise<CommitOptions> {
+  const author = await getCommitAuthorFromInputs(inputs.gitCommitAuthor)
+  const gpgSign = await getSigningKeyIdFromInputs(inputs.gitCommitGpgSign)
   const noGpgSig = inputs.gitCommitNoGpgSign
 
   return new CommitOptions(author, gpgSign, noGpgSig)
+}
+
+async function printDebugInfo(
+  gitRepoDir: GitRepoDir,
+  gnuPGHomeDir: string
+): Promise<void> {
+  await core.group(`Debug info`, async () => {
+    core.info(`git_repo_dir: ${gitRepoDir.getDirPath()}`)
+    core.info(`gnupg_home_dir: ${gnuPGHomeDir}`)
+  })
 }
 
 async function run(): Promise<void> {
   try {
     const inputs: context.Inputs = await context.getInputs()
 
-    const gitRepoDir =
-      inputs.gitRepoDir !== '' ? inputs.gitRepoDir : process.cwd()
+    const gitRepoDir = await getGitRepoDirFromInputs(
+      inputs.gitRepoDir,
+      process.cwd()
+    )
+
+    const commitOptions = await getCommitOptionsFromInputs(inputs)
+
     const gnuPGHomeDir = await getGnupgHome()
 
-    await core.group(`Debug info`, async () => {
-      core.info(
-        `git_repo_dir input: ${inputs.gitRepoDir} ${typeof inputs.gitRepoDir}`
-      )
-      core.info(`git_repo_dir: ${gitRepoDir}`)
-      core.info(`gnupg_home_dir: ${gnuPGHomeDir}`)
-    })
+    await printDebugInfo(gitRepoDir, gnuPGHomeDir)
 
-    const git = await createInstance(gitRepoDir)
+    const git = await createGitInstance(gitRepoDir)
 
-    const commitOptions = await getCommitOptions(inputs)
-
-    const gitRepo = new GitRepo(new GitRepoDir(gitRepoDir), git)
+    const gitRepo = new GitRepo(gitRepoDir, git)
 
     const queue = await Queue.create(
       new QueueName(inputs.queueName),

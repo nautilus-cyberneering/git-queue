@@ -1,4 +1,5 @@
 import simpleGit, {SimpleGit} from 'simple-git'
+import {GitRepoDir} from './git-repo-dir'
 
 async function getGitConfig(
   key: string,
@@ -11,8 +12,10 @@ async function getGitConfig(
   return null
 }
 
-export async function createInstance(gitRepoDir: string): Promise<SimpleGit> {
-  const git: SimpleGit = simpleGit(gitRepoDir)
+export async function createGitInstance(
+  gitRepoDir: GitRepoDir
+): Promise<SimpleGit> {
+  const git: SimpleGit = simpleGit(gitRepoDir.getDirPath())
 
   /*
    * We need to pass the env vars to the child git process
