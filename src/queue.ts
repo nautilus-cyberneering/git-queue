@@ -48,8 +48,8 @@ export class Queue {
     return queue
   }
 
-  private guardThatGitRepoHasBeenInitialized(): void {
-    const isInitialized = this.gitRepo.isInitialized()
+  private async guardThatGitRepoHasBeenInitialized(): Promise<void> {
+    const isInitialized = await this.gitRepo.isInitialized()
     if (!isInitialized) {
       throw new GitDirNotInitializedError(this.gitRepo.getDirPath())
     }
@@ -72,7 +72,7 @@ export class Queue {
   }
 
   private async loadMessagesFromGit(): Promise<void> {
-    this.guardThatGitRepoHasBeenInitialized()
+    await this.guardThatGitRepoHasBeenInitialized()
 
     const noCommits = !(await this.gitRepo.hasCommits()) ? true : false
 

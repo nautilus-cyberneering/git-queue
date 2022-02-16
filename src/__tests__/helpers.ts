@@ -38,9 +38,17 @@ export async function newSimpleGit(baseDir: string): Promise<SimpleGit> {
 export async function newSimpleGitWithCommitterIdentity(
   gitRepoDir: string
 ): Promise<SimpleGit> {
-  const git = await newSimpleGit(gitRepoDir)
+  const git = await newSimpleGitWithoutCommitterIdentity(gitRepoDir)
+  git.init()
   git.addConfig('user.name', testConfiguration().git.user.name)
   git.addConfig('user.email', testConfiguration().git.user.email)
+  return git
+}
+
+export async function newSimpleGitWithoutCommitterIdentity(
+  gitRepoDir: string
+): Promise<SimpleGit> {
+  const git = await newSimpleGit(gitRepoDir)
   return git
 }
 
@@ -52,10 +60,16 @@ export async function createInitializedTempGitDir(): Promise<string> {
 }
 
 export async function createInitializedGitRepo(): Promise<GitRepo> {
-  const gitRepoDirPath = await createInitializedTempGitDir()
+  const gitRepoDirPath = await createTempEmptyDir()
   const git = await newSimpleGitWithCommitterIdentity(gitRepoDirPath)
   const gitRepo = new GitRepo(new GitRepoDir(gitRepoDirPath), git)
-  await gitRepo.init()
+  return gitRepo
+}
+
+export async function createNotInitializedGitRepo(): Promise<GitRepo> {
+  const gitRepoDirPath = await createTempEmptyDir()
+  const git = await newSimpleGitWithoutCommitterIdentity(gitRepoDirPath)
+  const gitRepo = new GitRepo(new GitRepoDir(gitRepoDirPath), git)
   return gitRepo
 }
 
