@@ -7,6 +7,7 @@ import {
 } from '../../src/__tests__/helpers'
 
 import {CommitAuthor} from '../../src/commit-author'
+import {CommitInfo} from '../../src/commit-info'
 import {CommitOptions} from '../../src/commit-options'
 import {Queue} from '../../src/queue'
 import {QueueName} from '../../src/queue-name'
@@ -49,6 +50,12 @@ async function createTestQueue(commitOptions: CommitOptions): Promise<Queue> {
 }
 
 describe('Queue', () => {
+  it('could be empty', async () => {
+    const queue = await createTestQueue(commitOptionsForTests())
+
+    expect(queue.isEmpty()).toBe(true)
+  })
+
   it('should dispatch a new job', async () => {
     const queue = await createTestQueue(commitOptionsForTests())
 
@@ -57,6 +64,20 @@ describe('Queue', () => {
     const nextJob = queue.getNextJob()
 
     expect(nextJob.payload()).toBe(dummyPayload())
+  })
+
+  it('should fail when trying to create a job if the previous job has not finished yet', async () => {
+    const queue = await createTestQueue(commitOptionsForTests())
+
+    const commit = await queue.createJob(dummyPayload())
+
+    const fn = async (): Promise<CommitInfo> => {
+      return queue.createJob(dummyPayload())
+    }
+
+    const expectedError = `Can't create a new job. There is already a pending job in commit: ${commit.hash}`
+
+    await expect(fn()).rejects.toThrowError(expectedError)
   })
 
   it('should mark a job as finished', async () => {
@@ -68,6 +89,20 @@ describe('Queue', () => {
     const nextJob = queue.getNextJob()
 
     expect(nextJob.isNull()).toBe(true)
+  })
+
+  it('should fail when trying to finish a job without any pending to finish job', async () => {
+    const queue = await createTestQueue(commitOptionsForTests())
+
+    const fn = async (): Promise<CommitInfo> => {
+      return queue.markJobAsFinished(dummyPayload())
+    }
+
+    const expectedError = `Can't mark job as finished. There isn't any pending job in queue: ${queue
+      .getName()
+      .toString()}`
+
+    await expect(fn()).rejects.toThrowError(expectedError)
   })
 
   it('should allow to specify the commit author', async () => {
@@ -132,5 +167,15 @@ describe('Queue', () => {
     const expectedError = `Git dir: ${gitRepo.getDirPath()} has not been initialized`
 
     await expect(fn()).rejects.toThrowError(expectedError)
+  })
+
+  it('should return all the messages in the queue', async () => {
+    const queue = await createTestQueue(commitOptionsForTests())
+
+    await queue.createJob(dummyPayload())
+
+    const messages = queue.getMessages()
+
+    expect(messages).toContain(queue.getLatestMessage())
   })
 })

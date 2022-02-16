@@ -111,6 +111,10 @@ export class Queue {
     )
   }
 
+  getName(): QueueName {
+    return this.name
+  }
+
   getGitRepoDir(): GitRepoDir {
     return this.gitRepo.getDir()
   }

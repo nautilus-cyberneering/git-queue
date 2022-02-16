@@ -1173,6 +1173,9 @@ class Queue {
     buildCommitMessage(message) {
         return new commit_message_1.CommitMessage(commit_subject_1.CommitSubject.fromMessageAndQueueName(message, this.name), commit_body_1.CommitBody.fromMessage(message));
     }
+    getName() {
+        return this.name;
+    }
     getGitRepoDir() {
         return this.gitRepo.getDir();
     }
