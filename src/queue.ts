@@ -53,11 +53,27 @@ export class Queue {
     return queue
   }
 
-  guardThatGitRepoHasBeenInitialized(): void {
+  private guardThatGitRepoHasBeenInitialized(): void {
     const isInitialized = this.gitRepo.isInitialized()
     if (!isInitialized) {
       throw new GitDirNotInitializedError(this.gitRepo.getDirPath())
     }
+  }
+
+  private guardThatThereAreNoPendingJobs(): void {
+    if (!this.getNextJob().isNull()) {
+      throw new PendingJobsLimitReachedError(
+        this.getNextJob().commitHash().toString()
+      )
+    }
+  }
+
+  private guardThatThereIsAPendingJob(): CommittedMessage {
+    const pendingJob = this.getNextJob()
+    if (pendingJob.isNull()) {
+      throw new NoPendingJobsFoundError(this.name.toString())
+    }
+    return pendingJob
   }
 
   private filterQueueCommits(
@@ -68,7 +84,7 @@ export class Queue {
     )
   }
 
-  async loadMessagesFromGit(): Promise<void> {
+  private async loadMessagesFromGit(): Promise<void> {
     this.guardThatGitRepoHasBeenInitialized()
 
     const noCommits = !(await this.gitRepo.hasCommits()) ? true : false
@@ -85,17 +101,41 @@ export class Queue {
       CommittedMessageLog.fromGitLogCommits(thisQueueCommits)
   }
 
-  getGitRepoDir(): GitRepoDir {
-    return this.gitRepo.getDir()
-  }
-
-  commitBelongsToQueue(commitSubject: string): boolean {
+  private commitBelongsToQueue(commitSubject: string): boolean {
     if (!commitSubjectBelongsToAQueue(commitSubject)) {
       return false
     }
     return CommitSubjectParser.parseText(commitSubject).belongsToQueue(
       this.name
     )
+  }
+
+  private async commitMessage(message: Message): Promise<CommitInfo> {
+    const commitMessage = this.buildCommitMessage(message)
+
+    const commitResult = await this.gitRepo.commit(
+      commitMessage,
+      this.commitOptions
+    )
+
+    await this.loadMessagesFromGit()
+
+    const committedMessage = this.findCommittedMessageByCommit(
+      new CommitHash(commitResult.commit)
+    )
+
+    return committedMessage.commitInfo()
+  }
+
+  private buildCommitMessage(message: Message): CommitMessage {
+    return new CommitMessage(
+      CommitSubject.fromMessageAndQueueName(message, this.name),
+      CommitBody.fromMessage(message)
+    )
+  }
+
+  getGitRepoDir(): GitRepoDir {
+    return this.gitRepo.getDir()
   }
 
   getMessages(): readonly CommittedMessage[] {
@@ -117,24 +157,12 @@ export class Queue {
       : nullMessage()
   }
 
-  guardThatThereIsNoPendingJobs(): void {
-    if (!this.getNextJob().isNull()) {
-      throw new PendingJobsLimitReachedError(
-        this.getNextJob().commitHash().toString()
-      )
-    }
-  }
-
-  guardThatThereIsAPendingJob(): CommittedMessage {
-    const pendingJob = this.getNextJob()
-    if (pendingJob.isNull()) {
-      throw new NoPendingJobsFoundError(this.name.toString())
-    }
-    return pendingJob
+  findCommittedMessageByCommit(commitHash: CommitHash): CommittedMessage {
+    return this.committedMessages.findByCommit(commitHash)
   }
 
   async createJob(payload: string): Promise<CommitInfo> {
-    this.guardThatThereIsNoPendingJobs()
+    this.guardThatThereAreNoPendingJobs()
 
     const message = new NewJobMessage(payload)
 
@@ -147,33 +175,5 @@ export class Queue {
     const message = new JobFinishedMessage(payload, pendingJob.commitHash())
 
     return this.commitMessage(message)
-  }
-
-  async commitMessage(message: Message): Promise<CommitInfo> {
-    const commitMessage = this.buildCommitMessage(message)
-
-    const commitResult = await this.gitRepo.commit(
-      commitMessage,
-      this.commitOptions
-    )
-
-    await this.loadMessagesFromGit()
-
-    const committedMessage = this.findCommittedMessageByCommit(
-      new CommitHash(commitResult.commit)
-    )
-
-    return committedMessage.commitInfo()
-  }
-
-  findCommittedMessageByCommit(commitHash: CommitHash): CommittedMessage {
-    return this.committedMessages.findByCommit(commitHash)
-  }
-
-  buildCommitMessage(message: Message): CommitMessage {
-    return new CommitMessage(
-      CommitSubject.fromMessageAndQueueName(message, this.name),
-      CommitBody.fromMessage(message)
-    )
   }
 }
