@@ -33,12 +33,12 @@ export class GitRepo {
     return this.dir.getDirPath()
   }
 
-  getGit(): SimpleGit {
-    return this.git
-  }
-
   async init(): Promise<void> {
     await this.git.init()
+  }
+
+  env(name: string, value: string): void {
+    this.git.env(name, value)
   }
 
   async getCurrentBranch(): Promise<string | null> {

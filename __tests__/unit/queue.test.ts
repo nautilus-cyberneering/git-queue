@@ -1,19 +1,15 @@
 import {
-  createInitializedTempGitDir,
+  createInitializedGitRepo,
   createInitializedTempGnuPGHomeDir,
   dummyPayload,
-  gitLogForLatestCommit,
-  newSimpleGit
+  gitLogForLatestCommit
 } from '../../src/__tests__/helpers'
 
 import {CommitAuthor} from '../../src/commit-author'
 import {CommitOptions} from '../../src/commit-options'
-import {GitRepo} from '../../src/git-repo'
-import {GitRepoDir} from '../../src/git-repo-dir'
 import {Queue} from '../../src/queue'
 import {QueueName} from '../../src/queue-name'
 import {SigningKeyId} from '../../src/signing-key-id'
-import {SimpleGit} from 'simple-git'
 
 import {testConfiguration} from '../../src/__tests__/config'
 
@@ -39,21 +35,8 @@ function commitOptionsForTestsUsingSignature(): CommitOptions {
   return new CommitOptions(author, signingKeyId, noGpgSig)
 }
 
-async function newSimpleGitWithCommitterIdentity(
-  gitRepoDir: string
-): Promise<SimpleGit> {
-  const git = await newSimpleGit(gitRepoDir)
-  git.addConfig('user.name', testConfiguration().git.user.name)
-  git.addConfig('user.email', testConfiguration().git.user.email)
-  return git
-}
-
 async function createTestQueue(commitOptions: CommitOptions): Promise<Queue> {
-  const gitRepoDir = await createInitializedTempGitDir()
-
-  const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
-
-  const gitRepo = new GitRepo(new GitRepoDir(gitRepoDir), git)
+  const gitRepo = await createInitializedGitRepo()
 
   const queue = await Queue.create(
     new QueueName('QUEUE NAME'),
@@ -109,17 +92,12 @@ describe('Queue', () => {
   })
 
   it('should allow to sign commits', async () => {
-    const gitRepoDir = await createInitializedTempGitDir()
+    const gitRepo = await createInitializedGitRepo()
 
     const gnuPGHomeDir = await createInitializedTempGnuPGHomeDir()
     const signingKeyFingerprint =
       testConfiguration().gpg_signing_key.fingerprint
-
-    const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
-
-    git.env('GNUPGHOME', gnuPGHomeDir)
-
-    const gitRepo = new GitRepo(new GitRepoDir(gitRepoDir), git)
+    gitRepo.env('GNUPGHOME', gnuPGHomeDir)
 
     const queue = await Queue.create(
       new QueueName('QUEUE NAME'),
@@ -129,7 +107,7 @@ describe('Queue', () => {
 
     await queue.createJob(dummyPayload())
 
-    const output = gitLogForLatestCommit(gitRepoDir)
+    const output = gitLogForLatestCommit(gitRepo.getDirPath())
 
     expect(
       output.includes(
