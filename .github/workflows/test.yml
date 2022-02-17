@@ -132,7 +132,6 @@ jobs:
           git log --show-signature
 
       - name: Show new commits
-        if: ${{ steps.finish-job.outputs.job_created == 'true' }}
         run: |
           cd ${{ runner.temp }}/temp_git_dir
           git show --show-signature ${{ steps.create-job.outputs.job_commit }}
