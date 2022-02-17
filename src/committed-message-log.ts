@@ -3,6 +3,9 @@ import {DefaultLogFields, ListLogLine} from 'simple-git'
 
 import {CommitHash} from './commit-hash'
 import {CommitInfo} from './commit-info'
+import {QueueName} from './queue-name'
+
+import {commitSubjectBelongsToAQueue} from './commit-subject-parser'
 
 /**
  * A readonly list of ordered commit messages.
@@ -15,12 +18,23 @@ export class CommittedMessageLog {
     this.messages = messages
   }
 
+  private static filterQueueCommits(
+    commits: readonly (DefaultLogFields & ListLogLine)[]
+  ): readonly (DefaultLogFields & ListLogLine)[] {
+    return commits.filter(commit =>
+      commitSubjectBelongsToAQueue(commit.message)
+    )
+  }
+
   static fromGitLogCommits(
-    commits: (DefaultLogFields & ListLogLine)[]
+    allCommits: readonly (DefaultLogFields & ListLogLine)[]
   ): CommittedMessageLog {
-    const committedMessages = commits.map(commit =>
+    const onlyQueueCommits = this.filterQueueCommits(allCommits)
+
+    const committedMessages = onlyQueueCommits.map(commit =>
       CommittedMessage.fromCommitInfo(CommitInfo.fromDefaultLogFields(commit))
     )
+
     return new CommittedMessageLog(committedMessages)
   }
 
@@ -46,5 +60,12 @@ export class CommittedMessageLog {
     }
 
     return commits[0]
+  }
+
+  filterCommitsByQueue(queueName: QueueName): CommittedMessageLog {
+    const filteredMessages = this.messages.filter(committedMessage =>
+      committedMessage.belongsToQueue(queueName)
+    )
+    return new CommittedMessageLog(filteredMessages)
   }
 }

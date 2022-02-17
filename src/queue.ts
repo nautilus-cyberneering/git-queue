@@ -1,13 +1,8 @@
 import {
-  CommitSubjectParser,
-  commitSubjectBelongsToAQueue
-} from './commit-subject-parser'
-import {
   CommittedMessage,
   NewJobCommittedMessage,
   nullMessage
 } from './committed-message'
-import {DefaultLogFields, ListLogLine, LogResult} from 'simple-git'
 import {
   GitDirNotInitializedError,
   NoPendingJobsFoundError,
@@ -76,14 +71,6 @@ export class Queue {
     return pendingJob
   }
 
-  private filterQueueCommits(
-    gitLog: LogResult<DefaultLogFields>
-  ): (DefaultLogFields & ListLogLine)[] {
-    return gitLog.all.filter(commit =>
-      this.commitBelongsToQueue(commit.message)
-    )
-  }
-
   private async loadMessagesFromGit(): Promise<void> {
     this.guardThatGitRepoHasBeenInitialized()
 
@@ -93,21 +80,11 @@ export class Queue {
       return
     }
 
-    const allCommits = await this.gitRepo.log()
+    const logCommits = await this.gitRepo.log()
 
-    const thisQueueCommits = this.filterQueueCommits(allCommits)
+    const allMessages = CommittedMessageLog.fromGitLogCommits(logCommits.all)
 
-    this.committedMessages =
-      CommittedMessageLog.fromGitLogCommits(thisQueueCommits)
-  }
-
-  private commitBelongsToQueue(commitSubject: string): boolean {
-    if (!commitSubjectBelongsToAQueue(commitSubject)) {
-      return false
-    }
-    return CommitSubjectParser.parseText(commitSubject).belongsToQueue(
-      this.name
-    )
+    this.committedMessages = allMessages.filterCommitsByQueue(this.name)
   }
 
   private async commitMessage(message: Message): Promise<CommitInfo> {
