@@ -16,7 +16,6 @@ import {
 } from './message'
 
 import {CommitBody} from './commit-body'
-import {CommitHash} from './commit-hash'
 import {CommitInfo} from './commit-info'
 import {CommitMessage} from './commit-message'
 import {CommitOptions} from './commit-options'

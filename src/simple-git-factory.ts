@@ -1,17 +1,6 @@
 import simpleGit, {SimpleGit} from 'simple-git'
 import {GitRepoDir} from './git-repo-dir'
 
-async function getGitConfig(
-  key: string,
-  git: SimpleGit
-): Promise<string | null> {
-  const option = await git.getConfig(key)
-  if (option.value) {
-    return option.value
-  }
-  return null
-}
-
 export async function createGitInstance(
   gitRepoDir: GitRepoDir
 ): Promise<SimpleGit> {

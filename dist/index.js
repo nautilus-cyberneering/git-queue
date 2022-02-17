@@ -1364,15 +1364,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createGitInstance = void 0;
 const simple_git_1 = __importDefault(__nccwpck_require__(9103));
-function getGitConfig(key, git) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const option = yield git.getConfig(key);
-        if (option.value) {
-            return option.value;
-        }
-        return null;
-    });
-}
 function createGitInstance(gitRepoDir) {
     return __awaiter(this, void 0, void 0, function* () {
         const git = (0, simple_git_1.default)(gitRepoDir.getDirPath());
@@ -1394,26 +1385,6 @@ function createGitInstance(gitRepoDir) {
          * TODO: Code review. Should we pass only the env vars used by git commit?
          */
         git.env(process.env);
-        /*
-         * It seems the `git` child process does not apply the global git config,
-         * at least for the `git commit` command. You have to overwrite local config with the global.
-         */
-        const userName = yield getGitConfig('user.name', git);
-        if (userName) {
-            git.addConfig('user.name', userName);
-        }
-        const userEmail = yield getGitConfig('user.email', git);
-        if (userEmail) {
-            git.addConfig('user.email', userEmail);
-        }
-        const userSigningkey = yield getGitConfig('user.signingkey', git);
-        if (userSigningkey) {
-            git.addConfig('user.signingkey', userSigningkey);
-        }
-        const commitGpgsign = yield getGitConfig('commit.gpgsign', git);
-        if (commitGpgsign) {
-            git.addConfig('commit.gpgsign', commitGpgsign);
-        }
         return git;
     });
 }
