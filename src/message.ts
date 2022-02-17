@@ -26,6 +26,10 @@ export abstract class Message {
 }
 
 export class NewJobMessage extends Message {
+  constructor(payload: string) {
+    super(payload, nullCommitHash())
+  }
+
   getKey(): MessageKey {
     return new MessageKey('🈺')
   }
