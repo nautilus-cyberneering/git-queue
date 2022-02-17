@@ -3,10 +3,12 @@ import {
   createInitializedTempGnuPGHomeDir,
   createNotInitializedGitRepo,
   dummyPayload,
+  getLatestCommitHash,
   gitLogForLatestCommit
 } from '../../src/__tests__/helpers'
 
 import {CommitAuthor} from '../../src/commit-author'
+import {CommitHash} from '../../src/commit-hash'
 import {CommitInfo} from '../../src/commit-info'
 import {CommitOptions} from '../../src/commit-options'
 import {Queue} from '../../src/queue'
@@ -61,11 +63,21 @@ describe('Queue', () => {
 
     const commit = await queue.createJob(dummyPayload())
 
+    // The job was created with the right payload
     const nextJob = queue.getNextJob()
-
     expect(nextJob.isNull()).toBe(false)
     expect(nextJob.payload()).toBe(dummyPayload())
-    expect(nextJob.commitHash().equalsTo(commit.hash)).toBe(true)
+
+    // The commit was created with the right hash
+    const newJobCommit = new CommitHash(
+      getLatestCommitHash(queue.getGitRepoDir().getDirPath())
+    )
+    expect(newJobCommit.equalsTo(commit.hash)).toBe(true)
+
+    // TODO: Code Review. Should we check not only the commit hash but the CommittedMessage?
+    // Maybe we should return the CommittedMessage.
+    // const committedMessage = await queue.createJob(dummyPayload())
+    // expect(committedMessage).toBeInstance(JobStartedCommittedMessage)
   })
 
   it('should fail when trying to create a job if the previous job has not finished yet', async () => {
@@ -86,11 +98,15 @@ describe('Queue', () => {
     const queue = await createTestQueue(commitOptionsForTests())
 
     await queue.createJob(dummyPayload())
-    await queue.markJobAsFinished(dummyPayload())
+    const commit = await queue.markJobAsFinished(dummyPayload())
 
     const nextJob = queue.getNextJob()
-
     expect(nextJob.isNull()).toBe(true)
+
+    const finishJobCommit = new CommitHash(
+      getLatestCommitHash(queue.getGitRepoDir().getDirPath())
+    )
+    expect(finishJobCommit.equalsTo(commit.hash)).toBe(true)
   })
 
   it('should fail when trying to finish a job without any pending to finish job', async () => {
@@ -105,6 +121,17 @@ describe('Queue', () => {
       .toString()}`
 
     await expect(fn()).rejects.toThrowError(expectedError)
+  })
+
+  it('should mark a job as started', async () => {
+    const queue = await createTestQueue(commitOptionsForTests())
+
+    await queue.createJob(dummyPayload())
+    await queue.markJobAsStarted(dummyPayload())
+
+    const nextJob = queue.getNextJob()
+
+    expect(nextJob.isNull()).toBe(true)
   })
 
   it('should allow to specify the commit author', async () => {

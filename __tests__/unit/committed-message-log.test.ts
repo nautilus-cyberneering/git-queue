@@ -3,7 +3,7 @@ import {CommitInfo} from '../../src/commit-info'
 import {CommittedMessage} from '../../src/committed-message'
 import {CommittedMessageLog} from '../../src/committed-message-log'
 import {DefaultLogFields} from 'simple-git'
-import {ShortCommitHash} from '../../src/short-commit--hash'
+import {ShortCommitHash} from '../../src/short-commit-hash'
 
 function dummyNewJobCommitSubjectText(): string {
   return '📝🈺: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
@@ -138,6 +138,20 @@ describe('CommittedMessageLog', () => {
         .findByCommitHash(
           new CommitHash('2ab1cce1479d25966e2dba5be89849a71264a192')
         )
+        .isNull()
+    ).toBe(true)
+  })
+
+  it('should return a null message if it can not find a message by its short commit hash', async () => {
+    const commit = dummySimpleGitCommitWithHash(
+      'f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+    )
+
+    const committedMessageLog = CommittedMessageLog.fromGitLogCommits([commit])
+
+    expect(
+      committedMessageLog
+        .findByShortCommitHash(new ShortCommitHash('2ab1cce'))
         .isNull()
     ).toBe(true)
   })

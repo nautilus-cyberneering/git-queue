@@ -45,6 +45,26 @@ function createJob(gitRepoDir): string | Buffer {
   return executeAction(env)
 }
 
+/**
+ * It parses the output to get an output variable value.
+ */
+function getOutputVariable(
+  varName: string,
+  output: string
+): string | undefined {
+  const lines = output.split('\n')
+
+  for (const line of lines) {
+    const varPrefix = `::set-output name=${varName}::`
+    if (line.startsWith(varPrefix)) {
+      const value = line.substring(varPrefix.length)
+      return value.trim()
+    }
+  }
+
+  return undefined
+}
+
 describe('GitHub Action', () => {
   it('should print the git repo dir at the beginning of the action execution', async () => {
     const gitRepoDir = await createInitializedTempGitDir()
@@ -100,13 +120,9 @@ describe('GitHub Action', () => {
 
     const output = executeAction(env)
 
-    expect(output).toEqual(
-      expect.stringContaining('::set-output name=job_created::true')
-    )
-
-    const commitHash = getLatestCommitHash(gitRepoDir)
-    expect(output).toEqual(
-      expect.stringContaining(`set-output name=job_commit::${commitHash}`)
+    expect(getOutputVariable('job_created', output.toString())).toBe('true')
+    expect(getOutputVariable('job_commit', output.toString())).toBe(
+      getLatestCommitHash(gitRepoDir)
     )
   })
 
@@ -125,15 +141,11 @@ describe('GitHub Action', () => {
 
     const output = executeAction(env)
 
-    expect(output).toEqual(
-      expect.stringContaining(
-        `::set-output name=job_payload::${dummyPayload()}`
-      )
+    expect(getOutputVariable('job_payload', output.toString())).toBe(
+      dummyPayload()
     )
-
-    const commitHash = getLatestCommitHash(gitRepoDir)
-    expect(output).toEqual(
-      expect.stringContaining(`set-output name=job_commit::${commitHash}`)
+    expect(getOutputVariable('job_commit', output.toString())).toBe(
+      getLatestCommitHash(gitRepoDir)
     )
   })
 
@@ -152,13 +164,9 @@ describe('GitHub Action', () => {
 
     const output = executeAction(env)
 
-    expect(output).toEqual(
-      expect.stringContaining('::set-output name=job_started::true')
-    )
-
-    const commitHash = getLatestCommitHash(gitRepoDir)
-    expect(output).toEqual(
-      expect.stringContaining(`set-output name=job_commit::${commitHash}`)
+    expect(getOutputVariable('job_started', output.toString())).toBe('true')
+    expect(getOutputVariable('job_commit', output.toString())).toBe(
+      getLatestCommitHash(gitRepoDir)
     )
   })
 
@@ -177,13 +185,9 @@ describe('GitHub Action', () => {
 
     const output = executeAction(env)
 
-    expect(output).toEqual(
-      expect.stringContaining('::set-output name=job_finished::true')
-    )
-
-    const commitHash = getLatestCommitHash(gitRepoDir)
-    expect(output).toEqual(
-      expect.stringContaining(`set-output name=job_commit::${commitHash}`)
+    expect(getOutputVariable('job_finished', output.toString())).toBe('true')
+    expect(getOutputVariable('job_commit', output.toString())).toBe(
+      getLatestCommitHash(gitRepoDir)
     )
   })
 

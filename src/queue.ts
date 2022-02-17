@@ -25,7 +25,7 @@ import {CommittedMessageLog} from './committed-message-log'
 import {GitRepo} from './git-repo'
 import {GitRepoDir} from './git-repo-dir'
 import {QueueName} from './queue-name'
-import {ShortCommitHash} from './short-commit--hash'
+import {ShortCommitHash} from './short-commit-hash'
 
 export class Queue {
   private readonly name: QueueName

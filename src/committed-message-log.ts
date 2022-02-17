@@ -6,7 +6,7 @@ import {CommitInfo} from './commit-info'
 import {QueueName} from './queue-name'
 
 import {commitSubjectBelongsToAQueue} from './commit-subject-parser'
-import {ShortCommitHash} from './short-commit--hash'
+import {ShortCommitHash} from './short-commit-hash'
 
 /**
  * A readonly list of ordered commit messages.

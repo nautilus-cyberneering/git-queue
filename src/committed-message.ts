@@ -5,7 +5,7 @@ import {CommitSubjectParser} from './commit-subject-parser'
 import {InvalidMessageKeyError} from './errors'
 import {Nullable} from './nullable'
 import {QueueName} from './queue-name'
-import {ShortCommitHash} from './short-commit--hash'
+import {ShortCommitHash} from './short-commit-hash'
 
 export abstract class CommittedMessage implements Nullable {
   private readonly commit: CommitInfo

@@ -86,6 +86,7 @@ export function gitLogForLatestCommit(gitRepoDir: string): string {
       cwd: gitRepoDir
     })
     .toString()
+    .trim()
   return output
 }
 
@@ -95,5 +96,6 @@ export function getLatestCommitHash(gitRepoDir: string): string {
       cwd: gitRepoDir
     })
     .toString()
+    .trim()
   return output
 }

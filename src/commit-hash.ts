@@ -1,5 +1,5 @@
 import {Nullable} from './nullable'
-import {ShortCommitHash} from './short-commit--hash'
+import {ShortCommitHash} from './short-commit-hash'
 
 const NO_COMMIT_HASH = '--no-commit-hash--'
 
