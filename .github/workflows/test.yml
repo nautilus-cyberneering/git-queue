@@ -69,13 +69,6 @@ jobs:
           git init
           git status
 
-      - name: Upload test git dir on fail
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: Integration test git dir
-          path: ${{ runner.temp }}/temp_git_dir
-
       - name: Create new job
         id: create-job
         uses: ./
@@ -85,6 +78,9 @@ jobs:
           action: 'create-job'
           job_payload: '{"field": "value", "state": "pending"}'
 
+      - name: Debug
+        run: git log --show-signature
+
       - name: Mark job as started
         id: start-job
         if: ${{ steps.create-job.outputs.job_created == 'true' }}
@@ -93,7 +89,10 @@ jobs:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'Library Update [library-aaa]'
           action: 'start-job'
-          job_payload: '{"field": "value", "state": "started"}'          
+          job_payload: '{"field": "value", "state": "started"}'
+
+      - name: Debug
+        run: git log --show-signature
 
       - name: Mutual exclusion code
         if: ${{ steps.create-job.outputs.job_created == 'true' }}
@@ -108,6 +107,9 @@ jobs:
           queue_name: 'Library Update [library-aaa]'
           action: 'next-job'
 
+      - name: Debug
+        run: git log --show-signature
+
       - name: Mark job as finished
         id: finish-job
         if: ${{ steps.create-job.outputs.job_created == 'true' }}
@@ -118,6 +120,9 @@ jobs:
           action: 'finish-job'
           job_payload: '{"field": "value", "state": "finished"}'
 
+      - name: Debug
+        run: git log --show-signature
+
       - name: Show new commits
         if: ${{ steps.finish-job.outputs.job_created == 'true' }}
         run: |
@@ -125,3 +130,9 @@ jobs:
           git show --show-signature ${{ steps.create-job.outputs.job_commit }}
           git show --show-signature ${{ steps.start-job.outputs.job_commit }}
           git show --show-signature ${{ steps.finish-job.outputs.job_commit }}
+
+      - name: Upload test git dir
+        uses: actions/upload-artifact@v2
+        with:
+          name: Integration test git dir
+          path: ${{ runner.temp }}/temp_git_dir
