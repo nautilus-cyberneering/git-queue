@@ -711,7 +711,7 @@ exports.GitRepoDir = GitRepoDir;
 /***/ }),
 
 /***/ 8432:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ (function(__unused_webpack_module, exports) {
 
 "use strict";
 
@@ -726,7 +726,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GitRepo = void 0;
-const simple_git_1 = __nccwpck_require__(9103);
 class GitRepo {
     constructor(dir, git) {
         this.dir = dir;
@@ -734,9 +733,7 @@ class GitRepo {
     }
     isInitialized() {
         return __awaiter(this, void 0, void 0, function* () {
-            return (yield this.git.checkIsRepo(simple_git_1.CheckRepoActions.IS_REPO_ROOT))
-                ? true
-                : false;
+            return yield this.git.checkIsRepo();
         });
     }
     getDir() {
@@ -1133,10 +1130,12 @@ class Queue {
         });
     }
     guardThatGitRepoHasBeenInitialized() {
-        const isInitialized = this.gitRepo.isInitialized();
-        if (!isInitialized) {
-            throw new errors_1.GitDirNotInitializedError(this.gitRepo.getDirPath());
-        }
+        return __awaiter(this, void 0, void 0, function* () {
+            const isInitialized = yield this.gitRepo.isInitialized();
+            if (!isInitialized) {
+                throw new errors_1.GitDirNotInitializedError(this.gitRepo.getDirPath());
+            }
+        });
     }
     guardThatThereAreNoPendingJobs() {
         if (!this.getNextJob().isNull()) {
@@ -1152,7 +1151,7 @@ class Queue {
     }
     loadMessagesFromGit() {
         return __awaiter(this, void 0, void 0, function* () {
-            this.guardThatGitRepoHasBeenInitialized();
+            yield this.guardThatGitRepoHasBeenInitialized();
             const noCommits = !(yield this.gitRepo.hasCommits()) ? true : false;
             if (noCommits) {
                 return;

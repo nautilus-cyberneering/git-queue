@@ -1,6 +1,7 @@
 import {
   createInitializedGitRepo,
   createInitializedTempGnuPGHomeDir,
+  createNotInitializedGitRepo,
   dummyPayload,
   gitLogForLatestCommit
 } from '../../src/__tests__/helpers'
@@ -114,5 +115,22 @@ describe('Queue', () => {
         `gpg:                using RSA key ${signingKeyFingerprint}`
       )
     ).toBe(true)
+  })
+
+  it('should fail when it is created from an uninitialized git repo', async () => {
+    const gitRepo = await createNotInitializedGitRepo()
+
+    const fn = async (): Promise<Queue> => {
+      const queue = await Queue.create(
+        new QueueName('QUEUE NAME'),
+        gitRepo,
+        commitOptionsForTests()
+      )
+      return queue
+    }
+
+    const expectedError = `Git dir: ${gitRepo.getDirPath()} has not been initialized`
+
+    await expect(fn()).rejects.toThrowError(expectedError)
   })
 })

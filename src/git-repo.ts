@@ -1,5 +1,4 @@
 import {
-  CheckRepoActions,
   CommitResult,
   DefaultLogFields,
   GitResponseError,
@@ -20,9 +19,7 @@ export class GitRepo {
   }
 
   async isInitialized(): Promise<boolean> {
-    return (await this.git.checkIsRepo(CheckRepoActions.IS_REPO_ROOT))
-      ? true
-      : false
+    return await this.git.checkIsRepo()
   }
 
   getDir(): GitRepoDir {
