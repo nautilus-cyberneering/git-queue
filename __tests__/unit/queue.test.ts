@@ -11,6 +11,7 @@ import {CommitAuthor} from '../../src/commit-author'
 import {CommitHash} from '../../src/commit-hash'
 import {CommitInfo} from '../../src/commit-info'
 import {CommitOptions} from '../../src/commit-options'
+import {NewJobCommittedMessage} from '../../src/committed-message'
 import {Queue} from '../../src/queue'
 import {QueueName} from '../../src/queue-name'
 import {SigningKeyId} from '../../src/signing-key-id'
@@ -89,7 +90,7 @@ describe('Queue', () => {
       return queue.createJob(dummyPayload())
     }
 
-    const expectedError = `Can't create a new job. There is already a pending job in commit: ${commit.hash}`
+    const expectedError = `Can't create job. Previous message is not a job finished message. Previous message commit: ${commit.hash}`
 
     await expect(fn()).rejects.toThrowError(expectedError)
   })
@@ -98,6 +99,7 @@ describe('Queue', () => {
     const queue = await createTestQueue(commitOptionsForTests())
 
     await queue.createJob(dummyPayload())
+    await queue.markJobAsStarted(dummyPayload())
     const commit = await queue.markJobAsFinished(dummyPayload())
 
     const nextJob = queue.getNextJob()
@@ -116,9 +118,7 @@ describe('Queue', () => {
       return queue.markJobAsFinished(dummyPayload())
     }
 
-    const expectedError = `Can't mark job as finished. There isn't any pending job in queue: ${queue
-      .getName()
-      .toString()}`
+    const expectedError = `Can't finish job. Previous message is not a job started message. Previous message commit: --no-commit-hash--`
 
     await expect(fn()).rejects.toThrowError(expectedError)
   })
@@ -131,7 +131,8 @@ describe('Queue', () => {
 
     const nextJob = queue.getNextJob()
 
-    expect(nextJob.isNull()).toBe(true)
+    expect(nextJob.isNull()).toBe(false)
+    expect(nextJob instanceof NewJobCommittedMessage).toBe(true)
   })
 
   it('should allow to specify the commit author', async () => {
@@ -196,5 +197,47 @@ describe('Queue', () => {
     const messages = queue.getMessages()
 
     expect(messages).toContain(queue.getLatestMessage())
+  })
+
+  describe('should return the next job to do, returning ...', () => {
+    it('null message when there are no pending jobs', async () => {
+      const queue = await createTestQueue(commitOptionsForTests())
+
+      const nextJob = queue.getNextJob()
+
+      expect(nextJob.isNull()).toBe(true)
+    })
+
+    it('a new job message when there is only one pending job', async () => {
+      const queue = await createTestQueue(commitOptionsForTests())
+
+      await queue.createJob(dummyPayload())
+
+      const nextJob = queue.getNextJob()
+
+      expect(nextJob.isNull()).toBe(false)
+      expect(nextJob.payload()).toBe(dummyPayload())
+    })
+
+    it('a new job message also when there is also a previous finished job', async () => {
+      const queue = await createTestQueue(commitOptionsForTests())
+
+      // First job
+      await queue.createJob(dummyPayload())
+      await queue.markJobAsStarted(dummyPayload())
+      await queue.markJobAsFinished(dummyPayload())
+
+      // Second job
+      const commit = await queue.createJob(dummyPayload())
+
+      const nextJob = queue.getNextJob()
+
+      expect(nextJob.isNull()).toBe(false)
+      expect(nextJob.payload()).toBe(dummyPayload())
+      const newJobCommit = new CommitHash(
+        getLatestCommitHash(queue.getGitRepoDir().getDirPath())
+      )
+      expect(newJobCommit.equalsTo(commit.hash)).toBe(true)
+    })
   })
 })

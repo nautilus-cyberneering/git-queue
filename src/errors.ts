@@ -1,3 +1,5 @@
+import {CommittedMessage} from './committed-message'
+
 export class MissingQueueNameInCommitSubjectError extends Error {
   constructor(commitSubject: string) {
     super(`Missing queue name in commit subject: ${commitSubject}`)
@@ -28,27 +30,42 @@ export class InvalidMessageKeyError extends Error {
   }
 }
 
+export class GitDirNotInitializedError extends Error {
+  constructor(dir: string) {
+    super(`Git dir: ${dir} has not been initialized`)
+    Object.setPrototypeOf(this, GitDirNotInitializedError.prototype)
+  }
+}
+
 export class PendingJobsLimitReachedError extends Error {
-  constructor(commitHash: string) {
+  constructor(committedMessage: CommittedMessage) {
     super(
-      `Can't create a new job. There is already a pending job in commit: ${commitHash}`
+      `Can't create job. Previous message is not a job finished message. Previous message commit: ${committedMessage
+        .commitHash()
+        .toString()}`
     )
     Object.setPrototypeOf(this, PendingJobsLimitReachedError.prototype)
   }
 }
 
-export class NoPendingJobsFoundError extends Error {
-  constructor(queueName: string) {
+export class MissingJobStartedMessageError extends Error {
+  constructor(committedMessage: CommittedMessage) {
     super(
-      `Can't mark job as finished. There isn't any pending job in queue: ${queueName}`
+      `Can't finish job. Previous message is not a job started message. Previous message commit: ${committedMessage
+        .commitHash()
+        .toString()}`
     )
-    Object.setPrototypeOf(this, NoPendingJobsFoundError.prototype)
+    Object.setPrototypeOf(this, MissingJobStartedMessageError.prototype)
   }
 }
 
-export class GitDirNotInitializedError extends Error {
-  constructor(dir: string) {
-    super(`Git dir: ${dir} has not been initialized`)
-    Object.setPrototypeOf(this, GitDirNotInitializedError.prototype)
+export class MissingNewJobMessageError extends Error {
+  constructor(committedMessage: CommittedMessage) {
+    super(
+      `Can't start job. Previous message is not a new job message. Previous message commit: ${committedMessage
+        .commitHash()
+        .toString()}`
+    )
+    Object.setPrototypeOf(this, MissingNewJobMessageError.prototype)
   }
 }

@@ -1,11 +1,15 @@
 import {
   CommittedMessage,
+  JobFinishedCommittedMessage,
+  JobStartedCommittedMessage,
   NewJobCommittedMessage,
+  NullCommittedMessage,
   nullMessage
 } from './committed-message'
 import {
   GitDirNotInitializedError,
-  NoPendingJobsFoundError,
+  MissingJobStartedMessageError,
+  MissingNewJobMessageError,
   PendingJobsLimitReachedError
 } from './errors'
 import {
@@ -60,20 +64,30 @@ export class Queue {
     }
   }
 
-  private guardThatThereAreNoPendingJobs(): void {
-    if (!this.getNextJob().isNull()) {
-      throw new PendingJobsLimitReachedError(
-        this.getNextJob().commitHash().toString()
-      )
+  // Job states: new -> started -> finished
+
+  private guardThatLastMessageWasNewJob(latestMessage: CommittedMessage): void {
+    if (!(latestMessage instanceof NewJobCommittedMessage)) {
+      throw new MissingNewJobMessageError(latestMessage)
     }
   }
 
-  private guardThatThereIsAPendingJob(): CommittedMessage {
-    const pendingJob = this.getNextJob()
-    if (pendingJob.isNull()) {
-      throw new NoPendingJobsFoundError(this.name.toString())
+  private guardThatLastMessageWasJobStarted(
+    latestMessage: CommittedMessage
+  ): void {
+    if (!(latestMessage instanceof JobStartedCommittedMessage)) {
+      throw new MissingJobStartedMessageError(latestMessage)
     }
-    return pendingJob
+  }
+
+  private guardThatLastMessageWasJobFinishedOrNull(
+    latestMessage: CommittedMessage
+  ): void {
+    if (latestMessage.isNull()) return
+
+    if (!(latestMessage instanceof JobFinishedCommittedMessage)) {
+      throw new PendingJobsLimitReachedError(latestMessage)
+    }
   }
 
   private async loadMessagesFromGit(): Promise<void> {
@@ -136,15 +150,30 @@ export class Queue {
     return this.committedMessages.isEmpty()
   }
 
-  getNextJob(): CommittedMessage {
+  getNextJob(): NewJobCommittedMessage | NullCommittedMessage {
+    // Job states: new -> started -> finished
+
     const latestMessage = this.getLatestMessage()
-    return latestMessage instanceof NewJobCommittedMessage
-      ? latestMessage
-      : nullMessage()
+
+    if (latestMessage instanceof NewJobCommittedMessage) {
+      return latestMessage
+    }
+
+    if (latestMessage instanceof JobStartedCommittedMessage) {
+      return this.committedMessages.getNextToLatestMessage()
+    }
+
+    if (latestMessage instanceof JobFinishedCommittedMessage) {
+      return nullMessage()
+    }
+
+    return nullMessage()
   }
 
+  // Job states: new -> started -> finished
+
   async createJob(payload: string): Promise<CommitInfo> {
-    this.guardThatThereAreNoPendingJobs()
+    this.guardThatLastMessageWasJobFinishedOrNull(this.getLatestMessage())
 
     const message = new NewJobMessage(payload)
 
@@ -154,7 +183,9 @@ export class Queue {
   }
 
   async markJobAsStarted(payload: string): Promise<CommitInfo> {
-    const pendingJob = this.guardThatThereIsAPendingJob()
+    this.guardThatLastMessageWasNewJob(this.getLatestMessage())
+
+    const pendingJob = this.getNextJob()
 
     const message = new JobStartedMessage(payload, pendingJob.commitHash())
 
@@ -164,7 +195,9 @@ export class Queue {
   }
 
   async markJobAsFinished(payload: string): Promise<CommitInfo> {
-    const pendingJob = this.guardThatThereIsAPendingJob()
+    this.guardThatLastMessageWasJobStarted(this.getLatestMessage())
+
+    const pendingJob = this.getNextJob()
 
     const message = new JobFinishedMessage(payload, pendingJob.commitHash())
 
