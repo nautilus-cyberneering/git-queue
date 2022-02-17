@@ -9,4 +9,8 @@ export class GitRepoDir {
   getDirPath(): string {
     return this.dirPath
   }
+
+  equalsTo(other: GitRepoDir): boolean {
+    return this.dirPath === other.dirPath
+  }
 }
