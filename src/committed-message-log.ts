@@ -51,6 +51,18 @@ export class CommittedMessageLog {
     return this.isEmpty() ? nullMessage() : this.messages[0]
   }
 
+  getNextToLatestMessage(): CommittedMessage {
+    if (this.isEmpty()) {
+      return nullMessage()
+    }
+
+    if (this.messages.length < 2) {
+      return nullMessage()
+    }
+
+    return this.messages[1]
+  }
+
   findByCommitHash(commitHash: CommitHash): CommittedMessage {
     const commits = this.messages.filter(message =>
       message.commitHash().equalsTo(commitHash)

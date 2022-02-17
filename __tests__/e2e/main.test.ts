@@ -175,15 +175,21 @@ describe('GitHub Action', () => {
 
     createJob(gitRepoDir)
 
-    const env = {
+    executeAction({
+      ...process.env,
+      INPUT_QUEUE_NAME: 'QUEUE-NAME',
+      INPUT_GIT_REPO_DIR: gitRepoDir,
+      INPUT_ACTION: 'start-job',
+      INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
+    })
+
+    const output = executeAction({
       ...process.env,
       INPUT_QUEUE_NAME: 'QUEUE-NAME',
       INPUT_GIT_REPO_DIR: gitRepoDir,
       INPUT_ACTION: 'finish-job',
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
-    }
-
-    const output = executeAction(env)
+    })
 
     expect(getOutputVariable('job_finished', output.toString())).toBe('true')
     expect(getOutputVariable('job_commit', output.toString())).toBe(

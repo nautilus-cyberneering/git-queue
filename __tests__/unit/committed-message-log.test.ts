@@ -82,6 +82,28 @@ describe('CommittedMessageLog', () => {
     ).toBe(true)
   })
 
+  it('should return the next to latest committed message', async () => {
+    const commit1 = dummySimpleGitCommitWithHash(
+      'f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+    )
+    const commit2 = dummySimpleGitCommitWithHash(
+      '2ab1cce1479d25966e2dba5be89849a71264a192'
+    )
+
+    const committedMessageLog = CommittedMessageLog.fromGitLogCommits([
+      commit1,
+      commit2
+    ])
+
+    const expectedMessage = CommittedMessage.fromCommitInfo(
+      CommitInfo.fromDefaultLogFields(commit2)
+    )
+
+    expect(
+      committedMessageLog.getNextToLatestMessage().equalsTo(expectedMessage)
+    ).toBe(true)
+  })
+
   it('should return the null message as the latest message when it is empty', async () => {
     const committedMessageLog = CommittedMessageLog.fromGitLogCommits([])
 

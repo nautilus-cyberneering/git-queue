@@ -372,6 +372,15 @@ class CommittedMessageLog {
     getLatestMessage() {
         return this.isEmpty() ? (0, committed_message_1.nullMessage)() : this.messages[0];
     }
+    getNextToLatestMessage() {
+        if (this.isEmpty()) {
+            return (0, committed_message_1.nullMessage)();
+        }
+        if (this.messages.length < 2) {
+            return (0, committed_message_1.nullMessage)();
+        }
+        return this.messages[1];
+    }
     findByCommitHash(commitHash) {
         const commits = this.messages.filter(message => message.commitHash().equalsTo(commitHash));
         if (commits.length === 0) {
@@ -653,7 +662,7 @@ exports.getErrorMessage = getErrorMessage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.GitDirNotInitializedError = exports.NoPendingJobsFoundError = exports.PendingJobsLimitReachedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
 class MissingQueueNameInCommitSubjectError extends Error {
     constructor(commitSubject) {
         super(`Missing queue name in commit subject: ${commitSubject}`);
@@ -682,20 +691,6 @@ class InvalidMessageKeyError extends Error {
     }
 }
 exports.InvalidMessageKeyError = InvalidMessageKeyError;
-class PendingJobsLimitReachedError extends Error {
-    constructor(commitHash) {
-        super(`Can't create a new job. There is already a pending job in commit: ${commitHash}`);
-        Object.setPrototypeOf(this, PendingJobsLimitReachedError.prototype);
-    }
-}
-exports.PendingJobsLimitReachedError = PendingJobsLimitReachedError;
-class NoPendingJobsFoundError extends Error {
-    constructor(queueName) {
-        super(`Can't mark job as finished. There isn't any pending job in queue: ${queueName}`);
-        Object.setPrototypeOf(this, NoPendingJobsFoundError.prototype);
-    }
-}
-exports.NoPendingJobsFoundError = NoPendingJobsFoundError;
 class GitDirNotInitializedError extends Error {
     constructor(dir) {
         super(`Git dir: ${dir} has not been initialized`);
@@ -703,6 +698,33 @@ class GitDirNotInitializedError extends Error {
     }
 }
 exports.GitDirNotInitializedError = GitDirNotInitializedError;
+class PendingJobsLimitReachedError extends Error {
+    constructor(committedMessage) {
+        super(`Can't create job. Previous message is not a job finished message. Previous message commit: ${committedMessage
+            .commitHash()
+            .toString()}`);
+        Object.setPrototypeOf(this, PendingJobsLimitReachedError.prototype);
+    }
+}
+exports.PendingJobsLimitReachedError = PendingJobsLimitReachedError;
+class MissingJobStartedMessageError extends Error {
+    constructor(committedMessage) {
+        super(`Can't finish job. Previous message is not a job started message. Previous message commit: ${committedMessage
+            .commitHash()
+            .toString()}`);
+        Object.setPrototypeOf(this, MissingJobStartedMessageError.prototype);
+    }
+}
+exports.MissingJobStartedMessageError = MissingJobStartedMessageError;
+class MissingNewJobMessageError extends Error {
+    constructor(committedMessage) {
+        super(`Can't start job. Previous message is not a new job message. Previous message commit: ${committedMessage
+            .commitHash()
+            .toString()}`);
+        Object.setPrototypeOf(this, MissingNewJobMessageError.prototype);
+    }
+}
+exports.MissingNewJobMessageError = MissingNewJobMessageError;
 
 
 /***/ }),
@@ -1188,17 +1210,23 @@ class Queue {
             }
         });
     }
-    guardThatThereAreNoPendingJobs() {
-        if (!this.getNextJob().isNull()) {
-            throw new errors_1.PendingJobsLimitReachedError(this.getNextJob().commitHash().toString());
+    // Job states: new -> started -> finished
+    guardThatLastMessageWasNewJob(latestMessage) {
+        if (!(latestMessage instanceof committed_message_1.NewJobCommittedMessage)) {
+            throw new errors_1.MissingNewJobMessageError(latestMessage);
         }
     }
-    guardThatThereIsAPendingJob() {
-        const pendingJob = this.getNextJob();
-        if (pendingJob.isNull()) {
-            throw new errors_1.NoPendingJobsFoundError(this.name.toString());
+    guardThatLastMessageWasJobStarted(latestMessage) {
+        if (!(latestMessage instanceof committed_message_1.JobStartedCommittedMessage)) {
+            throw new errors_1.MissingJobStartedMessageError(latestMessage);
         }
-        return pendingJob;
+    }
+    guardThatLastMessageWasJobFinishedOrNull(latestMessage) {
+        if (latestMessage.isNull())
+            return;
+        if (!(latestMessage instanceof committed_message_1.JobFinishedCommittedMessage)) {
+            throw new errors_1.PendingJobsLimitReachedError(latestMessage);
+        }
     }
     loadMessagesFromGit() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -1240,14 +1268,23 @@ class Queue {
         return this.committedMessages.isEmpty();
     }
     getNextJob() {
+        // Job states: new -> started -> finished
         const latestMessage = this.getLatestMessage();
-        return latestMessage instanceof committed_message_1.NewJobCommittedMessage
-            ? latestMessage
-            : (0, committed_message_1.nullMessage)();
+        if (latestMessage instanceof committed_message_1.NewJobCommittedMessage) {
+            return latestMessage;
+        }
+        if (latestMessage instanceof committed_message_1.JobStartedCommittedMessage) {
+            return this.committedMessages.getNextToLatestMessage();
+        }
+        if (latestMessage instanceof committed_message_1.JobFinishedCommittedMessage) {
+            return (0, committed_message_1.nullMessage)();
+        }
+        return (0, committed_message_1.nullMessage)();
     }
+    // Job states: new -> started -> finished
     createJob(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.guardThatThereAreNoPendingJobs();
+            this.guardThatLastMessageWasJobFinishedOrNull(this.getLatestMessage());
             const message = new message_1.NewJobMessage(payload);
             const commit = yield this.commitMessage(message);
             return commit;
@@ -1255,7 +1292,8 @@ class Queue {
     }
     markJobAsStarted(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const pendingJob = this.guardThatThereIsAPendingJob();
+            this.guardThatLastMessageWasNewJob(this.getLatestMessage());
+            const pendingJob = this.getNextJob();
             const message = new message_1.JobStartedMessage(payload, pendingJob.commitHash());
             const commit = yield this.commitMessage(message);
             return commit;
@@ -1263,7 +1301,8 @@ class Queue {
     }
     markJobAsFinished(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const pendingJob = this.guardThatThereIsAPendingJob();
+            this.guardThatLastMessageWasJobStarted(this.getLatestMessage());
+            const pendingJob = this.getNextJob();
             const message = new message_1.JobFinishedMessage(payload, pendingJob.commitHash());
             const commit = yield this.commitMessage(message);
             return commit;
