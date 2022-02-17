@@ -79,7 +79,9 @@ jobs:
           job_payload: '{"field": "value", "state": "pending"}'
 
       - name: Debug
-        run: git log --show-signature
+        run: |
+          cd ${{ runner.temp }}/temp_git_dir
+          git log --show-signature
 
       - name: Mark job as started
         id: start-job
@@ -92,7 +94,9 @@ jobs:
           job_payload: '{"field": "value", "state": "started"}'
 
       - name: Debug
-        run: git log --show-signature
+        run: |
+          cd ${{ runner.temp }}/temp_git_dir
+          git log --show-signature
 
       - name: Mutual exclusion code
         if: ${{ steps.create-job.outputs.job_created == 'true' }}
@@ -108,7 +112,9 @@ jobs:
           action: 'next-job'
 
       - name: Debug
-        run: git log --show-signature
+        run: |
+          cd ${{ runner.temp }}/temp_git_dir
+          git log --show-signature
 
       - name: Mark job as finished
         id: finish-job
@@ -121,7 +127,9 @@ jobs:
           job_payload: '{"field": "value", "state": "finished"}'
 
       - name: Debug
-        run: git log --show-signature
+        run: |
+          cd ${{ runner.temp }}/temp_git_dir
+          git log --show-signature
 
       - name: Show new commits
         if: ${{ steps.finish-job.outputs.job_created == 'true' }}
