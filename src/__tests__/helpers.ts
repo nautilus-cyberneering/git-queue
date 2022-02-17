@@ -41,8 +41,8 @@ export async function newSimpleGitWithCommitterIdentity(
 ): Promise<SimpleGit> {
   const git = await newSimpleGitWithoutCommitterIdentity(gitRepoDir)
   git.init()
-  git.addConfig('user.name', testConfiguration().git.user.name)
-  git.addConfig('user.email', testConfiguration().git.user.email)
+  //git.addConfig('user.name', testConfiguration().git.user.name)
+  //git.addConfig('user.email', testConfiguration().git.user.email)
   return git
 }
 
