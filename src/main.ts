@@ -105,14 +105,14 @@ async function run(): Promise<void> {
 
     switch (inputs.action) {
       case ACTION_CREATE_JOB: {
-        const createJobCommit = await queue.createJob(inputs.jobPayload)
+        const commit = await queue.createJob(inputs.jobPayload)
 
         await core.group(`Setting outputs`, async () => {
           context.setOutput('job_created', true)
-          context.setOutput('job_commit', createJobCommit.hash.toString())
+          context.setOutput('job_commit', commit.hash.toString())
 
           core.info(`job_created: true`)
-          core.info(`job_commit: ${createJobCommit.hash}`)
+          core.info(`job_commit: ${commit.hash.toString()}`)
         })
 
         break
@@ -142,7 +142,7 @@ async function run(): Promise<void> {
           context.setOutput('job_commit', commit.hash.toString())
 
           core.info(`job_finished: true`)
-          core.info(`job_commit: ${commit.hash}`)
+          core.info(`job_commit: ${commit.hash.toString()}`)
         })
 
         break
@@ -155,7 +155,7 @@ async function run(): Promise<void> {
           context.setOutput('job_commit', commit.hash.toString())
 
           core.info(`job_finished: true`)
-          core.info(`job_commit: ${commit.hash}`)
+          core.info(`job_commit: ${commit.hash.toString()}`)
         })
 
         break

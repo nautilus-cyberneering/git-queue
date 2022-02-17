@@ -70,12 +70,14 @@ exports.CommitBody = CommitBody;
 /***/ }),
 
 /***/ 5533:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nullCommitHash = exports.CommitHash = void 0;
+const short_commit__hash_1 = __nccwpck_require__(7406);
+const NO_COMMIT_HASH = '--no-commit-hash--';
 class CommitHash {
     constructor(value) {
         // TODO: validation
@@ -84,8 +86,11 @@ class CommitHash {
     getHash() {
         return this.value;
     }
+    getShortHash() {
+        return new short_commit__hash_1.ShortCommitHash(this.value.substring(0, 7));
+    }
     isNull() {
-        return this.value === '';
+        return this.value === NO_COMMIT_HASH;
     }
     equalsTo(other) {
         return this.value === other.value;
@@ -96,7 +101,7 @@ class CommitHash {
 }
 exports.CommitHash = CommitHash;
 function nullCommitHash() {
-    return new CommitHash('');
+    return new CommitHash(NO_COMMIT_HASH);
 }
 exports.nullCommitHash = nullCommitHash;
 
@@ -367,8 +372,15 @@ class CommittedMessageLog {
     getLatestMessage() {
         return this.isEmpty() ? (0, committed_message_1.nullMessage)() : this.messages[0];
     }
-    findByCommit(commitHash) {
+    findByCommitHash(commitHash) {
         const commits = this.messages.filter(message => message.commitHash().equalsTo(commitHash));
+        if (commits.length === 0) {
+            return (0, committed_message_1.nullMessage)();
+        }
+        return commits[0];
+    }
+    findByShortCommitHash(shortCommitHash) {
+        const commits = this.messages.filter(message => message.shortCommitHash().equalsTo(shortCommitHash));
         if (commits.length === 0) {
             return (0, committed_message_1.nullMessage)();
         }
@@ -418,6 +430,9 @@ class CommittedMessage {
     }
     commitHash() {
         return this.commit.hash;
+    }
+    shortCommitHash() {
+        return this.commit.hash.getShortHash();
     }
     commitSubject() {
         return commit_subject_parser_1.CommitSubjectParser.parseText(this.commit.message);
@@ -788,6 +803,10 @@ class GitRepo {
     }
     commit(commitMessage, commitOptions) {
         return __awaiter(this, void 0, void 0, function* () {
+            // TODO: Code Review. Should we use our own CommitResult class?
+            // We could return always the 40-character commit hash with:
+            // const longCommit = await git.show([commit, '--pretty=%H', '-s']);
+            // Related issue: https://github.com/steveukx/git-js/issues/757
             return yield this.git.commit(commitMessage.forSimpleGit(), commitOptions.forSimpleGit());
         });
     }
@@ -961,12 +980,12 @@ function run() {
             const queue = yield queue_1.Queue.create(new queue_name_1.QueueName(inputs.queueName), gitRepo, commitOptions);
             switch (inputs.action) {
                 case ACTION_CREATE_JOB: {
-                    const createJobCommit = yield queue.createJob(inputs.jobPayload);
+                    const commit = yield queue.createJob(inputs.jobPayload);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_created', true);
-                        context.setOutput('job_commit', createJobCommit.hash.toString());
+                        context.setOutput('job_commit', commit.hash.toString());
                         core.info(`job_created: true`);
-                        core.info(`job_commit: ${createJobCommit.hash}`);
+                        core.info(`job_commit: ${commit.hash.toString()}`);
                     }));
                     break;
                 }
@@ -989,7 +1008,7 @@ function run() {
                         context.setOutput('job_started', true);
                         context.setOutput('job_commit', commit.hash.toString());
                         core.info(`job_finished: true`);
-                        core.info(`job_commit: ${commit.hash}`);
+                        core.info(`job_commit: ${commit.hash.toString()}`);
                     }));
                     break;
                 }
@@ -999,7 +1018,7 @@ function run() {
                         context.setOutput('job_finished', true);
                         context.setOutput('job_commit', commit.hash.toString());
                         core.info(`job_finished: true`);
-                        core.info(`job_commit: ${commit.hash}`);
+                        core.info(`job_commit: ${commit.hash.toString()}`);
                     }));
                     break;
                 }
@@ -1098,13 +1117,14 @@ exports.JobStartedMessage = JobStartedMessage;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nullQueueName = exports.QueueName = void 0;
+const NO_QUEUE_NAME = '--no-queue-name--';
 class QueueName {
     constructor(value) {
         // TODO: validation. Issue -> https://github.com/Nautilus-Cyberneering/git-queue/issues/39
         this.value = value;
     }
     isNull() {
-        return this.value === '';
+        return this.value === NO_QUEUE_NAME;
     }
     equalsTo(other) {
         return this.value === other.value;
@@ -1115,7 +1135,7 @@ class QueueName {
 }
 exports.QueueName = QueueName;
 function nullQueueName() {
-    return new QueueName('');
+    return new QueueName(NO_QUEUE_NAME);
 }
 exports.nullQueueName = nullQueueName;
 
@@ -1142,10 +1162,10 @@ const committed_message_1 = __nccwpck_require__(6537);
 const errors_1 = __nccwpck_require__(9292);
 const message_1 = __nccwpck_require__(3307);
 const commit_body_1 = __nccwpck_require__(3801);
-const commit_hash_1 = __nccwpck_require__(5533);
 const commit_message_1 = __nccwpck_require__(1961);
 const commit_subject_1 = __nccwpck_require__(8798);
 const committed_message_log_1 = __nccwpck_require__(6472);
+const short_commit__hash_1 = __nccwpck_require__(7406);
 class Queue {
     constructor(name, gitRepo, commitOptions) {
         this.name = name;
@@ -1197,7 +1217,7 @@ class Queue {
             const commitMessage = this.buildCommitMessage(message);
             const commitResult = yield this.gitRepo.commit(commitMessage, this.commitOptions);
             yield this.loadMessagesFromGit();
-            const committedMessage = this.findCommittedMessageByCommit(new commit_hash_1.CommitHash(commitResult.commit));
+            const committedMessage = this.committedMessages.findByShortCommitHash(new short_commit__hash_1.ShortCommitHash(commitResult.commit));
             return committedMessage.commitInfo();
         });
     }
@@ -1225,32 +1245,70 @@ class Queue {
             ? latestMessage
             : (0, committed_message_1.nullMessage)();
     }
-    findCommittedMessageByCommit(commitHash) {
-        return this.committedMessages.findByCommit(commitHash);
-    }
     createJob(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             this.guardThatThereAreNoPendingJobs();
             const message = new message_1.NewJobMessage(payload);
-            return this.commitMessage(message);
+            const commit = yield this.commitMessage(message);
+            return commit;
         });
     }
     markJobAsStarted(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const pendingJob = this.guardThatThereIsAPendingJob();
             const message = new message_1.JobStartedMessage(payload, pendingJob.commitHash());
-            return this.commitMessage(message);
+            const commit = yield this.commitMessage(message);
+            return commit;
         });
     }
     markJobAsFinished(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             const pendingJob = this.guardThatThereIsAPendingJob();
             const message = new message_1.JobFinishedMessage(payload, pendingJob.commitHash());
-            return this.commitMessage(message);
+            const commit = yield this.commitMessage(message);
+            return commit;
         });
     }
 }
 exports.Queue = Queue;
+
+
+/***/ }),
+
+/***/ 7406:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.nullShortCommitHash = exports.ShortCommitHash = void 0;
+const NO_SHORT_COMMIT_HASH = '--no-short-commit-hash--';
+/**
+ * 7-character commit hash
+ */
+class ShortCommitHash {
+    constructor(value) {
+        // TODO: validation
+        this.value = value;
+    }
+    getHash() {
+        return this.value;
+    }
+    isNull() {
+        return this.value === NO_SHORT_COMMIT_HASH;
+    }
+    equalsTo(other) {
+        return this.value === other.value;
+    }
+    toString() {
+        return this.value;
+    }
+}
+exports.ShortCommitHash = ShortCommitHash;
+function nullShortCommitHash() {
+    return new ShortCommitHash(NO_SHORT_COMMIT_HASH);
+}
+exports.nullShortCommitHash = nullShortCommitHash;
 
 
 /***/ }),
@@ -1262,6 +1320,7 @@ exports.Queue = Queue;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nullSigningKeyId = exports.SigningKeyId = void 0;
+const NO_SIGNING_KEY_ID = '--no-signing-key-id--';
 class SigningKeyId {
     constructor(id) {
         this.id = id;
@@ -1273,12 +1332,12 @@ class SigningKeyId {
         return this.id;
     }
     isNull() {
-        return this.id === '';
+        return this.id === NO_SIGNING_KEY_ID;
     }
 }
 exports.SigningKeyId = SigningKeyId;
 function nullSigningKeyId() {
-    return new SigningKeyId('');
+    return new SigningKeyId(NO_SIGNING_KEY_ID);
 }
 exports.nullSigningKeyId = nullSigningKeyId;
 

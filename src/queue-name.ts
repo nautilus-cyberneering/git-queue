@@ -1,5 +1,7 @@
 import {Nullable} from './nullable'
 
+const NO_QUEUE_NAME = '--no-queue-name--'
+
 export class QueueName implements Nullable {
   value: string
 
@@ -9,7 +11,7 @@ export class QueueName implements Nullable {
   }
 
   isNull(): boolean {
-    return this.value === ''
+    return this.value === NO_QUEUE_NAME
   }
 
   equalsTo(other: QueueName): boolean {
@@ -22,5 +24,5 @@ export class QueueName implements Nullable {
 }
 
 export function nullQueueName(): QueueName {
-  return new QueueName('')
+  return new QueueName(NO_QUEUE_NAME)
 }

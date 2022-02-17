@@ -6,6 +6,7 @@ import {
   createInitializedTempGitDir,
   createInitializedTempGnuPGHomeDir,
   dummyPayload,
+  getLatestCommitHash,
   gitLogForLatestCommit
 } from '../../src/__tests__/helpers'
 
@@ -102,8 +103,10 @@ describe('GitHub Action', () => {
     expect(output).toEqual(
       expect.stringContaining('::set-output name=job_created::true')
     )
+
+    const commitHash = getLatestCommitHash(gitRepoDir)
     expect(output).toEqual(
-      expect.stringContaining('::set-output name=job_commit::')
+      expect.stringContaining(`set-output name=job_commit::${commitHash}`)
     )
   })
 
@@ -123,12 +126,14 @@ describe('GitHub Action', () => {
     const output = executeAction(env)
 
     expect(output).toEqual(
-      expect.stringContaining('::set-output name=job_commit::')
-    )
-    expect(output).toEqual(
       expect.stringContaining(
         `::set-output name=job_payload::${dummyPayload()}`
       )
+    )
+
+    const commitHash = getLatestCommitHash(gitRepoDir)
+    expect(output).toEqual(
+      expect.stringContaining(`set-output name=job_commit::${commitHash}`)
     )
   })
 
@@ -150,8 +155,10 @@ describe('GitHub Action', () => {
     expect(output).toEqual(
       expect.stringContaining('::set-output name=job_started::true')
     )
+
+    const commitHash = getLatestCommitHash(gitRepoDir)
     expect(output).toEqual(
-      expect.stringContaining('::set-output name=job_commit::')
+      expect.stringContaining(`set-output name=job_commit::${commitHash}`)
     )
   })
 
@@ -173,8 +180,10 @@ describe('GitHub Action', () => {
     expect(output).toEqual(
       expect.stringContaining('::set-output name=job_finished::true')
     )
+
+    const commitHash = getLatestCommitHash(gitRepoDir)
     expect(output).toEqual(
-      expect.stringContaining('::set-output name=job_commit::')
+      expect.stringContaining(`set-output name=job_commit::${commitHash}`)
     )
   })
 

@@ -6,6 +6,7 @@ import {CommitInfo} from './commit-info'
 import {QueueName} from './queue-name'
 
 import {commitSubjectBelongsToAQueue} from './commit-subject-parser'
+import {ShortCommitHash} from './short-commit--hash'
 
 /**
  * A readonly list of ordered commit messages.
@@ -50,9 +51,21 @@ export class CommittedMessageLog {
     return this.isEmpty() ? nullMessage() : this.messages[0]
   }
 
-  findByCommit(commitHash: CommitHash): CommittedMessage {
+  findByCommitHash(commitHash: CommitHash): CommittedMessage {
     const commits = this.messages.filter(message =>
       message.commitHash().equalsTo(commitHash)
+    )
+
+    if (commits.length === 0) {
+      return nullMessage()
+    }
+
+    return commits[0]
+  }
+
+  findByShortCommitHash(shortCommitHash: ShortCommitHash): CommittedMessage {
+    const commits = this.messages.filter(message =>
+      message.shortCommitHash().equalsTo(shortCommitHash)
     )
 
     if (commits.length === 0) {

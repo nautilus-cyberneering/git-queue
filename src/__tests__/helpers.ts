@@ -88,3 +88,12 @@ export function gitLogForLatestCommit(gitRepoDir: string): string {
     .toString()
   return output
 }
+
+export function getLatestCommitHash(gitRepoDir: string): string {
+  const output = cp
+    .execFileSync('git', ['show', '--pretty=%H', '-s', 'HEAD'], {
+      cwd: gitRepoDir
+    })
+    .toString()
+  return output
+}

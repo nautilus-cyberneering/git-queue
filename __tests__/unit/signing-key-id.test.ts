@@ -15,7 +15,7 @@ describe('SigningKeyId', () => {
     expect(signingKeyId1.equalsTo(signingKeyId2)).toBe(false)
   })
 
-  it('could be empty', () => {
+  it('could be null', () => {
     const signingKeyId = nullSigningKeyId()
 
     expect(signingKeyId.isNull()).toBe(true)

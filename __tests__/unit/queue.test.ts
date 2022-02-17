@@ -59,11 +59,13 @@ describe('Queue', () => {
   it('should dispatch a new job', async () => {
     const queue = await createTestQueue(commitOptionsForTests())
 
-    await queue.createJob(dummyPayload())
+    const commit = await queue.createJob(dummyPayload())
 
     const nextJob = queue.getNextJob()
 
+    expect(nextJob.isNull()).toBe(false)
     expect(nextJob.payload()).toBe(dummyPayload())
+    expect(nextJob.commitHash().equalsTo(commit.hash)).toBe(true)
   })
 
   it('should fail when trying to create a job if the previous job has not finished yet', async () => {
@@ -115,16 +117,6 @@ describe('Queue', () => {
     expect(output.includes('Author: A committer <committer@example.com>')).toBe(
       true
     )
-  })
-
-  it('should find an stored message by its commit hash', async () => {
-    const queue = await createTestQueue(commitOptionsForTests())
-
-    const commit = await queue.createJob(dummyPayload())
-
-    const committedMessage = queue.findCommittedMessageByCommit(commit.hash)
-
-    expect(committedMessage.commitHash().equalsTo(commit.hash)).toBe(true)
   })
 
   it('should allow to sign commits', async () => {

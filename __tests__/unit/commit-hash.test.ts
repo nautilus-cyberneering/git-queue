@@ -32,7 +32,7 @@ describe('CommitHash', () => {
 
   it('could be converted to string', () => {
     const nullObject = nullCommitHash()
-    expect(nullObject.toString()).toBe('')
+    expect(nullObject.toString()).toBe('--no-commit-hash--')
 
     const commit = new CommitHash('ad5cea6308f69d7955d8de5f0da19f675d5ba75f')
     expect(commit.toString()).toBe('ad5cea6308f69d7955d8de5f0da19f675d5ba75f')

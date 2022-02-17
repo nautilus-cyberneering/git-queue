@@ -25,6 +25,7 @@ import {CommittedMessageLog} from './committed-message-log'
 import {GitRepo} from './git-repo'
 import {GitRepoDir} from './git-repo-dir'
 import {QueueName} from './queue-name'
+import {ShortCommitHash} from './short-commit--hash'
 
 export class Queue {
   private readonly name: QueueName
@@ -102,8 +103,8 @@ export class Queue {
 
     await this.loadMessagesFromGit()
 
-    const committedMessage = this.findCommittedMessageByCommit(
-      new CommitHash(commitResult.commit)
+    const committedMessage = this.committedMessages.findByShortCommitHash(
+      new ShortCommitHash(commitResult.commit)
     )
 
     return committedMessage.commitInfo()
@@ -143,16 +144,14 @@ export class Queue {
       : nullMessage()
   }
 
-  findCommittedMessageByCommit(commitHash: CommitHash): CommittedMessage {
-    return this.committedMessages.findByCommit(commitHash)
-  }
-
   async createJob(payload: string): Promise<CommitInfo> {
     this.guardThatThereAreNoPendingJobs()
 
     const message = new NewJobMessage(payload)
 
-    return this.commitMessage(message)
+    const commit = await this.commitMessage(message)
+
+    return commit
   }
 
   async markJobAsStarted(payload: string): Promise<CommitInfo> {
@@ -160,7 +159,9 @@ export class Queue {
 
     const message = new JobStartedMessage(payload, pendingJob.commitHash())
 
-    return this.commitMessage(message)
+    const commit = await this.commitMessage(message)
+
+    return commit
   }
 
   async markJobAsFinished(payload: string): Promise<CommitInfo> {
@@ -168,6 +169,8 @@ export class Queue {
 
     const message = new JobFinishedMessage(payload, pendingJob.commitHash())
 
-    return this.commitMessage(message)
+    const commit = await this.commitMessage(message)
+
+    return commit
   }
 }

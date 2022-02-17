@@ -1,5 +1,7 @@
 import {Nullable} from './nullable'
 
+const NO_SIGNING_KEY_ID = '--no-signing-key-id--'
+
 export class SigningKeyId implements Nullable {
   id: string
 
@@ -16,10 +18,10 @@ export class SigningKeyId implements Nullable {
   }
 
   isNull(): boolean {
-    return this.id === ''
+    return this.id === NO_SIGNING_KEY_ID
   }
 }
 
 export function nullSigningKeyId(): SigningKeyId {
-  return new SigningKeyId('')
+  return new SigningKeyId(NO_SIGNING_KEY_ID)
 }
