@@ -80,7 +80,7 @@ describe('GitHub Action', () => {
 
     expect(output).toEqual(
       expect.stringContaining(
-        `::error::Invalid action. Actions can only be: create-job, next-job, finish-job`
+        '::error::Invalid action. Actions can only be: create-job, next-job, start-job, finish-job'
       )
     )
   })
@@ -129,6 +129,29 @@ describe('GitHub Action', () => {
       expect.stringContaining(
         `::set-output name=job_payload::${dummyPayload()}`
       )
+    )
+  })
+
+  it('should mark the pending job as started', async () => {
+    const gitRepoDir = await createInitializedTempGitDir()
+
+    createJob(gitRepoDir)
+
+    const env = {
+      ...process.env,
+      INPUT_QUEUE_NAME: 'QUEUE-NAME',
+      INPUT_GIT_REPO_DIR: gitRepoDir,
+      INPUT_ACTION: 'start-job',
+      INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
+    }
+
+    const output = executeAction(env)
+
+    expect(output).toEqual(
+      expect.stringContaining('::set-output name=job_started::true')
+    )
+    expect(output).toEqual(
+      expect.stringContaining('::set-output name=job_commit::')
     )
   })
 

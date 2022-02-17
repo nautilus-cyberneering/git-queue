@@ -85,6 +85,16 @@ jobs:
           action: 'create-job'
           job_payload: '{"field": "value", "state": "pending"}'
 
+      - name: Mark job as started
+        id: start-job
+        if: ${{ steps.create-job.outputs.job_created == 'true' }}
+        uses: ./
+        with:
+          git_repo_dir: ${{ runner.temp }}/temp_git_dir
+          queue_name: 'Library Update [library-aaa]'
+          action: 'start-job'
+          job_payload: '{"field": "value", "state": "started"}'          
+
       - name: Mutual exclusion code
         if: ${{ steps.create-job.outputs.job_created == 'true' }}
         run: echo "Running the job that requires mutual exclusion"
@@ -113,4 +123,5 @@ jobs:
         run: |
           cd ${{ runner.temp }}/temp_git_dir
           git show --show-signature ${{ steps.create-job.outputs.job_commit }}
+          git show --show-signature ${{ steps.start-job.outputs.job_commit }}
           git show --show-signature ${{ steps.finish-job.outputs.job_commit }}

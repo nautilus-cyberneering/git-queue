@@ -390,7 +390,7 @@ exports.CommittedMessageLog = CommittedMessageLog;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.nullMessage = exports.JobFinishedCommittedMessage = exports.NewJobCommittedMessage = exports.NullCommittedMessage = exports.CommittedMessage = void 0;
+exports.nullMessage = exports.JobStartedCommittedMessage = exports.JobFinishedCommittedMessage = exports.NewJobCommittedMessage = exports.NullCommittedMessage = exports.CommittedMessage = void 0;
 const commit_info_1 = __nccwpck_require__(4136);
 const commit_subject_parser_1 = __nccwpck_require__(386);
 const errors_1 = __nccwpck_require__(9292);
@@ -406,6 +406,9 @@ class CommittedMessage {
             }
             case '✅': {
                 return new JobFinishedCommittedMessage(commit);
+            }
+            case '👔': {
+                return new JobStartedCommittedMessage(commit);
             }
         }
         throw new errors_1.InvalidMessageKeyError(messageKey.toString());
@@ -442,6 +445,9 @@ exports.NewJobCommittedMessage = NewJobCommittedMessage;
 class JobFinishedCommittedMessage extends CommittedMessage {
 }
 exports.JobFinishedCommittedMessage = JobFinishedCommittedMessage;
+class JobStartedCommittedMessage extends CommittedMessage {
+}
+exports.JobStartedCommittedMessage = JobStartedCommittedMessage;
 function nullMessage() {
     return new NullCommittedMessage((0, commit_info_1.nullCommitInfo)());
 }
@@ -891,9 +897,15 @@ const error_1 = __nccwpck_require__(8751);
 const gpg_env_1 = __nccwpck_require__(314);
 const ACTION_CREATE_JOB = 'create-job';
 const ACTION_NEXT_JOB = 'next-job';
+const ACTION_START_JOB = 'start-job';
 const ACTION_FINISH_JOB = 'finish-job';
-function actionOptions() {
-    const options = [ACTION_CREATE_JOB, ACTION_NEXT_JOB, ACTION_FINISH_JOB];
+function listOfActions() {
+    const options = [
+        ACTION_CREATE_JOB,
+        ACTION_NEXT_JOB,
+        ACTION_START_JOB,
+        ACTION_FINISH_JOB
+    ];
     return options.join(', ');
 }
 function getCommitAuthorFromInputs(commitAuthor) {
@@ -971,18 +983,28 @@ function run() {
                     }));
                     break;
                 }
+                case ACTION_START_JOB: {
+                    const commit = yield queue.markJobAsStarted(inputs.jobPayload);
+                    yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
+                        context.setOutput('job_started', true);
+                        context.setOutput('job_commit', commit.hash.toString());
+                        core.info(`job_finished: true`);
+                        core.info(`job_commit: ${commit.hash}`);
+                    }));
+                    break;
+                }
                 case ACTION_FINISH_JOB: {
-                    const markJobAsFinishedCommit = yield queue.markJobAsFinished(inputs.jobPayload);
+                    const commit = yield queue.markJobAsFinished(inputs.jobPayload);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_finished', true);
-                        context.setOutput('job_commit', markJobAsFinishedCommit.hash.toString());
+                        context.setOutput('job_commit', commit.hash.toString());
                         core.info(`job_finished: true`);
-                        core.info(`job_commit: ${markJobAsFinishedCommit.hash}`);
+                        core.info(`job_commit: ${commit.hash}`);
                     }));
                     break;
                 }
                 default: {
-                    core.error(`Invalid action. Actions can only be: ${actionOptions()}`);
+                    core.error(`Invalid action. Actions can only be: ${listOfActions()}`);
                 }
             }
         }
@@ -1025,7 +1047,7 @@ exports.MessageKey = MessageKey;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.JobFinishedMessage = exports.NewJobMessage = exports.Message = void 0;
+exports.JobStartedMessage = exports.JobFinishedMessage = exports.NewJobMessage = exports.Message = void 0;
 const commit_hash_1 = __nccwpck_require__(5533);
 const message_key_1 = __nccwpck_require__(493);
 class Message {
@@ -1059,6 +1081,12 @@ class JobFinishedMessage extends Message {
     }
 }
 exports.JobFinishedMessage = JobFinishedMessage;
+class JobStartedMessage extends Message {
+    getKey() {
+        return new message_key_1.MessageKey('👔');
+    }
+}
+exports.JobStartedMessage = JobStartedMessage;
 
 
 /***/ }),
@@ -1204,6 +1232,13 @@ class Queue {
         return __awaiter(this, void 0, void 0, function* () {
             this.guardThatThereAreNoPendingJobs();
             const message = new message_1.NewJobMessage(payload);
+            return this.commitMessage(message);
+        });
+    }
+    markJobAsStarted(payload) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const pendingJob = this.guardThatThereIsAPendingJob();
+            const message = new message_1.JobStartedMessage(payload, pendingJob.commitHash());
             return this.commitMessage(message);
         });
     }

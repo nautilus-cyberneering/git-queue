@@ -24,6 +24,9 @@ export abstract class CommittedMessage implements Nullable {
       case '✅': {
         return new JobFinishedCommittedMessage(commit)
       }
+      case '👔': {
+        return new JobStartedCommittedMessage(commit)
+      }
     }
     throw new InvalidMessageKeyError(messageKey.toString())
   }
@@ -60,6 +63,7 @@ export abstract class CommittedMessage implements Nullable {
 export class NullCommittedMessage extends CommittedMessage {}
 export class NewJobCommittedMessage extends CommittedMessage {}
 export class JobFinishedCommittedMessage extends CommittedMessage {}
+export class JobStartedCommittedMessage extends CommittedMessage {}
 
 export function nullMessage(): NullCommittedMessage {
   return new NullCommittedMessage(nullCommitInfo())

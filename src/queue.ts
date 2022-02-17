@@ -8,7 +8,12 @@ import {
   NoPendingJobsFoundError,
   PendingJobsLimitReachedError
 } from './errors'
-import {JobFinishedMessage, Message, NewJobMessage} from './message'
+import {
+  JobFinishedMessage,
+  JobStartedMessage,
+  Message,
+  NewJobMessage
+} from './message'
 
 import {CommitBody} from './commit-body'
 import {CommitHash} from './commit-hash'
@@ -146,6 +151,14 @@ export class Queue {
     this.guardThatThereAreNoPendingJobs()
 
     const message = new NewJobMessage(payload)
+
+    return this.commitMessage(message)
+  }
+
+  async markJobAsStarted(payload: string): Promise<CommitInfo> {
+    const pendingJob = this.guardThatThereIsAPendingJob()
+
+    const message = new JobStartedMessage(payload, pendingJob.commitHash())
 
     return this.commitMessage(message)
   }

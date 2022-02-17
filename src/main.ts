@@ -17,10 +17,16 @@ import {getGnupgHome} from './gpg-env'
 
 const ACTION_CREATE_JOB = 'create-job'
 const ACTION_NEXT_JOB = 'next-job'
+const ACTION_START_JOB = 'start-job'
 const ACTION_FINISH_JOB = 'finish-job'
 
-function actionOptions(): string {
-  const options = [ACTION_CREATE_JOB, ACTION_NEXT_JOB, ACTION_FINISH_JOB]
+function listOfActions(): string {
+  const options = [
+    ACTION_CREATE_JOB,
+    ACTION_NEXT_JOB,
+    ACTION_START_JOB,
+    ACTION_FINISH_JOB
+  ]
   return options.join(', ')
 }
 
@@ -128,26 +134,34 @@ async function run(): Promise<void> {
 
         break
       }
+      case ACTION_START_JOB: {
+        const commit = await queue.markJobAsStarted(inputs.jobPayload)
+
+        await core.group(`Setting outputs`, async () => {
+          context.setOutput('job_started', true)
+          context.setOutput('job_commit', commit.hash.toString())
+
+          core.info(`job_finished: true`)
+          core.info(`job_commit: ${commit.hash}`)
+        })
+
+        break
+      }
       case ACTION_FINISH_JOB: {
-        const markJobAsFinishedCommit = await queue.markJobAsFinished(
-          inputs.jobPayload
-        )
+        const commit = await queue.markJobAsFinished(inputs.jobPayload)
 
         await core.group(`Setting outputs`, async () => {
           context.setOutput('job_finished', true)
-          context.setOutput(
-            'job_commit',
-            markJobAsFinishedCommit.hash.toString()
-          )
+          context.setOutput('job_commit', commit.hash.toString())
 
           core.info(`job_finished: true`)
-          core.info(`job_commit: ${markJobAsFinishedCommit.hash}`)
+          core.info(`job_commit: ${commit.hash}`)
         })
 
         break
       }
       default: {
-        core.error(`Invalid action. Actions can only be: ${actionOptions()}`)
+        core.error(`Invalid action. Actions can only be: ${listOfActions()}`)
       }
     }
   } catch (error) {

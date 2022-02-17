@@ -40,3 +40,9 @@ export class JobFinishedMessage extends Message {
     return new MessageKey('✅')
   }
 }
+
+export class JobStartedMessage extends Message {
+  getKey(): MessageKey {
+    return new MessageKey('👔')
+  }
+}
