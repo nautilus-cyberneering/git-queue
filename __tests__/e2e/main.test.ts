@@ -3,12 +3,14 @@ import * as path from 'path'
 import * as process from 'process'
 
 import {
-  createInitializedTempGitDir,
+  createInitializedGitRepo,
   createInitializedTempGnuPGHomeDir,
   dummyPayload,
   getLatestCommitHash,
   gitLogForLatestCommit
 } from '../../src/__tests__/helpers'
+
+import {GitRepo} from '../../src/git-repo'
 
 import {expect} from '@jest/globals'
 import {getErrorMessage} from '../../src/error'
@@ -32,11 +34,11 @@ function executeAction(env): string | Buffer {
   return output
 }
 
-function createJob(gitRepoDir): string | Buffer {
+function createJob(gitRepo: GitRepo): string | Buffer {
   const env = {
     ...process.env,
     INPUT_QUEUE_NAME: 'QUEUE-NAME',
-    INPUT_GIT_REPO_DIR: gitRepoDir,
+    INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
     INPUT_ACTION: 'create-job',
     INPUT_JOB_PAYLOAD: dummyPayload(),
     INPUT_GIT_COMMIT_NO_GPG_SIGN: true
@@ -67,12 +69,12 @@ function getOutputVariable(
 
 describe('GitHub Action', () => {
   it('should print the git repo dir at the beginning of the action execution', async () => {
-    const gitRepoDir = await createInitializedTempGitDir()
+    const gitRepo = await createInitializedGitRepo()
 
     const env = {
       ...process.env,
       INPUT_QUEUE_NAME: 'QUEUE-NAME',
-      INPUT_GIT_REPO_DIR: gitRepoDir,
+      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'next-job',
       INPUT_JOB_PAYLOAD: dummyPayload(),
       INPUT_GIT_COMMIT_NO_GPG_SIGN: true
@@ -81,17 +83,17 @@ describe('GitHub Action', () => {
     const output = executeAction(env)
 
     expect(output).toEqual(
-      expect.stringContaining(`git_repo_dir: ${gitRepoDir}`)
+      expect.stringContaining(`git_repo_dir: ${gitRepo.getDirPath()}`)
     )
   })
 
   it('should return an error for invalid actions', async () => {
-    const gitRepoDir = await createInitializedTempGitDir()
+    const gitRepo = await createInitializedGitRepo()
 
     const env = {
       ...process.env,
       INPUT_QUEUE_NAME: 'QUEUE-NAME',
-      INPUT_GIT_REPO_DIR: gitRepoDir,
+      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'INVALID ACTION',
       INPUT_JOB_PAYLOAD: dummyPayload(),
       INPUT_GIT_COMMIT_NO_GPG_SIGN: true
@@ -107,12 +109,12 @@ describe('GitHub Action', () => {
   })
 
   it('should create a new job', async () => {
-    const gitRepoDir = await createInitializedTempGitDir()
+    const gitRepo = await createInitializedGitRepo()
 
     const env = {
       ...process.env,
       INPUT_QUEUE_NAME: 'QUEUE-NAME',
-      INPUT_GIT_REPO_DIR: gitRepoDir,
+      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'create-job',
       INPUT_JOB_PAYLOAD: dummyPayload(),
       INPUT_GIT_COMMIT_NO_GPG_SIGN: true
@@ -122,19 +124,19 @@ describe('GitHub Action', () => {
 
     expect(getOutputVariable('job_created', output.toString())).toBe('true')
     expect(getOutputVariable('job_commit', output.toString())).toBe(
-      getLatestCommitHash(gitRepoDir)
+      getLatestCommitHash(gitRepo.getDirPath())
     )
   })
 
   it('should get the next job', async () => {
-    const gitRepoDir = await createInitializedTempGitDir()
+    const gitRepo = await createInitializedGitRepo()
 
-    createJob(gitRepoDir)
+    createJob(gitRepo)
 
     const env = {
       ...process.env,
       INPUT_QUEUE_NAME: 'QUEUE-NAME',
-      INPUT_GIT_REPO_DIR: gitRepoDir,
+      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'next-job',
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
     }
@@ -145,19 +147,19 @@ describe('GitHub Action', () => {
       dummyPayload()
     )
     expect(getOutputVariable('job_commit', output.toString())).toBe(
-      getLatestCommitHash(gitRepoDir)
+      getLatestCommitHash(gitRepo.getDirPath())
     )
   })
 
   it('should mark the pending job as started', async () => {
-    const gitRepoDir = await createInitializedTempGitDir()
+    const gitRepo = await createInitializedGitRepo()
 
-    createJob(gitRepoDir)
+    createJob(gitRepo)
 
     const env = {
       ...process.env,
       INPUT_QUEUE_NAME: 'QUEUE-NAME',
-      INPUT_GIT_REPO_DIR: gitRepoDir,
+      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'start-job',
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
     }
@@ -166,19 +168,19 @@ describe('GitHub Action', () => {
 
     expect(getOutputVariable('job_started', output.toString())).toBe('true')
     expect(getOutputVariable('job_commit', output.toString())).toBe(
-      getLatestCommitHash(gitRepoDir)
+      getLatestCommitHash(gitRepo.getDirPath())
     )
   })
 
   it('should mark the pending job as finished', async () => {
-    const gitRepoDir = await createInitializedTempGitDir()
+    const gitRepo = await createInitializedGitRepo()
 
-    createJob(gitRepoDir)
+    createJob(gitRepo)
 
     executeAction({
       ...process.env,
       INPUT_QUEUE_NAME: 'QUEUE-NAME',
-      INPUT_GIT_REPO_DIR: gitRepoDir,
+      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'start-job',
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
     })
@@ -186,24 +188,24 @@ describe('GitHub Action', () => {
     const output = executeAction({
       ...process.env,
       INPUT_QUEUE_NAME: 'QUEUE-NAME',
-      INPUT_GIT_REPO_DIR: gitRepoDir,
+      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'finish-job',
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
     })
 
     expect(getOutputVariable('job_finished', output.toString())).toBe('true')
     expect(getOutputVariable('job_commit', output.toString())).toBe(
-      getLatestCommitHash(gitRepoDir)
+      getLatestCommitHash(gitRepo.getDirPath())
     )
   })
 
   it('should allow to overwrite commit author', async () => {
-    const gitRepoDir = await createInitializedTempGitDir()
+    const gitRepo = await createInitializedGitRepo()
 
     const env = {
       ...process.env,
       INPUT_QUEUE_NAME: 'QUEUE-NAME',
-      INPUT_GIT_REPO_DIR: gitRepoDir,
+      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'create-job',
       INPUT_JOB_PAYLOAD: dummyPayload(),
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true',
@@ -212,7 +214,7 @@ describe('GitHub Action', () => {
 
     executeAction(env)
 
-    const gitLogOutput = gitLogForLatestCommit(gitRepoDir)
+    const gitLogOutput = gitLogForLatestCommit(gitRepo.getDirPath())
 
     expect(gitLogOutput).toEqual(
       expect.stringContaining('Author: A committer <committer@example.com>')
@@ -220,7 +222,7 @@ describe('GitHub Action', () => {
   })
 
   it('should allow to overwrite commit signing key', async () => {
-    const gitRepoDir = await createInitializedTempGitDir()
+    const gitRepo = await createInitializedGitRepo()
     const gnuPGHomeDir = await createInitializedTempGnuPGHomeDir()
     const signingKeyFingerprint =
       testConfiguration().gpg_signing_key.fingerprint
@@ -228,7 +230,7 @@ describe('GitHub Action', () => {
     const env = {
       ...process.env,
       INPUT_QUEUE_NAME: 'QUEUE-NAME',
-      INPUT_GIT_REPO_DIR: gitRepoDir,
+      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'create-job',
       INPUT_JOB_PAYLOAD: dummyPayload(),
       INPUT_GIT_COMMIT_GPG_SIGN: signingKeyFingerprint,
@@ -237,7 +239,7 @@ describe('GitHub Action', () => {
 
     executeAction(env)
 
-    const gitLogOutput = gitLogForLatestCommit(gitRepoDir)
+    const gitLogOutput = gitLogForLatestCommit(gitRepo.getDirPath())
 
     expect(gitLogOutput).toEqual(
       expect.stringContaining(
@@ -247,12 +249,12 @@ describe('GitHub Action', () => {
   })
 
   it('should allow to disable commit signing for a given commit', async () => {
-    const gitRepoDir = await createInitializedTempGitDir()
+    const gitRepo = await createInitializedGitRepo()
 
     const env = {
       ...process.env,
       INPUT_QUEUE_NAME: 'QUEUE-NAME',
-      INPUT_GIT_REPO_DIR: gitRepoDir,
+      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'create-job',
       INPUT_JOB_PAYLOAD: dummyPayload(),
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
@@ -260,7 +262,7 @@ describe('GitHub Action', () => {
 
     executeAction(env)
 
-    const gitLogOutput = gitLogForLatestCommit(gitRepoDir)
+    const gitLogOutput = gitLogForLatestCommit(gitRepo.getDirPath())
 
     expect(!gitLogOutput.includes('gpg: Signature')).toBe(true)
 

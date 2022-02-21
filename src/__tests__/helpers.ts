@@ -2,7 +2,7 @@ import * as cp from 'child_process'
 import * as gpg from './gpg'
 import * as openpgp from './openpgp'
 
-import simpleGit, {SimpleGit} from 'simple-git'
+import simpleGit, {SimpleGit, SimpleGitOptions} from 'simple-git'
 
 import {GitRepo} from '../git-repo'
 import {GitRepoDir} from '../git-repo-dir'
@@ -37,12 +37,16 @@ export async function newSimpleGit(baseDir: string): Promise<SimpleGit> {
 }
 
 export async function newSimpleGitWithCommitterIdentity(
-  gitRepoDir: string
+  gitRepoDir: GitRepoDir
 ): Promise<SimpleGit> {
-  const git = await newSimpleGitWithoutCommitterIdentity(gitRepoDir)
-  git.init()
-  //git.addConfig('user.name', testConfiguration().git.user.name)
-  //git.addConfig('user.email', testConfiguration().git.user.email)
+  const options: Partial<SimpleGitOptions> = {
+    baseDir: gitRepoDir.getDirPath(),
+    config: [
+      `user.name=${testConfiguration().git.user.name}`,
+      `user.email=${testConfiguration().git.user.email}`
+    ]
+  }
+  const git = simpleGit(options)
   return git
 }
 
@@ -53,17 +57,11 @@ export async function newSimpleGitWithoutCommitterIdentity(
   return git
 }
 
-export async function createInitializedTempGitDir(): Promise<string> {
-  const gitRepoDir = await createTempEmptyDir()
-  const git = await newSimpleGit(gitRepoDir)
-  await git.init()
-  return gitRepoDir
-}
-
 export async function createInitializedGitRepo(): Promise<GitRepo> {
-  const gitRepoDirPath = await createTempEmptyDir()
-  const git = await newSimpleGitWithCommitterIdentity(gitRepoDirPath)
-  const gitRepo = new GitRepo(new GitRepoDir(gitRepoDirPath), git)
+  const gitRepoDir = new GitRepoDir(await createTempEmptyDir())
+  const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
+  const gitRepo = new GitRepo(gitRepoDir, git)
+  await gitRepo.init()
   return gitRepo
 }
 

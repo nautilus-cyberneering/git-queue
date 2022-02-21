@@ -1,18 +1,10 @@
-import {createTempEmptyDir, newSimpleGit} from '../../src/__tests__/helpers'
+import {
+  createTempEmptyDir,
+  newSimpleGitWithCommitterIdentity
+} from '../../src/__tests__/helpers'
 
 import {GitRepo} from '../../src/git-repo'
 import {GitRepoDir} from '../../src/git-repo-dir'
-import {SimpleGit} from 'simple-git'
-//import {testConfiguration} from '../../src/__tests__/config'
-
-async function newSimpleGitWithCommitterIdentity(
-  gitRepoDir: GitRepoDir
-): Promise<SimpleGit> {
-  const git = await newSimpleGit(gitRepoDir.getDirPath())
-  //git.addConfig('user.name', testConfiguration().git.user.name)
-  //git.addConfig('user.email', testConfiguration().git.user.email)
-  return git
-}
 
 describe('GitRepo', () => {
   it('should be bound to a file system dir', async () => {
