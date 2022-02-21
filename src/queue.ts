@@ -134,8 +134,16 @@ export class Queue {
     return this.name
   }
 
+  getGitRepo(): GitRepo {
+    return this.gitRepo
+  }
+
   getGitRepoDir(): GitRepoDir {
     return this.gitRepo.getDir()
+  }
+
+  getGitRepoDirPath(): string {
+    return this.gitRepo.getDirPath()
   }
 
   getMessages(): readonly CommittedMessage[] {

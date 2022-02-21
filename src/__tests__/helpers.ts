@@ -97,3 +97,13 @@ export function getLatestCommitHash(gitRepoDir: string): string {
     .trim()
   return output
 }
+
+export function getSecondToLatestCommitHash(gitRepoDir: string): string {
+  const output = cp
+    .execFileSync('git', ['show', '--pretty=%H', '-s', 'HEAD^1'], {
+      cwd: gitRepoDir
+    })
+    .toString()
+    .trim()
+  return output
+}

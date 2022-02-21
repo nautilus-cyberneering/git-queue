@@ -1255,8 +1255,14 @@ class Queue {
     getName() {
         return this.name;
     }
+    getGitRepo() {
+        return this.gitRepo;
+    }
     getGitRepoDir() {
         return this.gitRepo.getDir();
+    }
+    getGitRepoDirPath() {
+        return this.gitRepo.getDirPath();
     }
     getMessages() {
         return this.committedMessages.getMessages();
