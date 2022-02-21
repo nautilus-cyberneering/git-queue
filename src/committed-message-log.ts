@@ -52,10 +52,6 @@ export class CommittedMessageLog {
   }
 
   getNextToLatestMessage(): CommittedMessage {
-    if (this.isEmpty()) {
-      return nullMessage()
-    }
-
     if (this.messages.length < 2) {
       return nullMessage()
     }

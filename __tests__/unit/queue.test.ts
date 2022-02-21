@@ -12,7 +12,7 @@ import {CommitAuthor} from '../../src/commit-author'
 import {CommitHash} from '../../src/commit-hash'
 import {CommitInfo} from '../../src/commit-info'
 import {CommitOptions} from '../../src/commit-options'
-import {NewJobCommittedMessage} from '../../src/committed-message'
+import {Job} from '../../src/job'
 import {Queue} from '../../src/queue'
 import {QueueName} from '../../src/queue-name'
 import {SigningKeyId} from '../../src/signing-key-id'
@@ -71,7 +71,7 @@ describe('Queue', () => {
     // The job was created with the right payload
     const nextJob = queue.getNextJob()
     expect(nextJob.isNull()).toBe(false)
-    expect(nextJob.payload()).toBe(dummyPayload())
+    expect(nextJob.getPayload()).toBe(dummyPayload())
 
     // The commit was created with the right hash
     const newJobCommit = new CommitHash(
@@ -138,7 +138,7 @@ describe('Queue', () => {
     const nextJob = queue.getNextJob()
 
     expect(nextJob.isNull()).toBe(false)
-    expect(nextJob instanceof NewJobCommittedMessage).toBe(true)
+    expect(nextJob instanceof Job).toBe(true)
   })
 
   it('should allow to specify the commit author', async () => {
@@ -222,7 +222,7 @@ describe('Queue', () => {
       const nextJob = queue.getNextJob()
 
       expect(nextJob.isNull()).toBe(false)
-      expect(nextJob.payload()).toBe(dummyPayload())
+      expect(nextJob.getPayload()).toBe(dummyPayload())
     })
 
     it('a new job message also when there is also a previous finished job', async () => {
@@ -239,7 +239,7 @@ describe('Queue', () => {
       const nextJob = queue.getNextJob()
 
       expect(nextJob.isNull()).toBe(false)
-      expect(nextJob.payload()).toBe(dummyPayload())
+      expect(nextJob.getPayload()).toBe(dummyPayload())
       const newJobCommit = new CommitHash(
         getLatestCommitHash(queue.getGitRepoDir().getDirPath())
       )
@@ -271,11 +271,11 @@ describe('Queue', () => {
 
     const nextJob1 = queue1.getNextJob()
     expect(nextJob1.isNull()).toBe(false)
-    expect(nextJob1.payload()).toBe(payload1)
+    expect(nextJob1.getPayload()).toBe(payload1)
 
     const nextJob2 = queue2.getNextJob()
     expect(nextJob2.isNull()).toBe(false)
-    expect(nextJob2.payload()).toBe(payload2)
+    expect(nextJob2.getPayload()).toBe(payload2)
 
     // The commits were created with the right hashes
 

@@ -1,4 +1,5 @@
 import {CommitHash, nullCommitHash} from '../../src/commit-hash'
+import {ShortCommitHash} from '../../src/short-commit-hash'
 
 describe('CommitHash', () => {
   it('should contain the hash of a git commit', () => {
@@ -36,5 +37,14 @@ describe('CommitHash', () => {
 
     const commit = new CommitHash('ad5cea6308f69d7955d8de5f0da19f675d5ba75f')
     expect(commit.toString()).toBe('ad5cea6308f69d7955d8de5f0da19f675d5ba75f')
+    expect(commit.getHash()).toBe('ad5cea6308f69d7955d8de5f0da19f675d5ba75f')
+  })
+
+  it('could be converted to a short hash', () => {
+    const commit = new CommitHash('ad5cea6308f69d7955d8de5f0da19f675d5ba75f')
+
+    expect(commit.getShortHash().equalsTo(new ShortCommitHash('ad5cea6'))).toBe(
+      true
+    )
   })
 })

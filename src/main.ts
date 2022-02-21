@@ -124,11 +124,11 @@ async function run(): Promise<void> {
           context.setOutput('job_found', !nextJob.isNull())
 
           if (!nextJob.isNull()) {
-            context.setOutput('job_commit', nextJob.commitHash().toString())
-            context.setOutput('job_payload', nextJob.payload())
+            context.setOutput('job_commit', nextJob.getCommitHash().toString())
+            context.setOutput('job_payload', nextJob.getPayload())
 
-            core.info(`job_commit: ${nextJob.commitHash()}`)
-            core.info(`job_payload: ${nextJob.payload()}`)
+            core.info(`job_commit: ${nextJob.getCommitHash()}`)
+            core.info(`job_payload: ${nextJob.getPayload()}`)
           }
         })
 
