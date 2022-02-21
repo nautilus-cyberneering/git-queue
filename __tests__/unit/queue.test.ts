@@ -4,6 +4,7 @@ import {
   createNotInitializedGitRepo,
   dummyPayload,
   getLatestCommitHash,
+  getSecondToLatestCommitHash,
   gitLogForLatestCommit
 } from '../../src/__tests__/helpers'
 
@@ -40,11 +41,14 @@ function commitOptionsForTestsUsingSignature(): CommitOptions {
   return new CommitOptions(author, signingKeyId, noGpgSig)
 }
 
-async function createTestQueue(commitOptions: CommitOptions): Promise<Queue> {
+async function createTestQueue(
+  commitOptions: CommitOptions,
+  queueName = 'QUEUE NAME'
+): Promise<Queue> {
   const gitRepo = await createInitializedGitRepo()
 
   const queue = await Queue.create(
-    new QueueName('QUEUE NAME'),
+    new QueueName(queueName),
     gitRepo,
     commitOptions
   )
@@ -79,6 +83,8 @@ describe('Queue', () => {
     // Maybe we should return the CommittedMessage.
     // const committedMessage = await queue.createJob(dummyPayload())
     // expect(committedMessage).toBeInstance(JobStartedCommittedMessage)
+    // We can change the test once we introduce the new class Job:
+    // https://github.com/Nautilus-Cyberneering/git-queue/issues/56
   })
 
   it('should fail when trying to create a job if the previous job has not finished yet', async () => {
@@ -239,5 +245,48 @@ describe('Queue', () => {
       )
       expect(newJobCommit.equalsTo(commit.hash)).toBe(true)
     })
+  })
+
+  it('should dispatch a new job without mixing it up with other queues jobs', async () => {
+    const queue1 = await createTestQueue(commitOptionsForTests())
+
+    const queue2 = await Queue.create(
+      new QueueName('QUEUE NAME 2'),
+      queue1.getGitRepo(),
+      commitOptionsForTests()
+    )
+
+    const payload1 = JSON.stringify({
+      field1: 'value1'
+    })
+
+    const payload2 = JSON.stringify({
+      field1: 'value2'
+    })
+
+    const commit1 = await queue1.createJob(payload1)
+    const commit2 = await queue2.createJob(payload2)
+
+    // The jobs were created with the right payload
+
+    const nextJob1 = queue1.getNextJob()
+    expect(nextJob1.isNull()).toBe(false)
+    expect(nextJob1.payload()).toBe(payload1)
+
+    const nextJob2 = queue2.getNextJob()
+    expect(nextJob2.isNull()).toBe(false)
+    expect(nextJob2.payload()).toBe(payload2)
+
+    // The commits were created with the right hashes
+
+    const newJobCommit1 = new CommitHash(
+      getSecondToLatestCommitHash(queue1.getGitRepoDir().getDirPath())
+    )
+    expect(newJobCommit1.equalsTo(commit1.hash)).toBe(true)
+
+    const newJobCommit2 = new CommitHash(
+      getLatestCommitHash(queue2.getGitRepoDir().getDirPath())
+    )
+    expect(newJobCommit2.equalsTo(commit2.hash)).toBe(true)
   })
 })
