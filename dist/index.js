@@ -1405,7 +1405,10 @@ exports.createGitInstance = void 0;
 const simple_git_1 = __importDefault(__nccwpck_require__(9103));
 function createGitInstance(gitRepoDir) {
     return __awaiter(this, void 0, void 0, function* () {
-        const git = (0, simple_git_1.default)(gitRepoDir.getDirPath());
+        const options = {
+            baseDir: gitRepoDir.getDirPath()
+        };
+        const git = (0, simple_git_1.default)(options);
         /*
          * We need to pass the env vars to the child git process
          * because the user might want to use some env vars like:
