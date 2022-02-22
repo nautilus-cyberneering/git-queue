@@ -6,7 +6,6 @@ export interface Inputs {
   action: string
   jobPayload: string
   gitRepoDir: string
-  gitCommitAuthor: string
   gitCommitGpgSign: string
   gitCommitNoGpgSign: boolean
 }
@@ -17,7 +16,6 @@ export async function getInputs(): Promise<Inputs> {
     action: core.getInput('action', {required: true}),
     jobPayload: core.getInput('job_payload', {required: false}),
     gitRepoDir: core.getInput('git_repo_dir', {required: false}),
-    gitCommitAuthor: core.getInput('git_commit_author', {required: false}),
     gitCommitGpgSign: core.getInput('git_commit_gpg_sign', {required: false}),
     gitCommitNoGpgSign:
       core.getInput('git_commit_no_gpg_sign', {required: false}) === 'true'

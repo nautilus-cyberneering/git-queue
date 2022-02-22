@@ -199,28 +199,6 @@ describe('GitHub Action', () => {
     )
   })
 
-  it('should allow to overwrite commit author', async () => {
-    const gitRepo = await createInitializedGitRepo()
-
-    const env = {
-      ...process.env,
-      INPUT_QUEUE_NAME: 'QUEUE-NAME',
-      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
-      INPUT_ACTION: 'create-job',
-      INPUT_JOB_PAYLOAD: dummyPayload(),
-      INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true',
-      INPUT_GIT_COMMIT_AUTHOR: 'A committer <committer@example.com>'
-    }
-
-    executeAction(env)
-
-    const gitLogOutput = gitLogForLatestCommit(gitRepo.getDirPath())
-
-    expect(gitLogOutput).toEqual(
-      expect.stringContaining('Author: A committer <committer@example.com>')
-    )
-  })
-
   it('should allow to overwrite commit signing key', async () => {
     const gitRepo = await createInitializedGitRepo()
     const gnuPGHomeDir = await createInitializedTempGnuPGHomeDir()
@@ -267,5 +245,28 @@ describe('GitHub Action', () => {
     expect(!gitLogOutput.includes('gpg: Signature')).toBe(true)
 
     expect(gitLogOutput).not.toEqual(expect.stringContaining('gpg: Signature'))
+  })
+
+  it('should always overwrite the commit author with: NautilusCyberneering[bot] <bot@nautilus-cyberneering.de>', async () => {
+    const gitRepo = await createInitializedGitRepo()
+
+    const env = {
+      ...process.env,
+      INPUT_QUEUE_NAME: 'QUEUE-NAME',
+      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
+      INPUT_ACTION: 'create-job',
+      INPUT_JOB_PAYLOAD: dummyPayload(),
+      INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
+    }
+
+    executeAction(env)
+
+    const gitLogOutput = gitLogForLatestCommit(gitRepo.getDirPath())
+
+    expect(gitLogOutput).toEqual(
+      expect.stringContaining(
+        'Author: NautilusCyberneering[bot] <bot@nautilus-cyberneering.de>'
+      )
+    )
   })
 })

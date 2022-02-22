@@ -1,4 +1,4 @@
-import {CommitAuthor, nullCommitAuthor} from '../../src/commit-author'
+import {CommitAuthor, getCommitAuthor} from '../../src/commit-author'
 import {SigningKeyId, nullSigningKeyId} from '../../src/signing-key-id'
 
 import {CommitOptions} from '../../src/commit-options'
@@ -61,33 +61,23 @@ describe('CommitOptions', () => {
     )
   })
 
-  it('should allow to generate the git commit command arguments without using the --author option', () => {
-    const commitOptions = new CommitOptions(
-      nullCommitAuthor(),
-      nullSigningKeyId(),
-      true
-    )
-
-    expect(commitOptions.toString()).not.toContain('--author')
-  })
-
   it('should allow to generate the git commit command arguments without using the --gpg-sign option', () => {
     const commitOptions = new CommitOptions(
-      nullCommitAuthor(),
+      getCommitAuthor(),
       nullSigningKeyId(),
       true
     )
 
-    expect(commitOptions.toString()).not.toContain('--author')
+    expect(commitOptions.toString()).not.toContain('--gpg-sign')
   })
 
   it('should allow to generate the git commit command arguments without using the --no-gpg-sign option', () => {
     const commitOptions = new CommitOptions(
-      nullCommitAuthor(),
+      getCommitAuthor(),
       nullSigningKeyId(),
       false
     )
 
-    expect(commitOptions.toString()).not.toContain('--author')
+    expect(commitOptions.toString()).not.toContain('--no-gpg-sign')
   })
 })
