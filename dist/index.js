@@ -373,9 +373,6 @@ class CommittedMessageLog {
         return this.isEmpty() ? (0, committed_message_1.nullMessage)() : this.messages[0];
     }
     getNextToLatestMessage() {
-        if (this.isEmpty()) {
-            return (0, committed_message_1.nullMessage)();
-        }
         if (this.messages.length < 2) {
             return (0, committed_message_1.nullMessage)();
         }
@@ -890,6 +887,46 @@ exports.getGnupgHome = getGnupgHome;
 
 /***/ }),
 
+/***/ 6420:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.nullJob = exports.Job = void 0;
+const commit_hash_1 = __nccwpck_require__(5533);
+const NO_JOB = '--no-job--';
+class Job {
+    constructor(payload, commitHash) {
+        this.payload = payload;
+        this.commitHash = commitHash;
+    }
+    static fromCommittedMessage(newJobCommittedMessage) {
+        return new Job(newJobCommittedMessage.payload(), newJobCommittedMessage.commitHash());
+    }
+    getPayload() {
+        return this.payload;
+    }
+    getCommitHash() {
+        return this.commitHash;
+    }
+    isNull() {
+        return this.payload === NO_JOB && this.commitHash.isNull();
+    }
+    equalsTo(other) {
+        return (this.payload === other.getPayload() &&
+            this.commitHash.equalsTo(other.getCommitHash()));
+    }
+}
+exports.Job = Job;
+function nullJob() {
+    return new Job(NO_JOB, (0, commit_hash_1.nullCommitHash)());
+}
+exports.nullJob = nullJob;
+
+
+/***/ }),
+
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -1002,12 +1039,12 @@ function run() {
             const queue = yield queue_1.Queue.create(new queue_name_1.QueueName(inputs.queueName), gitRepo, commitOptions);
             switch (inputs.action) {
                 case ACTION_CREATE_JOB: {
-                    const commit = yield queue.createJob(inputs.jobPayload);
+                    const job = yield queue.createJob(inputs.jobPayload);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_created', true);
-                        context.setOutput('job_commit', commit.hash.toString());
+                        context.setOutput('job_commit', job.getCommitHash().toString());
                         core.info(`job_created: true`);
-                        core.info(`job_commit: ${commit.hash.toString()}`);
+                        core.info(`job_commit: ${job.getCommitHash().toString()}`);
                     }));
                     break;
                 }
@@ -1016,10 +1053,10 @@ function run() {
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_found', !nextJob.isNull());
                         if (!nextJob.isNull()) {
-                            context.setOutput('job_commit', nextJob.commitHash().toString());
-                            context.setOutput('job_payload', nextJob.payload());
-                            core.info(`job_commit: ${nextJob.commitHash()}`);
-                            core.info(`job_payload: ${nextJob.payload()}`);
+                            context.setOutput('job_commit', nextJob.getCommitHash().toString());
+                            context.setOutput('job_payload', nextJob.getPayload());
+                            core.info(`job_commit: ${nextJob.getCommitHash()}`);
+                            core.info(`job_payload: ${nextJob.getPayload()}`);
                         }
                     }));
                     break;
@@ -1182,6 +1219,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Queue = void 0;
 const committed_message_1 = __nccwpck_require__(6537);
 const errors_1 = __nccwpck_require__(9292);
+const job_1 = __nccwpck_require__(6420);
 const message_1 = __nccwpck_require__(3307);
 const commit_body_1 = __nccwpck_require__(3801);
 const commit_message_1 = __nccwpck_require__(1961);
@@ -1271,21 +1309,22 @@ class Queue {
         return this.committedMessages.getLatestMessage();
     }
     isEmpty() {
-        return this.committedMessages.isEmpty();
+        const nextJob = this.getNextJob();
+        return nextJob.isNull();
     }
     getNextJob() {
         // Job states: new -> started -> finished
         const latestMessage = this.getLatestMessage();
         if (latestMessage instanceof committed_message_1.NewJobCommittedMessage) {
-            return latestMessage;
+            return job_1.Job.fromCommittedMessage(latestMessage);
         }
         if (latestMessage instanceof committed_message_1.JobStartedCommittedMessage) {
-            return this.committedMessages.getNextToLatestMessage();
+            return job_1.Job.fromCommittedMessage(this.committedMessages.getNextToLatestMessage());
         }
         if (latestMessage instanceof committed_message_1.JobFinishedCommittedMessage) {
-            return (0, committed_message_1.nullMessage)();
+            return (0, job_1.nullJob)();
         }
-        return (0, committed_message_1.nullMessage)();
+        return (0, job_1.nullJob)();
     }
     // Job states: new -> started -> finished
     createJob(payload) {
@@ -1293,14 +1332,14 @@ class Queue {
             this.guardThatLastMessageWasJobFinishedOrNull(this.getLatestMessage());
             const message = new message_1.NewJobMessage(payload);
             const commit = yield this.commitMessage(message);
-            return commit;
+            return new job_1.Job(payload, commit.hash);
         });
     }
     markJobAsStarted(payload) {
         return __awaiter(this, void 0, void 0, function* () {
             this.guardThatLastMessageWasNewJob(this.getLatestMessage());
             const pendingJob = this.getNextJob();
-            const message = new message_1.JobStartedMessage(payload, pendingJob.commitHash());
+            const message = new message_1.JobStartedMessage(payload, pendingJob.getCommitHash());
             const commit = yield this.commitMessage(message);
             return commit;
         });
@@ -1309,7 +1348,7 @@ class Queue {
         return __awaiter(this, void 0, void 0, function* () {
             this.guardThatLastMessageWasJobStarted(this.getLatestMessage());
             const pendingJob = this.getNextJob();
-            const message = new message_1.JobFinishedMessage(payload, pendingJob.commitHash());
+            const message = new message_1.JobFinishedMessage(payload, pendingJob.getCommitHash());
             const commit = yield this.commitMessage(message);
             return commit;
         });

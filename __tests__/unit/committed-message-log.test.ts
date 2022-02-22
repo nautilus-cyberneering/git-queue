@@ -60,54 +60,64 @@ describe('CommittedMessageLog', () => {
     expect(committedMessageLog.isEmpty()).toBe(true)
   })
 
-  it('should return the latest committed message', async () => {
-    const commit1 = dummySimpleGitCommitWithHash(
-      'f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
-    )
-    const commit2 = dummySimpleGitCommitWithHash(
-      '2ab1cce1479d25966e2dba5be89849a71264a192'
-    )
+  describe('should return the latest committed message, returning ...', () => {
+    it('the null committed message when the git log is empty', async () => {
+      const committedMessageLog = CommittedMessageLog.fromGitLogCommits([])
 
-    const committedMessageLog = CommittedMessageLog.fromGitLogCommits([
-      commit1,
-      commit2
-    ])
+      expect(committedMessageLog.getLatestMessage().isNull()).toBe(true)
+    })
 
-    const expectedMessage = CommittedMessage.fromCommitInfo(
-      CommitInfo.fromDefaultLogFields(commit1)
-    )
+    it('the latest committed message in any other case', async () => {
+      const commit1 = dummySimpleGitCommitWithHash(
+        'f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+      )
+      const commit2 = dummySimpleGitCommitWithHash(
+        '2ab1cce1479d25966e2dba5be89849a71264a192'
+      )
 
-    expect(
-      committedMessageLog.getLatestMessage().equalsTo(expectedMessage)
-    ).toBe(true)
+      const committedMessageLog = CommittedMessageLog.fromGitLogCommits([
+        commit1,
+        commit2
+      ])
+
+      const expectedMessage = CommittedMessage.fromCommitInfo(
+        CommitInfo.fromDefaultLogFields(commit1)
+      )
+
+      expect(
+        committedMessageLog.getLatestMessage().equalsTo(expectedMessage)
+      ).toBe(true)
+    })
   })
 
-  it('should return the next to latest committed message', async () => {
-    const commit1 = dummySimpleGitCommitWithHash(
-      'f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
-    )
-    const commit2 = dummySimpleGitCommitWithHash(
-      '2ab1cce1479d25966e2dba5be89849a71264a192'
-    )
+  describe('should return the next to the latest committed message, returning ...', () => {
+    it('the committed message if there are two or more commits', async () => {
+      const commit1 = dummySimpleGitCommitWithHash(
+        'f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+      )
+      const commit2 = dummySimpleGitCommitWithHash(
+        '2ab1cce1479d25966e2dba5be89849a71264a192'
+      )
 
-    const committedMessageLog = CommittedMessageLog.fromGitLogCommits([
-      commit1,
-      commit2
-    ])
+      const committedMessageLog = CommittedMessageLog.fromGitLogCommits([
+        commit1,
+        commit2
+      ])
 
-    const expectedMessage = CommittedMessage.fromCommitInfo(
-      CommitInfo.fromDefaultLogFields(commit2)
-    )
+      const expectedMessage = CommittedMessage.fromCommitInfo(
+        CommitInfo.fromDefaultLogFields(commit2)
+      )
 
-    expect(
-      committedMessageLog.getNextToLatestMessage().equalsTo(expectedMessage)
-    ).toBe(true)
-  })
+      expect(
+        committedMessageLog.getNextToLatestMessage().equalsTo(expectedMessage)
+      ).toBe(true)
+    })
 
-  it('should return the null message as the latest message when it is empty', async () => {
-    const committedMessageLog = CommittedMessageLog.fromGitLogCommits([])
+    it('the null committed message in any other case', async () => {
+      const committedMessageLog = CommittedMessageLog.fromGitLogCommits([])
 
-    expect(committedMessageLog.getLatestMessage().isNull()).toBe(true)
+      expect(committedMessageLog.getNextToLatestMessage().isNull()).toBe(true)
+    })
   })
 
   it('should find a message by a full 40-character commit hash', async () => {

@@ -105,14 +105,14 @@ async function run(): Promise<void> {
 
     switch (inputs.action) {
       case ACTION_CREATE_JOB: {
-        const commit = await queue.createJob(inputs.jobPayload)
+        const job = await queue.createJob(inputs.jobPayload)
 
         await core.group(`Setting outputs`, async () => {
           context.setOutput('job_created', true)
-          context.setOutput('job_commit', commit.hash.toString())
+          context.setOutput('job_commit', job.getCommitHash().toString())
 
           core.info(`job_created: true`)
-          core.info(`job_commit: ${commit.hash.toString()}`)
+          core.info(`job_commit: ${job.getCommitHash().toString()}`)
         })
 
         break
@@ -124,11 +124,11 @@ async function run(): Promise<void> {
           context.setOutput('job_found', !nextJob.isNull())
 
           if (!nextJob.isNull()) {
-            context.setOutput('job_commit', nextJob.commitHash().toString())
-            context.setOutput('job_payload', nextJob.payload())
+            context.setOutput('job_commit', nextJob.getCommitHash().toString())
+            context.setOutput('job_payload', nextJob.getPayload())
 
-            core.info(`job_commit: ${nextJob.commitHash()}`)
-            core.info(`job_payload: ${nextJob.payload()}`)
+            core.info(`job_commit: ${nextJob.getCommitHash()}`)
+            core.info(`job_payload: ${nextJob.getPayload()}`)
           }
         })
 

@@ -124,7 +124,7 @@ describe('GitHub Action', () => {
 
     expect(getOutputVariable('job_created', output.toString())).toBe('true')
     expect(getOutputVariable('job_commit', output.toString())).toBe(
-      getLatestCommitHash(gitRepo.getDirPath())
+      getLatestCommitHash(gitRepo.getDir()).getHash()
     )
   })
 
@@ -147,7 +147,7 @@ describe('GitHub Action', () => {
       dummyPayload()
     )
     expect(getOutputVariable('job_commit', output.toString())).toBe(
-      getLatestCommitHash(gitRepo.getDirPath())
+      getLatestCommitHash(gitRepo.getDir()).getHash()
     )
   })
 
@@ -168,7 +168,7 @@ describe('GitHub Action', () => {
 
     expect(getOutputVariable('job_started', output.toString())).toBe('true')
     expect(getOutputVariable('job_commit', output.toString())).toBe(
-      getLatestCommitHash(gitRepo.getDirPath())
+      getLatestCommitHash(gitRepo.getDir()).getHash()
     )
   })
 
@@ -195,7 +195,7 @@ describe('GitHub Action', () => {
 
     expect(getOutputVariable('job_finished', output.toString())).toBe('true')
     expect(getOutputVariable('job_commit', output.toString())).toBe(
-      getLatestCommitHash(gitRepo.getDirPath())
+      getLatestCommitHash(gitRepo.getDir()).getHash()
     )
   })
 

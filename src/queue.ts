@@ -2,9 +2,7 @@ import {
   CommittedMessage,
   JobFinishedCommittedMessage,
   JobStartedCommittedMessage,
-  NewJobCommittedMessage,
-  NullCommittedMessage,
-  nullMessage
+  NewJobCommittedMessage
 } from './committed-message'
 import {
   GitDirNotInitializedError,
@@ -12,6 +10,7 @@ import {
   MissingNewJobMessageError,
   PendingJobsLimitReachedError
 } from './errors'
+import {Job, nullJob} from './job'
 import {
   JobFinishedMessage,
   JobStartedMessage,
@@ -155,39 +154,42 @@ export class Queue {
   }
 
   isEmpty(): boolean {
-    return this.committedMessages.isEmpty()
+    const nextJob = this.getNextJob()
+    return nextJob.isNull()
   }
 
-  getNextJob(): NewJobCommittedMessage | NullCommittedMessage {
+  getNextJob(): Job {
     // Job states: new -> started -> finished
 
     const latestMessage = this.getLatestMessage()
 
     if (latestMessage instanceof NewJobCommittedMessage) {
-      return latestMessage
+      return Job.fromCommittedMessage(latestMessage)
     }
 
     if (latestMessage instanceof JobStartedCommittedMessage) {
-      return this.committedMessages.getNextToLatestMessage()
+      return Job.fromCommittedMessage(
+        this.committedMessages.getNextToLatestMessage()
+      )
     }
 
     if (latestMessage instanceof JobFinishedCommittedMessage) {
-      return nullMessage()
+      return nullJob()
     }
 
-    return nullMessage()
+    return nullJob()
   }
 
   // Job states: new -> started -> finished
 
-  async createJob(payload: string): Promise<CommitInfo> {
+  async createJob(payload: string): Promise<Job> {
     this.guardThatLastMessageWasJobFinishedOrNull(this.getLatestMessage())
 
     const message = new NewJobMessage(payload)
 
     const commit = await this.commitMessage(message)
 
-    return commit
+    return new Job(payload, commit.hash)
   }
 
   async markJobAsStarted(payload: string): Promise<CommitInfo> {
@@ -195,7 +197,7 @@ export class Queue {
 
     const pendingJob = this.getNextJob()
 
-    const message = new JobStartedMessage(payload, pendingJob.commitHash())
+    const message = new JobStartedMessage(payload, pendingJob.getCommitHash())
 
     const commit = await this.commitMessage(message)
 
@@ -207,7 +209,7 @@ export class Queue {
 
     const pendingJob = this.getNextJob()
 
-    const message = new JobFinishedMessage(payload, pendingJob.commitHash())
+    const message = new JobFinishedMessage(payload, pendingJob.getCommitHash())
 
     const commit = await this.commitMessage(message)
 
