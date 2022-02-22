@@ -11,6 +11,7 @@ import {
 } from '../../src/__tests__/helpers'
 
 import {GitRepo} from '../../src/git-repo'
+import {InputsBuilder} from '../../src/__tests__/inputs-builder'
 
 import {expect} from '@jest/globals'
 import {getErrorMessage} from '../../src/error'
@@ -227,20 +228,20 @@ describe('GitHub Action', () => {
   })
 
   it('should allow to disable commit signing for a given commit', async () => {
-    const gitRepo = await createInitializedGitRepo()
+    const defaultArguments = await InputsBuilder.instance()
+      .withNoGpgSignature()
+      .build()
 
     const env = {
       ...process.env,
-      INPUT_QUEUE_NAME: 'QUEUE-NAME',
-      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
-      INPUT_ACTION: 'create-job',
-      INPUT_JOB_PAYLOAD: dummyPayload(),
-      INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
+      ...defaultArguments
     }
 
     executeAction(env)
 
-    const gitLogOutput = gitLogForLatestCommit(gitRepo.getDirPath())
+    const gitLogOutput = gitLogForLatestCommit(
+      defaultArguments.INPUT_GIT_REPO_DIR
+    )
 
     expect(!gitLogOutput.includes('gpg: Signature')).toBe(true)
 
@@ -248,20 +249,18 @@ describe('GitHub Action', () => {
   })
 
   it('should always overwrite the commit author with: NautilusCyberneering[bot] <bot@nautilus-cyberneering.de>', async () => {
-    const gitRepo = await createInitializedGitRepo()
+    const defaultArguments = await InputsBuilder.instance().build()
 
     const env = {
       ...process.env,
-      INPUT_QUEUE_NAME: 'QUEUE-NAME',
-      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
-      INPUT_ACTION: 'create-job',
-      INPUT_JOB_PAYLOAD: dummyPayload(),
-      INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
+      ...defaultArguments
     }
 
     executeAction(env)
 
-    const gitLogOutput = gitLogForLatestCommit(gitRepo.getDirPath())
+    const gitLogOutput = gitLogForLatestCommit(
+      defaultArguments.INPUT_GIT_REPO_DIR
+    )
 
     expect(gitLogOutput).toEqual(
       expect.stringContaining(
