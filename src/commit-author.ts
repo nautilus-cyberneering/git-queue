@@ -1,10 +1,6 @@
 import {EmailAddress} from './email-address'
-import {Nullable} from './nullable'
 
-const NO_AUTHOR_NAME = '--no-author--'
-const NO_AUTHOR_EMAIL = 'no-author@no-author.com'
-
-export class CommitAuthor implements Nullable {
+export class CommitAuthor {
   private emailAddress: EmailAddress
 
   constructor(emailAddress: EmailAddress) {
@@ -30,14 +26,10 @@ export class CommitAuthor implements Nullable {
   toString(): string {
     return this.emailAddress.toString()
   }
-
-  isNull(): boolean {
-    return (
-      this.getName() === NO_AUTHOR_NAME && this.getEmail() === NO_AUTHOR_EMAIL
-    )
-  }
 }
 
-export function nullCommitAuthor(): CommitAuthor {
-  return CommitAuthor.fromNameAndEmail(NO_AUTHOR_NAME, NO_AUTHOR_EMAIL)
+export function getCommitAuthor(): CommitAuthor {
+  return CommitAuthor.fromEmailAddressString(
+    'NautilusCyberneering[bot] <bot@nautilus-cyberneering.de>'
+  )
 }

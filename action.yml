@@ -18,10 +18,6 @@ inputs:
     description: 'The git repository directory. The default value is the current working dir'
     required: false
     default: ''
-  git_commit_author:
-    description: 'The git commit --author argument: https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---authorltauthorgt'
-    required: false
-    default: ''
   git_commit_gpg_sign:
     description: 'The git commit --gpg-sign argument: https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---gpg-signltkeyidgt'
     required: false

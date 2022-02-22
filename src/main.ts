@@ -1,7 +1,6 @@
 import * as context from './context'
 import * as core from '@actions/core'
 
-import {CommitAuthor, nullCommitAuthor} from './commit-author'
 import {SigningKeyId, nullSigningKeyId} from './signing-key-id'
 
 import {CommitOptions} from './commit-options'
@@ -12,6 +11,7 @@ import {Queue} from './queue'
 import {QueueName} from './queue-name'
 
 import {createGitInstance} from './simple-git-factory'
+import {getCommitAuthor} from './commit-author'
 import {getErrorMessage} from './error'
 import {getGnupgHome} from './gpg-env'
 
@@ -28,15 +28,6 @@ function listOfActions(): string {
     ACTION_FINISH_JOB
   ]
   return options.join(', ')
-}
-
-async function getCommitAuthorFromInputs(
-  commitAuthor: string
-): Promise<CommitAuthor> {
-  if (commitAuthor) {
-    return CommitAuthor.fromEmailAddressString(commitAuthor)
-  }
-  return nullCommitAuthor()
 }
 
 async function getSigningKeyIdFromInputs(
@@ -61,7 +52,7 @@ async function getGitRepoDirFromInputs(
 async function getCommitOptionsFromInputs(
   inputs: Inputs
 ): Promise<CommitOptions> {
-  const author = await getCommitAuthorFromInputs(inputs.gitCommitAuthor)
+  const author = getCommitAuthor()
   const gpgSign = await getSigningKeyIdFromInputs(inputs.gitCommitGpgSign)
   const noGpgSig = inputs.gitCommitNoGpgSign
 

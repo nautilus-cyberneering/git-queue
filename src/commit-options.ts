@@ -16,9 +16,7 @@ export class CommitOptions {
   forSimpleGit(): TaskOptions {
     return {
       '--allow-empty': null,
-      ...(!this.author.isNull() && {
-        '--author': `"${this.author.toString()}"`
-      }),
+      '--author': `"${this.author.toString()}"`,
       ...(!this.gpgSig.isNull() && {
         '--gpg-sign': this.gpgSig.toString()
       }),
@@ -28,9 +26,7 @@ export class CommitOptions {
 
   toString(): string {
     const allowEmpty = '--allow-empty'
-    const author = this.author.isNull()
-      ? ''
-      : `--author="${this.author.toString()}"`
+    const author = `--author="${this.author.toString()}"`
     const gpgSig = this.gpgSig.isNull()
       ? ''
       : `--gpg-sign=${this.gpgSig.toString()}`

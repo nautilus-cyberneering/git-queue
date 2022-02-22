@@ -7,10 +7,8 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.nullCommitAuthor = exports.CommitAuthor = void 0;
+exports.getCommitAuthor = exports.CommitAuthor = void 0;
 const email_address_1 = __nccwpck_require__(732);
-const NO_AUTHOR_NAME = '--no-author--';
-const NO_AUTHOR_EMAIL = 'no-author@no-author.com';
 class CommitAuthor {
     constructor(emailAddress) {
         this.emailAddress = emailAddress;
@@ -30,15 +28,12 @@ class CommitAuthor {
     toString() {
         return this.emailAddress.toString();
     }
-    isNull() {
-        return (this.getName() === NO_AUTHOR_NAME && this.getEmail() === NO_AUTHOR_EMAIL);
-    }
 }
 exports.CommitAuthor = CommitAuthor;
-function nullCommitAuthor() {
-    return CommitAuthor.fromNameAndEmail(NO_AUTHOR_NAME, NO_AUTHOR_EMAIL);
+function getCommitAuthor() {
+    return CommitAuthor.fromEmailAddressString('NautilusCyberneering[bot] <bot@nautilus-cyberneering.de>');
 }
-exports.nullCommitAuthor = nullCommitAuthor;
+exports.getCommitAuthor = getCommitAuthor;
 
 
 /***/ }),
@@ -191,17 +186,13 @@ class CommitOptions {
         this.noGpgSig = noGpgSig;
     }
     forSimpleGit() {
-        return Object.assign(Object.assign(Object.assign({ '--allow-empty': null }, (!this.author.isNull() && {
-            '--author': `"${this.author.toString()}"`
-        })), (!this.gpgSig.isNull() && {
+        return Object.assign(Object.assign({ '--allow-empty': null, '--author': `"${this.author.toString()}"` }, (!this.gpgSig.isNull() && {
             '--gpg-sign': this.gpgSig.toString()
         })), (this.noGpgSig && { '--no-gpg-sign': null }));
     }
     toString() {
         const allowEmpty = '--allow-empty';
-        const author = this.author.isNull()
-            ? ''
-            : `--author="${this.author.toString()}"`;
+        const author = `--author="${this.author.toString()}"`;
         const gpgSig = this.gpgSig.isNull()
             ? ''
             : `--gpg-sign=${this.gpgSig.toString()}`;
@@ -521,7 +512,6 @@ function getInputs() {
             action: core.getInput('action', { required: true }),
             jobPayload: core.getInput('job_payload', { required: false }),
             gitRepoDir: core.getInput('git_repo_dir', { required: false }),
-            gitCommitAuthor: core.getInput('git_commit_author', { required: false }),
             gitCommitGpgSign: core.getInput('git_commit_gpg_sign', { required: false }),
             gitCommitNoGpgSign: core.getInput('git_commit_no_gpg_sign', { required: false }) === 'true'
                 ? true
@@ -963,7 +953,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const context = __importStar(__nccwpck_require__(3842));
 const core = __importStar(__nccwpck_require__(2186));
-const commit_author_1 = __nccwpck_require__(1606);
 const signing_key_id_1 = __nccwpck_require__(9869);
 const commit_options_1 = __nccwpck_require__(360);
 const git_repo_1 = __nccwpck_require__(8432);
@@ -971,6 +960,7 @@ const git_repo_dir_1 = __nccwpck_require__(7775);
 const queue_1 = __nccwpck_require__(7065);
 const queue_name_1 = __nccwpck_require__(7894);
 const simple_git_factory_1 = __nccwpck_require__(9649);
+const commit_author_1 = __nccwpck_require__(1606);
 const error_1 = __nccwpck_require__(8751);
 const gpg_env_1 = __nccwpck_require__(314);
 const ACTION_CREATE_JOB = 'create-job';
@@ -985,14 +975,6 @@ function listOfActions() {
         ACTION_FINISH_JOB
     ];
     return options.join(', ');
-}
-function getCommitAuthorFromInputs(commitAuthor) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (commitAuthor) {
-            return commit_author_1.CommitAuthor.fromEmailAddressString(commitAuthor);
-        }
-        return (0, commit_author_1.nullCommitAuthor)();
-    });
 }
 function getSigningKeyIdFromInputs(signingKeyId) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -1012,7 +994,7 @@ function getGitRepoDirFromInputs(gitRepoDir, cwd) {
 }
 function getCommitOptionsFromInputs(inputs) {
     return __awaiter(this, void 0, void 0, function* () {
-        const author = yield getCommitAuthorFromInputs(inputs.gitCommitAuthor);
+        const author = (0, commit_author_1.getCommitAuthor)();
         const gpgSign = yield getSigningKeyIdFromInputs(inputs.gitCommitGpgSign);
         const noGpgSig = inputs.gitCommitNoGpgSign;
         return new commit_options_1.CommitOptions(author, gpgSign, noGpgSig);
