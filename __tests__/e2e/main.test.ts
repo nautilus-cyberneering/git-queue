@@ -228,39 +228,32 @@ describe('GitHub Action', () => {
   })
 
   it('should allow to disable commit signing for a given commit', async () => {
-    const defaultArguments = await InputsBuilder.instance()
-      .withNoGpgSignature()
-      .build()
+    const inputs = await InputsBuilder.instance().withNoGpgSignature().build()
 
     const env = {
       ...process.env,
-      ...defaultArguments
+      ...inputs
     }
 
     executeAction(env)
 
-    const gitLogOutput = gitLogForLatestCommit(
-      defaultArguments.INPUT_GIT_REPO_DIR
-    )
+    const gitLogOutput = gitLogForLatestCommit(inputs.INPUT_GIT_REPO_DIR)
 
     expect(!gitLogOutput.includes('gpg: Signature')).toBe(true)
-
     expect(gitLogOutput).not.toEqual(expect.stringContaining('gpg: Signature'))
   })
 
   it('should always overwrite the commit author with: NautilusCyberneering[bot] <bot@nautilus-cyberneering.de>', async () => {
-    const defaultArguments = await InputsBuilder.instance().build()
+    const defaultInputs = await InputsBuilder.instance().build()
 
     const env = {
       ...process.env,
-      ...defaultArguments
+      ...defaultInputs
     }
 
     executeAction(env)
 
-    const gitLogOutput = gitLogForLatestCommit(
-      defaultArguments.INPUT_GIT_REPO_DIR
-    )
+    const gitLogOutput = gitLogForLatestCommit(defaultInputs.INPUT_GIT_REPO_DIR)
 
     expect(gitLogOutput).toEqual(
       expect.stringContaining(
