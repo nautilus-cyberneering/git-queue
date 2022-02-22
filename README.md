@@ -2,7 +2,7 @@
 
 This GitHub Action is a job queue with the following characteristics:
 
-- It only allows on pending job at the same time. [Multiple pending jobs feature](https://github.com/Nautilus-Cyberneering/git-queue/issues/6) is planned.
+- It only allows one pending job at the same time. [Multiple pending jobs feature](https://github.com/Nautilus-Cyberneering/git-queue/issues/6) is planned.
 - Jobs are done by GitHub workflows intended to create git commits and merge them.
 - It provides a optimistic locking mechanism to guarantee that commits are merged in a mutual exclusion way, avoiding duplicate commits. When the queue accepts more than one active (not finished) job it will also guarantee the execution order.
 
@@ -154,14 +154,14 @@ jobs:
 
 Following inputs are available:
 
-| Name                     | Type   | Description                                                        |
-|--------------------------|--------|--------------------------------------------------------------------|
-| `queue_name`             | String | Queue name. It can not contain special characters or white spaces.  |
-| `action`                 | String | Queue actions: `create-job`, `next-job`, `start-job`, `finish-job`. |
-| `job_payload`            | String | Job payload. It can be any string. |
-| `git_repo_dir`           | String | The git repository directory. The default value is the current working dir. |
+| Name                     | Type   | Description                                                                                                                 |
+|--------------------------|--------|-----------------------------------------------------------------------------------------------------------------------------|
+| `queue_name`             | String | Queue name. It can not contain special characters or white spaces.                                                          |
+| `action`                 | String | Queue actions: `create-job`, `next-job`, `start-job`, `finish-job`.                                                         |
+| `job_payload`            | String | Job payload. It can be any string.                                                                                          |
+| `git_repo_dir`           | String | The git repository directory. The default value is the current working dir.                                                 |
 | `git_commit_gpg_sign`    | String | The git commit [--gpg-sign](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---gpg-signltkeyidgt) argument. |
-| `git_commit_no_gpg_sign` | String | The git commit [--no-gpg-sign](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---no-gpg-sign) argument. |
+| `git_commit_no_gpg_sign` | String | The git commit [--no-gpg-sign](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---no-gpg-sign) argument.    |
 
 ### Outputs
 

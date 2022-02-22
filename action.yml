@@ -30,7 +30,7 @@ outputs:
   job_created:
     description: 'Boolean, true if the job was created successfully'
   job_started:
-    description: 'Boolean, true if the job was started successfully'    
+    description: 'Boolean, true if the job was started successfully'
   job_finished:
     description: 'Boolean, true if the job was finished successfully'
   job_commit:
