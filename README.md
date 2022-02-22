@@ -1,5 +1,7 @@
 # Git Queue
 
+[![Check dist/](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/check-dist.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/check-dist.yml) [![MegaLinter](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/mega-linter.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/mega-linter.yml) [![Test](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test.yml) [![Test build](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test-build.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test-build.yml)
+
 This GitHub Action is a job queue with the following characteristics:
 
 - It only allows one pending job at the same time. [Multiple pending jobs feature](https://github.com/Nautilus-Cyberneering/git-queue/issues/6) is planned.
