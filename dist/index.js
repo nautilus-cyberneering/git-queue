@@ -1048,7 +1048,7 @@ function run() {
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_started', true);
                         context.setOutput('job_commit', commit.hash.toString());
-                        core.info(`job_finished: true`);
+                        core.info(`job_started: true`);
                         core.info(`job_commit: ${commit.hash.toString()}`);
                     }));
                     break;

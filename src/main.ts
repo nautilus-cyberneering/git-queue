@@ -132,7 +132,7 @@ async function run(): Promise<void> {
           context.setOutput('job_started', true)
           context.setOutput('job_commit', commit.hash.toString())
 
-          core.info(`job_finished: true`)
+          core.info(`job_started: true`)
           core.info(`job_commit: ${commit.hash.toString()}`)
         })
 
