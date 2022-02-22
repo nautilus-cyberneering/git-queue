@@ -228,7 +228,9 @@ describe('GitHub Action', () => {
   })
 
   it('should allow to disable commit signing for a given commit', async () => {
-    const inputs = await InputsBuilder.instance().withNoGpgSignature().build()
+    const inputs = await InputsBuilder.instance()
+      .withNoGpgSignature()
+      .buildInputs()
 
     const env = {
       ...process.env,
@@ -244,7 +246,7 @@ describe('GitHub Action', () => {
   })
 
   it('should always overwrite the commit author with: NautilusCyberneering[bot] <bot@nautilus-cyberneering.de>', async () => {
-    const defaultInputs = await InputsBuilder.instance().build()
+    const defaultInputs = await InputsBuilder.instance().buildInputs()
 
     const env = {
       ...process.env,

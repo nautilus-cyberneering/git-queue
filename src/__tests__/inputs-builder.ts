@@ -36,7 +36,7 @@ export class InputsBuilder {
     return this
   }
 
-  async build(): Promise<ActionInputs> {
+  async buildInputs(): Promise<ActionInputs> {
     if (this.queueName === null) {
       this.queueName = DEFAULT_QUEUE_NAME
     }
