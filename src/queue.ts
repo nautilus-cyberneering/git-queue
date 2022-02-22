@@ -154,7 +154,8 @@ export class Queue {
   }
 
   isEmpty(): boolean {
-    return this.committedMessages.isEmpty()
+    const nextJob = this.getNextJob()
+    return nextJob.isNull()
   }
 
   getNextJob(): Job {
@@ -181,14 +182,14 @@ export class Queue {
 
   // Job states: new -> started -> finished
 
-  async createJob(payload: string): Promise<CommitInfo> {
+  async createJob(payload: string): Promise<Job> {
     this.guardThatLastMessageWasJobFinishedOrNull(this.getLatestMessage())
 
     const message = new NewJobMessage(payload)
 
     const commit = await this.commitMessage(message)
 
-    return commit
+    return new Job(payload, commit.hash)
   }
 
   async markJobAsStarted(payload: string): Promise<CommitInfo> {

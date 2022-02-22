@@ -1039,12 +1039,12 @@ function run() {
             const queue = yield queue_1.Queue.create(new queue_name_1.QueueName(inputs.queueName), gitRepo, commitOptions);
             switch (inputs.action) {
                 case ACTION_CREATE_JOB: {
-                    const commit = yield queue.createJob(inputs.jobPayload);
+                    const job = yield queue.createJob(inputs.jobPayload);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_created', true);
-                        context.setOutput('job_commit', commit.hash.toString());
+                        context.setOutput('job_commit', job.getCommitHash().toString());
                         core.info(`job_created: true`);
-                        core.info(`job_commit: ${commit.hash.toString()}`);
+                        core.info(`job_commit: ${job.getCommitHash().toString()}`);
                     }));
                     break;
                 }
@@ -1309,7 +1309,8 @@ class Queue {
         return this.committedMessages.getLatestMessage();
     }
     isEmpty() {
-        return this.committedMessages.isEmpty();
+        const nextJob = this.getNextJob();
+        return nextJob.isNull();
     }
     getNextJob() {
         // Job states: new -> started -> finished
@@ -1331,7 +1332,7 @@ class Queue {
             this.guardThatLastMessageWasJobFinishedOrNull(this.getLatestMessage());
             const message = new message_1.NewJobMessage(payload);
             const commit = yield this.commitMessage(message);
-            return commit;
+            return new job_1.Job(payload, commit.hash);
         });
     }
     markJobAsStarted(payload) {

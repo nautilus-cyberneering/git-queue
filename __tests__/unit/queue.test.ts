@@ -9,9 +9,9 @@ import {
 } from '../../src/__tests__/helpers'
 
 import {CommitAuthor} from '../../src/commit-author'
-import {CommitHash} from '../../src/commit-hash'
 import {CommitInfo} from '../../src/commit-info'
 import {CommitOptions} from '../../src/commit-options'
+import {GitRepo} from '../../src/git-repo'
 import {Job} from '../../src/job'
 import {Queue} from '../../src/queue'
 import {QueueName} from '../../src/queue-name'
@@ -43,7 +43,7 @@ function commitOptionsForTestsUsingSignature(): CommitOptions {
 
 async function createTestQueue(
   commitOptions: CommitOptions,
-  queueName = 'QUEUE NAME'
+  queueName = 'queue-name'
 ): Promise<Queue> {
   const gitRepo = await createInitializedGitRepo()
 
@@ -56,75 +56,57 @@ async function createTestQueue(
   return queue
 }
 
-describe('Queue', () => {
-  it('could be empty', async () => {
-    const queue = await createTestQueue(commitOptionsForTests())
+async function createTestQueueWithGitRepo(
+  commitOptions: CommitOptions,
+  gitRepo: GitRepo,
+  queueName = 'queue-name'
+): Promise<Queue> {
+  const queue = await Queue.create(
+    new QueueName(queueName),
+    gitRepo,
+    commitOptions
+  )
+  return queue
+}
 
-    expect(queue.isEmpty()).toBe(true)
+describe('Queue', () => {
+  it('should have a name', async () => {
+    const queue = await createTestQueue(commitOptionsForTests(), 'queue-name')
+
+    expect(queue.getName().equalsTo(new QueueName('queue-name'))).toBe(true)
+  })
+
+  it('should be persisted in directory containing a Git repo', async () => {
+    const gitRepo = await createInitializedGitRepo()
+    const queue = await createTestQueueWithGitRepo(
+      commitOptionsForTests(),
+      gitRepo
+    )
+
+    expect(queue.getGitRepoDirPath()).toBe(gitRepo.getDirPath())
   })
 
   it('should dispatch a new job', async () => {
     const queue = await createTestQueue(commitOptionsForTests())
 
-    const commit = await queue.createJob(dummyPayload())
+    const job = await queue.createJob(dummyPayload())
 
-    // The job was created with the right payload
-    const nextJob = queue.getNextJob()
-    expect(nextJob.isNull()).toBe(false)
-    expect(nextJob.getPayload()).toBe(dummyPayload())
-
-    // The commit was created with the right hash
-    const newJobCommit = new CommitHash(
-      getLatestCommitHash(queue.getGitRepoDir().getDirPath())
-    )
-    expect(newJobCommit.equalsTo(commit.hash)).toBe(true)
-
-    // TODO: Code Review. Should we check not only the commit hash but the CommittedMessage?
-    // Maybe we should return the CommittedMessage.
-    // const committedMessage = await queue.createJob(dummyPayload())
-    // expect(committedMessage).toBeInstance(JobStartedCommittedMessage)
-    // We can change the test once we introduce the new class Job:
-    // https://github.com/Nautilus-Cyberneering/git-queue/issues/56
+    const commitHash = getLatestCommitHash(queue.getGitRepoDir())
+    expect(job.equalsTo(new Job(dummyPayload(), commitHash))).toBe(true)
   })
 
   it('should fail when trying to create a job if the previous job has not finished yet', async () => {
     const queue = await createTestQueue(commitOptionsForTests())
 
-    const commit = await queue.createJob(dummyPayload())
+    const job = await queue.createJob(dummyPayload())
 
-    const fn = async (): Promise<CommitInfo> => {
+    const fn = async (): Promise<Job> => {
       return queue.createJob(dummyPayload())
     }
 
-    const expectedError = `Can't create job. Previous message is not a job finished message. Previous message commit: ${commit.hash}`
-
-    await expect(fn()).rejects.toThrowError(expectedError)
-  })
-
-  it('should mark a job as finished', async () => {
-    const queue = await createTestQueue(commitOptionsForTests())
-
-    await queue.createJob(dummyPayload())
-    await queue.markJobAsStarted(dummyPayload())
-    const commit = await queue.markJobAsFinished(dummyPayload())
-
-    const nextJob = queue.getNextJob()
-    expect(nextJob.isNull()).toBe(true)
-
-    const finishJobCommit = new CommitHash(
-      getLatestCommitHash(queue.getGitRepoDir().getDirPath())
-    )
-    expect(finishJobCommit.equalsTo(commit.hash)).toBe(true)
-  })
-
-  it('should fail when trying to finish a job without any pending to finish job', async () => {
-    const queue = await createTestQueue(commitOptionsForTests())
-
-    const fn = async (): Promise<CommitInfo> => {
-      return queue.markJobAsFinished(dummyPayload())
-    }
-
-    const expectedError = `Can't finish job. Previous message is not a job started message. Previous message commit: --no-commit-hash--`
+    const expectedError = `Can't create job. Previous message is not a job finished message. Previous message commit: ${job
+      .getCommitHash()
+      .getHash()}`
 
     await expect(fn()).rejects.toThrowError(expectedError)
   })
@@ -139,6 +121,44 @@ describe('Queue', () => {
 
     expect(nextJob.isNull()).toBe(false)
     expect(nextJob instanceof Job).toBe(true)
+  })
+
+  it('should fail when trying to start a job without any pending job', async () => {
+    const queue = await createTestQueue(commitOptionsForTests())
+
+    const fn = async (): Promise<CommitInfo> => {
+      return queue.markJobAsStarted(dummyPayload())
+    }
+
+    const expectedError = `Can't start job. Previous message is not a new job message. Previous message commit: --no-commit-hash--`
+
+    await expect(fn()).rejects.toThrowError(expectedError)
+  })
+
+  it('should mark a job as finished', async () => {
+    const queue = await createTestQueue(commitOptionsForTests())
+
+    await queue.createJob(dummyPayload())
+    await queue.markJobAsStarted(dummyPayload())
+    const finishJobCommit = await queue.markJobAsFinished(dummyPayload())
+
+    expect(queue.isEmpty()).toBe(true)
+
+    // Commit was created
+    const latestCommit = getLatestCommitHash(queue.getGitRepoDir())
+    expect(finishJobCommit.hash.equalsTo(latestCommit)).toBe(true)
+  })
+
+  it('should fail when trying to finish a job without any pending to finish job', async () => {
+    const queue = await createTestQueue(commitOptionsForTests())
+
+    const fn = async (): Promise<CommitInfo> => {
+      return queue.markJobAsFinished(dummyPayload())
+    }
+
+    const expectedError = `Can't finish job. Previous message is not a job started message. Previous message commit: --no-commit-hash--`
+
+    await expect(fn()).rejects.toThrowError(expectedError)
   })
 
   it('should allow to specify the commit author', async () => {
@@ -205,8 +225,26 @@ describe('Queue', () => {
     expect(messages).toContain(queue.getLatestMessage())
   })
 
+  describe('should be empty, when ...', () => {
+    it('there are no jobs', async () => {
+      const queue = await createTestQueue(commitOptionsForTests())
+
+      expect(queue.isEmpty()).toBe(true)
+    })
+
+    it('all jobs are finished', async () => {
+      const queue = await createTestQueue(commitOptionsForTests())
+
+      await queue.createJob(dummyPayload())
+      await queue.markJobAsStarted(dummyPayload())
+      await queue.markJobAsFinished(dummyPayload())
+
+      expect(queue.isEmpty()).toBe(true)
+    })
+  })
+
   describe('should return the next job to do, returning ...', () => {
-    it('null message when there are no pending jobs', async () => {
+    it('null job when there are no pending jobs', async () => {
       const queue = await createTestQueue(commitOptionsForTests())
 
       const nextJob = queue.getNextJob()
@@ -214,7 +252,7 @@ describe('Queue', () => {
       expect(nextJob.isNull()).toBe(true)
     })
 
-    it('a new job message when there is only one pending job', async () => {
+    it('the job when there is one pending job', async () => {
       const queue = await createTestQueue(commitOptionsForTests())
 
       await queue.createJob(dummyPayload())
@@ -225,25 +263,21 @@ describe('Queue', () => {
       expect(nextJob.getPayload()).toBe(dummyPayload())
     })
 
-    it('a new job message also when there is also a previous finished job', async () => {
+    it('the latest job when there is also a previous finished job', async () => {
       const queue = await createTestQueue(commitOptionsForTests())
 
-      // First job
+      // First completed job
       await queue.createJob(dummyPayload())
       await queue.markJobAsStarted(dummyPayload())
       await queue.markJobAsFinished(dummyPayload())
 
       // Second job
-      const commit = await queue.createJob(dummyPayload())
+      await queue.createJob(dummyPayload())
 
       const nextJob = queue.getNextJob()
 
-      expect(nextJob.isNull()).toBe(false)
-      expect(nextJob.getPayload()).toBe(dummyPayload())
-      const newJobCommit = new CommitHash(
-        getLatestCommitHash(queue.getGitRepoDir().getDirPath())
-      )
-      expect(newJobCommit.equalsTo(commit.hash)).toBe(true)
+      const latestCommit = getLatestCommitHash(queue.getGitRepoDir())
+      expect(nextJob.equalsTo(new Job(dummyPayload(), latestCommit))).toBe(true)
     })
   })
 
@@ -264,29 +298,16 @@ describe('Queue', () => {
       field1: 'value2'
     })
 
-    const commit1 = await queue1.createJob(payload1)
-    const commit2 = await queue2.createJob(payload2)
-
-    // The jobs were created with the right payload
+    await queue1.createJob(payload1)
+    await queue2.createJob(payload2)
 
     const nextJob1 = queue1.getNextJob()
-    expect(nextJob1.isNull()).toBe(false)
-    expect(nextJob1.getPayload()).toBe(payload1)
-
     const nextJob2 = queue2.getNextJob()
-    expect(nextJob2.isNull()).toBe(false)
-    expect(nextJob2.getPayload()).toBe(payload2)
 
-    // The commits were created with the right hashes
+    const newJob1Commit = getSecondToLatestCommitHash(queue1.getGitRepoDir())
+    expect(nextJob1.equalsTo(new Job(payload1, newJob1Commit))).toBe(true)
 
-    const newJobCommit1 = new CommitHash(
-      getSecondToLatestCommitHash(queue1.getGitRepoDir().getDirPath())
-    )
-    expect(newJobCommit1.equalsTo(commit1.hash)).toBe(true)
-
-    const newJobCommit2 = new CommitHash(
-      getLatestCommitHash(queue2.getGitRepoDir().getDirPath())
-    )
-    expect(newJobCommit2.equalsTo(commit2.hash)).toBe(true)
+    const latestCommit = getLatestCommitHash(queue2.getGitRepoDir())
+    expect(nextJob2.equalsTo(new Job(payload2, latestCommit))).toBe(true)
   })
 })

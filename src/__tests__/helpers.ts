@@ -4,6 +4,7 @@ import * as openpgp from './openpgp'
 
 import simpleGit, {SimpleGit, SimpleGitOptions} from 'simple-git'
 
+import {CommitHash} from '../commit-hash'
 import {GitRepo} from '../git-repo'
 import {GitRepoDir} from '../git-repo-dir'
 
@@ -88,22 +89,24 @@ export function gitLogForLatestCommit(gitRepoDir: string): string {
   return output
 }
 
-export function getLatestCommitHash(gitRepoDir: string): string {
+export function getLatestCommitHash(gitRepoDir: GitRepoDir): CommitHash {
   const output = cp
     .execFileSync('git', ['show', '--pretty=%H', '-s', 'HEAD'], {
-      cwd: gitRepoDir
+      cwd: gitRepoDir.getDirPath()
     })
     .toString()
     .trim()
-  return output
+  return new CommitHash(output)
 }
 
-export function getSecondToLatestCommitHash(gitRepoDir: string): string {
+export function getSecondToLatestCommitHash(
+  gitRepoDir: GitRepoDir
+): CommitHash {
   const output = cp
     .execFileSync('git', ['show', '--pretty=%H', '-s', 'HEAD^1'], {
-      cwd: gitRepoDir
+      cwd: gitRepoDir.getDirPath()
     })
     .toString()
     .trim()
-  return output
+  return new CommitHash(output)
 }
