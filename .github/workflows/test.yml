@@ -50,7 +50,7 @@ jobs:
       - name: Set up git committer identity
         run: |
           git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'          
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
       - name: Install dependencies and build
         run: yarn install && yarn build && yarn package
@@ -128,9 +128,9 @@ jobs:
       - name: Show new commits
         run: |
           cd ${{ runner.temp }}/temp_git_dir
-          git show --show-signature ${{ steps.create-job.outputs.job_commit }}
-          git show --show-signature ${{ steps.start-job.outputs.job_commit }}
-          git show --show-signature ${{ steps.finish-job.outputs.job_commit }}
+          git show --pretty="fuller" --show-signature ${{ steps.create-job.outputs.job_commit }}
+          git show --pretty="fuller" --show-signature ${{ steps.start-job.outputs.job_commit }}
+          git show --pretty="fuller" --show-signature ${{ steps.finish-job.outputs.job_commit }}
 
       - name: Upload test git dir
         uses: actions/upload-artifact@v2
@@ -232,9 +232,9 @@ jobs:
       - name: Show new commits
         run: |
           cd ${{ runner.temp }}/temp_git_dir
-          git show --show-signature ${{ steps.create-job.outputs.job_commit }}
-          git show --show-signature ${{ steps.start-job.outputs.job_commit }}
-          git show --show-signature ${{ steps.finish-job.outputs.job_commit }}
+          git show --pretty="fuller" --show-signature ${{ steps.create-job.outputs.job_commit }}
+          git show --pretty="fuller" --show-signature ${{ steps.start-job.outputs.job_commit }}
+          git show --pretty="fuller" --show-signature ${{ steps.finish-job.outputs.job_commit }}
 
       - name: Upload test git dir
         uses: actions/upload-artifact@v2
