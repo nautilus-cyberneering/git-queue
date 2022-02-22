@@ -47,6 +47,104 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up git committer identity
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Install dependencies and build
+        run: yarn install && yarn build && yarn package
+
+      - name: Create a temp git dir
+        run: |
+          mkdir ${{ runner.temp }}/temp_git_dir
+          cd ${{ runner.temp }}/temp_git_dir
+          git config --global init.defaultBranch main
+          git init
+          git status
+
+      - name: Create new job
+        id: create-job
+        uses: ./
+        with:
+          git_repo_dir: ${{ runner.temp }}/temp_git_dir
+          queue_name: 'Library Update [library-aaa]'
+          action: 'create-job'
+          job_payload: '{"field": "value", "state": "pending"}'
+
+      - name: Debug
+        run: |
+          cd ${{ runner.temp }}/temp_git_dir
+          git log --show-signature
+
+      - name: Mark job as started
+        id: start-job
+        if: ${{ steps.create-job.outputs.job_created == 'true' }}
+        uses: ./
+        with:
+          git_repo_dir: ${{ runner.temp }}/temp_git_dir
+          queue_name: 'Library Update [library-aaa]'
+          action: 'start-job'
+          job_payload: '{"field": "value", "state": "started"}'
+
+      - name: Debug
+        run: |
+          cd ${{ runner.temp }}/temp_git_dir
+          git log --show-signature
+
+      - name: Mutual exclusion code
+        if: ${{ steps.create-job.outputs.job_created == 'true' }}
+        run: echo "Running the job that requires mutual exclusion"
+
+      - name: Get next job
+        id: get-next-job
+        if: ${{ steps.create-job.outputs.job_created == 'true' }}
+        uses: ./
+        with:
+          git_repo_dir: ${{ runner.temp }}/temp_git_dir
+          queue_name: 'Library Update [library-aaa]'
+          action: 'next-job'
+
+      - name: Debug
+        run: |
+          cd ${{ runner.temp }}/temp_git_dir
+          git log --show-signature
+
+      - name: Mark job as finished
+        id: finish-job
+        if: ${{ steps.create-job.outputs.job_created == 'true' }}
+        uses: ./
+        with:
+          git_repo_dir: ${{ runner.temp }}/temp_git_dir
+          queue_name: 'Library Update [library-aaa]'
+          action: 'finish-job'
+          job_payload: '{"field": "value", "state": "finished"}'
+
+      - name: Debug
+        run: |
+          cd ${{ runner.temp }}/temp_git_dir
+          git log --show-signature
+
+      - name: Show new commits
+        run: |
+          cd ${{ runner.temp }}/temp_git_dir
+          git show --pretty="fuller" --show-signature ${{ steps.create-job.outputs.job_commit }}
+          git show --pretty="fuller" --show-signature ${{ steps.start-job.outputs.job_commit }}
+          git show --pretty="fuller" --show-signature ${{ steps.finish-job.outputs.job_commit }}
+
+      - name: Upload test git dir
+        uses: actions/upload-artifact@v2
+        with:
+          name: Integration test git dir
+          path: ${{ runner.temp }}/temp_git_dir
+
+  integration-tests-with-commit-signature:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
       - name: Import GPG key
         id: import-gpg
         uses: crazy-max/ghaction-import-gpg@v4
@@ -134,9 +232,9 @@ jobs:
       - name: Show new commits
         run: |
           cd ${{ runner.temp }}/temp_git_dir
-          git show --show-signature ${{ steps.create-job.outputs.job_commit }}
-          git show --show-signature ${{ steps.start-job.outputs.job_commit }}
-          git show --show-signature ${{ steps.finish-job.outputs.job_commit }}
+          git show --pretty="fuller" --show-signature ${{ steps.create-job.outputs.job_commit }}
+          git show --pretty="fuller" --show-signature ${{ steps.start-job.outputs.job_commit }}
+          git show --pretty="fuller" --show-signature ${{ steps.finish-job.outputs.job_commit }}
 
       - name: Upload test git dir
         uses: actions/upload-artifact@v2

@@ -25,7 +25,7 @@ inputs:
   git_commit_no_gpg_sign:
     description: 'The git commit --no-gpg-sign argument: https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---no-gpg-sign'
     required: false
-    default: ''
+    default: 'true'
 outputs:
   job_created:
     description: 'Boolean, true if the job was created successfully'
