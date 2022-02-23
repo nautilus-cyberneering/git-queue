@@ -191,9 +191,9 @@ describe('Queue', () => {
 
     const output = gitLogForLatestCommit(gitRepo.getDirPath())
 
-    expect(
-      RegExp(`gpg:.+RSA.+${signingKeyFingerprint}`).test(output)
-    ).toBe(true)
+    expect(RegExp(`gpg:.+RSA.+${signingKeyFingerprint}`).test(output)).toBe(
+      true
+    )
   })
 
   it('should fail when it is created from an uninitialized git repo', async () => {

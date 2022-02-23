@@ -221,9 +221,7 @@ describe('GitHub Action', () => {
     const gitLogOutput = gitLogForLatestCommit(gitRepo.getDirPath())
 
     expect(gitLogOutput).toEqual(
-      expect.stringMatching(
-        `gpg:.+RSA.+${signingKeyFingerprint}`
-      )
+      expect.stringMatching(`gpg:.+RSA.+${signingKeyFingerprint}`)
     )
   })
 
