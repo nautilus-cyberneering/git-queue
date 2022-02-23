@@ -175,14 +175,14 @@ jobs:
 
 Following inputs are available:
 
-| Name                     | Type   | Command | Query    | Description                                                                                                                 |
-|--------------------------|--------|---------|----------|-----------------------------------------------------------------------------------------------------------------------------|
-| `queue_name`             | String | all     | all      | Queue name. It can not contain special characters or white spaces.                                                          |
-| `action`                 | String | all     | all      | Queue actions: `create-job`, `next-job`, `start-job`, `finish-job`.                                                         |
-| `job_payload`            | String | all     | none     | Job payload. It can be any string.                                                                                          |
-| `git_repo_dir`           | String | all     | all      | The git repository directory. The default value is the current working dir.                                                 |
-| `git_commit_gpg_sign`    | String | all     | none     | The git commit [--gpg-sign](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---gpg-signltkeyidgt) argument. |
-| `git_commit_no_gpg_sign` | String | all     | none     | The git commit [--no-gpg-sign](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---no-gpg-sign) argument.    |
+| Name                     | Type   | Command | Query | Description                                                                                                                 |
+|--------------------------|--------|---------|-------|-----------------------------------------------------------------------------------------------------------------------------|
+| `queue_name`             | String | all     | all   | Queue name. It can not contain special characters or white spaces.                                                          |
+| `action`                 | String | all     | all   | Queue actions: `create-job`, `next-job`, `start-job`, `finish-job`.                                                         |
+| `job_payload`            | String | all     | none  | Job payload. It can be any string.                                                                                          |
+| `git_repo_dir`           | String | all     | all   | The git repository directory. The default value is the current working dir.                                                 |
+| `git_commit_gpg_sign`    | String | all     | none  | The git commit [--gpg-sign](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---gpg-signltkeyidgt) argument. |
+| `git_commit_no_gpg_sign` | String | all     | none  | The git commit [--no-gpg-sign](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---no-gpg-sign) argument.    |
 
 ### Outputs
 
