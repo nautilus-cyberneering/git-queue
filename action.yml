@@ -8,7 +8,7 @@ inputs:
     description: 'Queue name. It cannot contain special characters or white spaces'
     required: true
   action:
-    description: 'The action you want to perform. Options: next-job, create-job, finish-job'
+    description: 'The action you want to perform. Options: create-job, next-job, start-job, finish-job'
     required: true
   job_payload:
     description: 'Job payload. It can be any string'

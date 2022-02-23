@@ -52,7 +52,7 @@ The problem this action was trying to solve initially was updating a submodule i
 - When a new commit is added to the main branch in `R1` we want to update the submodule in `R2`.
 - We have a scheduled workflow `W` in `R2` to import the latest changes.
 
-![Sequence diagram](sequence-diagram.svg)
+![Sequence diagram](./docs/images/sequence-diagram.svg)
 
 - `T1`. Add a new file to the library (`1.txt`)
 - `T2`. We run `W1` to update the library, however, for some reason, this process takes more than 10 minutes.
@@ -65,7 +65,26 @@ The problem this action was trying to solve initially was updating a submodule i
 
 It requires to enable only fast forward merges.
 
-It works on Linux, macOS and Windows [virtual environments](https://help.github.com/en/articles/virtual-environments-for-github-actions#supported-virtual-environments-and-hardware-resources)
+It works on Linux, macOS and Windows [virtual environments](https://help.github.com/en/articles/virtual-environments-for-github-actions#supported-virtual-environments-and-hardware-resources).
+
+The action has 3 different commands (specified by the input `action`):
+
+- `create-job`: it allow tou to create a new job with any payload.
+- `start-job`: it allows the workflow to create a commit when hte job process starts.
+- `finished-job`: it allows the workflow to mark the nob as finished.
+
+And one query (also specified by the input `action`):
+
+- `next-job`: it returns the next pending to process job.
+
+You should:
+
+- Create a new Job (`create-job`) and push it immediately to the `main` branch (or whatever your PR target branch is).
+- Later, a worker workflow can ask the queue for the next job (`next-job`). The first commit should be the start commit (`start-job`) and the latest one the finish commit (`finish-job`).
+
+And the end of the process your `git log` output should be like this:
+
+![Sequence diagram](./docs/images/git-log-screenshot.png)
 
 Sample workflow:
 
@@ -156,26 +175,26 @@ jobs:
 
 Following inputs are available:
 
-| Name                     | Type   | Description                                                                                                                 |
-|--------------------------|--------|-----------------------------------------------------------------------------------------------------------------------------|
-| `queue_name`             | String | Queue name. It can not contain special characters or white spaces.                                                          |
-| `action`                 | String | Queue actions: `create-job`, `next-job`, `start-job`, `finish-job`.                                                         |
-| `job_payload`            | String | Job payload. It can be any string.                                                                                          |
-| `git_repo_dir`           | String | The git repository directory. The default value is the current working dir.                                                 |
-| `git_commit_gpg_sign`    | String | The git commit [--gpg-sign](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---gpg-signltkeyidgt) argument. |
-| `git_commit_no_gpg_sign` | String | The git commit [--no-gpg-sign](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---no-gpg-sign) argument.    |
+| Name                     | Type   | Command | Query    | Description                                                                                                                 |
+|--------------------------|--------|---------|----------|-----------------------------------------------------------------------------------------------------------------------------|
+| `queue_name`             | String | all     | all      | Queue name. It can not contain special characters or white spaces.                                                          |
+| `action`                 | String | all     | all      | Queue actions: `create-job`, `next-job`, `start-job`, `finish-job`.                                                         |
+| `job_payload`            | String | all     | none     | Job payload. It can be any string.                                                                                          |
+| `git_repo_dir`           | String | all     | all      | The git repository directory. The default value is the current working dir.                                                 |
+| `git_commit_gpg_sign`    | String | all     | none     | The git commit [--gpg-sign](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---gpg-signltkeyidgt) argument. |
+| `git_commit_no_gpg_sign` | String | all     | none     | The git commit [--no-gpg-sign](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---no-gpg-sign) argument.    |
 
 ### Outputs
 
 Following outputs are available:
 
-| Name           | Type   | Description                                                                         |
-|----------------|--------|-------------------------------------------------------------------------------------|
-| `job_created`  | String | Boolean, `true` if the job was successfully created.                                |
-| `job_started`  | String | Boolean, `true` if the job was successfully started.                                |
-| `job_finished` | String | Boolean, `true` if the job was successfully finished .                              |
-| `job_commit`   | String | The commit hash of the newly created commits, when the action creates a new commit. |
-| `job_payload`  | String | The job payload. Only for `next-job` action.                                        |
+| Name           | Type   | Command      | Query      | Description                                                                         |
+|----------------|--------|--------------|--------------------------------------------------------------------------------------------------|
+| `job_created`  | String | `create-job` | none       | Boolean, `true` if the job was successfully created.                                |
+| `job_started`  | String | `start-job`  | none       | Boolean, `true` if the job was successfully started.                                |
+| `job_finished` | String | `finish-job` | none       | Boolean, `true` if the job was successfully finished.                               |
+| `job_commit`   | String | all          | none       | The commit hash of the newly created commits, when the action creates a new commit. |
+| `job_payload`  | String | none         | `next-job` | The job payload. Only for `next-job` action.                                        |
 
 ### Environment variables
 
