@@ -3,8 +3,7 @@ name: Publish GitHub Release
 on:
   push:
     tags:
-      - '*.*.*'
-      - '*.*.*-beta'
+      - 'v*'
 
 jobs:
   build:
