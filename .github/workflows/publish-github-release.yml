@@ -3,7 +3,8 @@ name: Publish GitHub Release
 on:
   push:
     tags:
-      - "*.*.*"
+      - '*.*.*'
+      - '*.*.*-beta'
 
 jobs:
   build:
@@ -21,7 +22,7 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "dist/*"
+          artifacts: 'dist/*'
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
           prerelease: steps.check-version.outputs.prerelease == 'true'
