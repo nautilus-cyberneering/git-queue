@@ -189,7 +189,7 @@ Following inputs are available:
 Following outputs are available:
 
 | Name           | Type   | Command      | Query      | Description                                                                         |
-|----------------|--------|--------------|--------------------------------------------------------------------------------------------------|
+|----------------|--------|--------------|------------|-------------------------------------------------------------------------------------|
 | `job_created`  | String | `create-job` | none       | Boolean, `true` if the job was successfully created.                                |
 | `job_started`  | String | `start-job`  | none       | Boolean, `true` if the job was successfully started.                                |
 | `job_finished` | String | `finish-job` | none       | Boolean, `true` if the job was successfully finished.                               |
