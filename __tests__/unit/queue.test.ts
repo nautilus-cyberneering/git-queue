@@ -192,9 +192,7 @@ describe('Queue', () => {
     const output = gitLogForLatestCommit(gitRepo.getDirPath())
 
     expect(
-      output.includes(
-        `gpg:                using RSA key ${signingKeyFingerprint}`
-      )
+      RegExp(`gpg:.+RSA.+${signingKeyFingerprint}`).test(output)
     ).toBe(true)
   })
 
