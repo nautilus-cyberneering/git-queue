@@ -2,7 +2,8 @@ name: 'Git Queue'
 description: 'A GitHub Action that implements a job queue with a concurrency lock by using Git empty commits'
 author: 'Nautilus-Cyberneering'
 branding:
-  icon: 'lock'
+  icon: 'git-pull-request'
+  color: 'black'
 inputs:
   queue_name:
     description: 'Queue name. It cannot contain special characters or white spaces'
