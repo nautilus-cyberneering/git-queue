@@ -3,7 +3,7 @@ description: 'A GitHub Action that implements a job queue with a concurrency loc
 author: 'Nautilus-Cyberneering'
 branding:
   icon: 'git-pull-request'
-  color: 'black'
+  color: 'gray-dark'
 inputs:
   queue_name:
     description: 'Queue name. It cannot contain special characters or white spaces'
