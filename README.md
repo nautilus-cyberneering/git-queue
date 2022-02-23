@@ -6,7 +6,7 @@ This GitHub Action is a job queue with the following characteristics:
 
 - It only allows one pending job at the same time. [Multiple pending jobs feature](https://github.com/Nautilus-Cyberneering/git-queue/issues/6) is planned.
 - Jobs are done by GitHub workflows intended to create git commits and merge them.
-- It provides a optimistic locking mechanism to guarantee that commits are merged in a mutual exclusion way, avoiding duplicate commits. When the queue accepts more than one active (not finished) job it will also guarantee the execution order.
+- It provides an optimistic locking mechanism to guarantee that commits are merged in a mutual exclusion way, avoiding duplicate commits. When the queue accepts more than one active (not finished) job it will also guarantee the execution order.
 
 Formal definition:
 
@@ -25,22 +25,22 @@ Formal definition:
 
 ## Features
 
-For the time being is only allows one active (unfinished) job. Check the [Roadmap](https://github.com/Nautilus-Cyberneering/git-queue/issues/6) for upcoming features.
+For the time being, it only allows one active (unfinished) job. Check the [Roadmap](https://github.com/Nautilus-Cyberneering/git-queue/issues/6) for upcoming features.
 
 ### When to use it
 
 You can use it if:
 
 - You have workflows running in parallel.
-- The workflows are going to create new commits in a branch and those commits are going to be merge into another branch.
+- The workflows are going to create new commits in a branch and those commits are going to be merged into another branch.
 - And you wan to coordinate them to avoid concurrency problems like duplicate commits or commits in the wrong order.
 
 ### Why to use it
 
 There are other alternatives like [GitHub concurrency groups](https://docs.github.com/en/actions/using-jobs/using-concurrency), but:
 
-- In some cases it could be convenient not to couple your application to GitHub infrastructure.
-- Concurrency problems are very tricky to detect and solve. This solution offer a high level of traceability.
+- In some cases, it could be convenient not to couple your application to the GitHub infrastructure.
+- Concurrency problems are very tricky to detect and solve. This solution offers a high level of traceability.
 - This solution does not require external services, only Git.
 
 ### Use case
@@ -50,12 +50,12 @@ The problem this action was trying to solve initially was updating a submodule i
 - You have two Git repositories: `R1` and `R2`.
 - `R1` is a submodule of `R2`.
 - When a new commit is added to the main branch in `R1` we want to update the submodule in `R2`.
-- We have an scheduled workflow `W` in `R2` to import latest changes.
+- We have a scheduled workflow `W` in `R2` to import the latest changes.
 
 ![Sequence diagram](sequence-diagram.svg)
 
 - `T1`. Add a new file to the library (`1.txt`)
-- `T2`. We run `W1` to update the library. For some reason, this process takes more than 10 minutes.
+- `T2`. We run `W1` to update the library, however, for some reason, this process takes more than 10 minutes.
 - `T3`. We modify the file `1.txt` in the library.
 - `T4`. (T2+10") We run a second workflow `W2` to update the library.
 - `T5`. The workflow `W2` finishes and creates a commit with the second version of file `1.txt`.
@@ -65,7 +65,7 @@ The problem this action was trying to solve initially was updating a submodule i
 
 It requires to enable only fast forward merges.
 
-Works on Linux, macOS and Windows [virtual environments](https://help.github.com/en/articles/virtual-environments-for-github-actions#supported-virtual-environments-and-hardware-resources)
+It works on Linux, macOS and Windows [virtual environments](https://help.github.com/en/articles/virtual-environments-for-github-actions#supported-virtual-environments-and-hardware-resources)
 
 Sample workflow:
 
