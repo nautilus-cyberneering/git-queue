@@ -21,7 +21,7 @@ export class GitRepo {
       if (!existsSync(this.dir.getDirPath())) {
         throw new Error()
       }
-      execSync(`cd ${this.getDirPath()} && git status`)
+      execSync(`git -C ${this.getDirPath()} status`)
     } catch {
       return false
     }
@@ -62,7 +62,7 @@ export class GitRepo {
       if (!existsSync(this.dir.getDirPath())) {
         throw new Error()
       }
-      execSync(`cd ${this.dir.getDirPath()} && git log -n 0`)
+      execSync(`git -C ${this.dir.getDirPath()} log -n 0`)
     } catch (err) {
       // No commits yet
       return false

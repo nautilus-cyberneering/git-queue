@@ -649,7 +649,7 @@ exports.getErrorMessage = getErrorMessage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotExistsError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
 class MissingQueueNameInCommitSubjectError extends Error {
     constructor(commitSubject) {
         super(`Missing queue name in commit subject: ${commitSubject}`);
@@ -685,13 +685,13 @@ class GitDirNotInitializedError extends Error {
     }
 }
 exports.GitDirNotInitializedError = GitDirNotInitializedError;
-class GitDirNotExistsError extends Error {
+class GitDirNotFoundError extends Error {
     constructor(dir) {
         super(`Git dir: ${dir} does not exist or is not reachable`);
-        Object.setPrototypeOf(this, GitDirNotExistsError.prototype);
+        Object.setPrototypeOf(this, GitDirNotFoundError.prototype);
     }
 }
-exports.GitDirNotExistsError = GitDirNotExistsError;
+exports.GitDirNotFoundError = GitDirNotFoundError;
 class PendingJobsLimitReachedError extends Error {
     constructor(committedMessage) {
         super(`Can't create job. Previous message is not a job finished message. Previous message commit: ${committedMessage
@@ -735,7 +735,7 @@ const fs_1 = __nccwpck_require__(7147);
 class GitRepoDir {
     constructor(dirPath) {
         if (!(0, fs_1.existsSync)(dirPath)) {
-            throw new errors_1.GitDirNotExistsError(dirPath);
+            throw new errors_1.GitDirNotFoundError(dirPath);
         }
         this.dirPath = dirPath;
     }
@@ -781,7 +781,7 @@ class GitRepo {
             if (!(0, fs_1.existsSync)(this.dir.getDirPath())) {
                 throw new Error();
             }
-            (0, child_process_1.execSync)(`cd ${this.getDirPath()} && git status`);
+            (0, child_process_1.execSync)(`git -C ${this.getDirPath()} status`);
         }
         catch (_a) {
             return false;
@@ -823,7 +823,7 @@ class GitRepo {
                 if (!(0, fs_1.existsSync)(this.dir.getDirPath())) {
                     throw new Error();
                 }
-                (0, child_process_1.execSync)(`cd ${this.dir.getDirPath()} && git log -n 0`);
+                (0, child_process_1.execSync)(`git -C ${this.dir.getDirPath()} log -n 0`);
             }
             catch (err) {
                 // No commits yet

@@ -1,4 +1,4 @@
-import {GitDirNotExistsError} from '../../src/errors'
+import {GitDirNotFoundError} from '../../src/errors'
 import {GitRepoDir} from '../../src/git-repo-dir'
 import {createInexistentTempDir} from '../../src/__tests__/helpers'
 
@@ -9,11 +9,11 @@ describe('GitRepoDir', () => {
     expect(gitRepoDir.getDirPath()).toBe('./')
   })
 
-  it('should throw on a non-existent Dir initialization', async () => {
+  it('should fail when the dir does not exist', async () => {
     const inexistentDir = await createInexistentTempDir()
     const failingRepoDirTest = (): GitRepoDir => new GitRepoDir(inexistentDir)
 
-    expect(failingRepoDirTest).toThrow(GitDirNotExistsError)
+    expect(failingRepoDirTest).toThrow(GitDirNotFoundError)
   })
 
   it('should compare two git repo dirs', () => {

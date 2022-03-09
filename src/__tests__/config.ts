@@ -24,7 +24,7 @@ export interface GpgSigningKeyConfig {
 
 export function testConfiguration(): TestConfig {
   const gpgPrivateKeyBody = fs.readFileSync(
-    '__tests__/fixtures/test-key-committer.pgp',
+    `${__dirname}/../../__tests__/fixtures/test-key-committer.pgp`,
     {
       encoding: 'utf8',
       flag: 'r'

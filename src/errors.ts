@@ -37,10 +37,10 @@ export class GitDirNotInitializedError extends Error {
   }
 }
 
-export class GitDirNotExistsError extends Error {
+export class GitDirNotFoundError extends Error {
   constructor(dir: string) {
     super(`Git dir: ${dir} does not exist or is not reachable`)
-    Object.setPrototypeOf(this, GitDirNotExistsError.prototype)
+    Object.setPrototypeOf(this, GitDirNotFoundError.prototype)
   }
 }
 

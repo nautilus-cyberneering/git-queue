@@ -1,4 +1,4 @@
-import {GitDirNotExistsError} from './errors'
+import {GitDirNotFoundError} from './errors'
 import {existsSync} from 'fs'
 
 export class GitRepoDir {
@@ -6,7 +6,7 @@ export class GitRepoDir {
 
   constructor(dirPath: string) {
     if (!existsSync(dirPath)) {
-      throw new GitDirNotExistsError(dirPath)
+      throw new GitDirNotFoundError(dirPath)
     }
     this.dirPath = dirPath
   }
