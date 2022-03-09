@@ -4474,7 +4474,7 @@ function checkIsBareRepoTask() {
     parser
   };
 }
-function isNotRepoMessage(error) {
+function isNotRepoMessage(error) {    
   return /(Not a git repository|Kein Git-Repository)/i.test(String(error));
 }
 var CheckRepoActions, onError, parser;

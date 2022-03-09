@@ -1,13 +1,10 @@
-import {
-  CommitResult,
-  DefaultLogFields,
-  GitResponseError,
-  LogResult,
-  SimpleGit
-} from 'simple-git'
+import {CommitResult, DefaultLogFields, LogResult, SimpleGit} from 'simple-git'
 import {CommitMessage} from './commit-message'
 import {CommitOptions} from './commit-options'
+import {GitDirNotInitializedError} from './errors'
 import {GitRepoDir} from './git-repo-dir'
+import {execSync} from 'child_process'
+import {existsSync} from 'fs'
 
 export class GitRepo {
   private readonly dir: GitRepoDir
@@ -18,8 +15,16 @@ export class GitRepo {
     this.git = git
   }
 
-  async isInitialized(): Promise<boolean> {
-    return await this.git.checkIsRepo()
+  isInitialized(): boolean {
+    try {
+      if (!this.dirPathExists()) {
+        return false
+      }
+      execSync(`cd ${this.getDirPath()} && git status`)
+    } catch {
+      return false
+    }
+    return true
   }
 
   getDir(): GitRepoDir {
@@ -28,6 +33,10 @@ export class GitRepo {
 
   getDirPath(): string {
     return this.dir.getDirPath()
+  }
+
+  dirPathExists(): boolean {
+    return existsSync(this.getDirPath())
   }
 
   async init(): Promise<void> {
@@ -48,21 +57,14 @@ export class GitRepo {
   }
 
   async hasCommits(): Promise<boolean> {
-    // TODO: find a better way to check if the repo has commits
-    const currentBranch = await this.getCurrentBranch()
+    if (!this.isInitialized()) {
+      throw new GitDirNotInitializedError(this.dir.getDirPath())
+    }
     try {
-      await this.log()
+      execSync(`cd ${this.dir.getDirPath()} && git log -n 0`)
     } catch (err) {
-      if (
-        (err as GitResponseError).message.includes(
-          `fatal: your current branch '${currentBranch}' does not have any commits yet`
-        )
-      ) {
-        // No commits yet
-        return false
-      } else {
-        throw err
-      }
+      // No commits yet
+      return false
     }
     return true
   }
