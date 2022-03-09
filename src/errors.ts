@@ -37,6 +37,13 @@ export class GitDirNotInitializedError extends Error {
   }
 }
 
+export class GitDirNotExistsError extends Error {
+  constructor(dir: string) {
+    super(`Git dir: ${dir} does not exist or is not reachable`)
+    Object.setPrototypeOf(this, GitDirNotExistsError.prototype)
+  }
+}
+
 export class PendingJobsLimitReachedError extends Error {
   constructor(committedMessage: CommittedMessage) {
     super(

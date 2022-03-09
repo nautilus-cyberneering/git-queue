@@ -1,8 +1,13 @@
+import {GitDirNotExistsError} from './errors'
+import {existsSync} from 'fs'
+
 export class GitRepoDir {
   private readonly dirPath: string
 
   constructor(dirPath: string) {
-    // TODO: validate dir path
+    if (!existsSync(dirPath)) {
+      throw new GitDirNotExistsError(dirPath)
+    }
     this.dirPath = dirPath
   }
 

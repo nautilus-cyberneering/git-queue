@@ -17,8 +17,9 @@ export class GitRepo {
 
   isInitialized(): boolean {
     try {
-      if (!this.dirPathExists()) {
-        return false
+      // Make sure the string we will pass to to the shell is an actual dir
+      if (!existsSync(this.dir.getDirPath())) {
+        throw new Error()
       }
       execSync(`cd ${this.getDirPath()} && git status`)
     } catch {
@@ -33,10 +34,6 @@ export class GitRepo {
 
   getDirPath(): string {
     return this.dir.getDirPath()
-  }
-
-  dirPathExists(): boolean {
-    return existsSync(this.getDirPath())
   }
 
   async init(): Promise<void> {
@@ -61,6 +58,10 @@ export class GitRepo {
       throw new GitDirNotInitializedError(this.dir.getDirPath())
     }
     try {
+      // Make sure the string we will pass to to the shell is an actual dir
+      if (!existsSync(this.dir.getDirPath())) {
+        throw new Error()
+      }
       execSync(`cd ${this.dir.getDirPath()} && git log -n 0`)
     } catch (err) {
       // No commits yet
