@@ -732,12 +732,19 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GitRepoDir = void 0;
 const errors_1 = __nccwpck_require__(9292);
 const fs_1 = __nccwpck_require__(7147);
+const path_1 = __nccwpck_require__(1017);
 class GitRepoDir {
     constructor(dirPath) {
+        this.checkPath(dirPath);
+        this.dirPath = this.normalizePath(dirPath);
+    }
+    checkPath(dirPath) {
         if (!(0, fs_1.existsSync)(dirPath)) {
             throw new errors_1.GitDirNotFoundError(dirPath);
         }
-        this.dirPath = dirPath;
+    }
+    normalizePath(dirPath) {
+        return (0, path_1.isAbsolute)(dirPath) ? (0, path_1.resolve)(dirPath) : dirPath;
     }
     getDirPath() {
         return this.dirPath;
