@@ -17,7 +17,7 @@ export class GitRepoDir {
   }
 
   normalizePath(dirPath): string {
-    return isAbsolute(dirPath) ? resolve(dirPath) : dirPath
+    return isAbsolute(dirPath) ? dirPath : resolve(dirPath)
   }
 
   getDirPath(): string {
