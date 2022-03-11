@@ -1,7 +1,7 @@
+import {isAbsolute, resolve} from 'path'
 import {GitDirNotFoundError} from '../../src/errors'
 import {GitRepoDir} from '../../src/git-repo-dir'
 import {createInexistentTempDir} from '../../src/__tests__/helpers'
-import {isAbsolute, resolve} from 'path'
 
 describe('GitRepoDir', () => {
   it('should contain dir path for the Git repo', () => {

@@ -1,6 +1,6 @@
+import {isAbsolute, resolve} from 'path'
 import {GitDirNotFoundError} from './errors'
 import {existsSync} from 'fs'
-import {isAbsolute, resolve} from 'path'
 
 export class GitRepoDir {
   private readonly dirPath: string
@@ -10,7 +10,7 @@ export class GitRepoDir {
     this.dirPath = this.normalizePath(dirPath)
   }
 
-  checkPath(dirPath) {
+  checkPath(dirPath): void {
     if (!existsSync(dirPath)) {
       throw new GitDirNotFoundError(dirPath)
     }

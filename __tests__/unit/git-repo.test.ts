@@ -5,8 +5,6 @@ import {
 
 import {GitRepo} from '../../src/git-repo'
 import {GitRepoDir} from '../../src/git-repo-dir'
-import {join} from 'path'
-import {mkdirSync} from 'fs'
 
 describe('GitRepo', () => {
   it('should be bound to a file system dir', async () => {
