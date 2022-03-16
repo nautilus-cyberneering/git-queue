@@ -1,3 +1,4 @@
+import {CommitHash} from '../../src/commit-hash'
 import {CommitSubjectParser} from '../../src/commit-subject-parser'
 
 describe('CommitSubjectParser', () => {
@@ -56,12 +57,30 @@ describe('CommitSubjectParser', () => {
     expect(parser.getQueueName().toString()).toBe('queue-name')
   })
 
-  it('should fail when the job reference prefix exits but the reference value is missing in a commit subject', () => {
+  it('should fail when the job reference prefix exists but the reference value is invalid in a commit subject', () => {
+    const fn = (): string => {
+      const parser = new CommitSubjectParser('📝🈺: queue-name: job.ref.f1a69d48a01cc---af762e4ba685de7')
+      return parser.getJobRef().toString()
+    }
+
+    expect(fn).toThrowError()
+  })
+
+  it('should fail when the job reference prefix exists but the reference value is missing in a commit subject', () => {
     const fn = (): string => {
       const parser = new CommitSubjectParser('📝🈺: queue-name: job.ref.')
       return parser.getJobRef().toString()
     }
 
     expect(fn).toThrowError()
+  })  
+
+  it('should return a Null Commit when the job reference does not exist', () => {
+
+    const parser = new CommitSubjectParser('📝🈺: queue-name: NAME')
+    const jobRef = parser.getJobRef()
+
+    expect(jobRef).toBeInstanceOf(CommitHash)
+    expect(jobRef.isNull()).toBe(true)
   })
 })

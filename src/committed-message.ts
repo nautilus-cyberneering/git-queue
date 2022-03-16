@@ -15,6 +15,18 @@ export abstract class CommittedMessage implements Nullable {
   }
 
   static fromCommitInfo(commit: CommitInfo): CommittedMessage {
+    /*
+      PROBLEMA:
+      En diversos tests (should allow to sign commits), se llega aquí con el siguiente
+      commit message: 🈺: QUEUE_NAME, con lo que falla pillar el job ref dentro de parse text
+      y hace petar el constructor de CommitHash
+      Entiendo que tal vez el parse Text, en el caso de que no encuentre el prefijo de Job Ref,
+      debería poner Hash nulo
+
+
+      ----> Añadir el test cuando se parsea un subject sin job ref, y en la implementación
+            del getJobRef devolver hash nulo si no hay jobref
+    */
     const messageKey = CommitSubjectParser.parseText(
       commit.message
     ).getMessageKey()

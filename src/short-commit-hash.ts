@@ -1,3 +1,4 @@
+import {InvalidShortHash} from './errors'
 import {Nullable} from './nullable'
 
 const NO_SHORT_COMMIT_HASH = '--no-short-commit-hash--'
@@ -9,8 +10,16 @@ export class ShortCommitHash implements Nullable {
   private value: string
 
   constructor(value: string) {
-    // TODO: validation
+    if (value !== NO_SHORT_COMMIT_HASH) {
+      this.validateHash(value)
+    }
     this.value = value
+  }
+
+  validateHash(value: string): void {
+    if (!RegExp('^[0-9a-f]{7}$').test(value)) {
+      throw new InvalidShortHash(value)
+    }
   }
 
   getHash(): string {

@@ -12,6 +12,22 @@ describe('CommitHash', () => {
     )
   })
 
+  it('should fail when using invalid hash value', () => {
+    const longHash = (): CommitHash => {
+      return new CommitHash('ad5cea6308f69d7955d8de5f0da19f675d5ba75faaaaaa')
+    }
+    const shortHash = (): CommitHash => {
+      return new CommitHash('ad5cea6')
+    }
+    const nonSHA1Hash = (): CommitHash => {
+      return new CommitHash('ad5cea63-8f69d-955d8-e5f0da-9f675d5ba75f')
+    }
+
+    expect(longHash).toThrowError()
+    expect(shortHash).toThrowError()
+    expect(nonSHA1Hash).toThrowError()
+  })
+
   it('should compare two commit hashes', () => {
     const commitHash1 = new CommitHash(
       'ad5cea6308f69d7955d8de5f0da19f675d5ba75f'

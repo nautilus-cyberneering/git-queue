@@ -71,12 +71,20 @@ exports.CommitBody = CommitBody;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nullCommitHash = exports.CommitHash = void 0;
+const errors_1 = __nccwpck_require__(9292);
 const short_commit_hash_1 = __nccwpck_require__(386);
 const NO_COMMIT_HASH = '--no-commit-hash--';
 class CommitHash {
     constructor(value) {
-        // TODO: validation
+        if (value != NO_COMMIT_HASH) {
+            this.validateHash(value);
+        }
         this.value = value;
+    }
+    validateHash(value) {
+        if (!RegExp("^[0-9a-f]{40}$").test(value)) {
+            throw new errors_1.InvalidHash(value);
+        }
     }
     getHash() {
         return this.value;
@@ -649,7 +657,7 @@ exports.getErrorMessage = getErrorMessage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+exports.InvalidShortHash = exports.InvalidHash = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
 class MissingQueueNameInCommitSubjectError extends Error {
     constructor(commitSubject) {
         super(`Missing queue name in commit subject: ${commitSubject}`);
@@ -712,6 +720,20 @@ class MissingNewJobMessageError extends Error {
     }
 }
 exports.MissingNewJobMessageError = MissingNewJobMessageError;
+class InvalidHash extends Error {
+    constructor(hash) {
+        super(`Invalid SHA-1 commit hash: ${hash}`);
+        Object.setPrototypeOf(this, MissingQueueNameInCommitSubjectError.prototype);
+    }
+}
+exports.InvalidHash = InvalidHash;
+class InvalidShortHash extends Error {
+    constructor(hash) {
+        super(`Invalid 7-characters SHA-1 commit hash: ${hash}`);
+        Object.setPrototypeOf(this, MissingQueueNameInCommitSubjectError.prototype);
+    }
+}
+exports.InvalidShortHash = InvalidShortHash;
 
 
 /***/ }),
@@ -1342,20 +1364,28 @@ exports.Queue = Queue;
 /***/ }),
 
 /***/ 386:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nullShortCommitHash = exports.ShortCommitHash = void 0;
+const errors_1 = __nccwpck_require__(9292);
 const NO_SHORT_COMMIT_HASH = '--no-short-commit-hash--';
 /**
  * 7-character commit hash
  */
 class ShortCommitHash {
     constructor(value) {
-        // TODO: validation
+        if (value != NO_SHORT_COMMIT_HASH) {
+            this.validateHash(value);
+        }
         this.value = value;
+    }
+    validateHash(value) {
+        if (!RegExp("^[0-9a-f]{7}$").test(value)) {
+            throw new errors_1.InvalidShortHash(value);
+        }
     }
     getHash() {
         return this.value;

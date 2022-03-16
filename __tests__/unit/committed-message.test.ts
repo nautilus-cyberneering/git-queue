@@ -19,7 +19,7 @@ function dummyJobFinishedCommitSubjectText(): string {
 describe('Queue', () => {
   it('should build a new-job message from a commit', async () => {
     const commit: DefaultLogFields = {
-      hash: 'not relevant',
+      hash: 'f1b69d48a01cc13ccc4aeac5eaf762e4ba685de7',
       date: 'not relevant',
       message: dummyNewJobCommitSubjectText(),
       refs: 'not relevant',
@@ -87,7 +87,7 @@ describe('Queue', () => {
 
   it('should build a finished-job message from a commit', async () => {
     const commit: DefaultLogFields = {
-      hash: 'not relevant',
+      hash: 'f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
       date: 'not relevant',
       message: dummyJobFinishedCommitSubjectText(),
       refs: 'not relevant',
@@ -105,7 +105,7 @@ describe('Queue', () => {
 
   it('should parse the payload from the commit body', async () => {
     const commit: DefaultLogFields = {
-      hash: 'not relevant',
+      hash: 'f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
       date: 'not relevant',
       message: dummyNewJobCommitSubjectText(),
       refs: 'not relevant',
@@ -123,7 +123,7 @@ describe('Queue', () => {
 
   it('should trim the payload', async () => {
     const commit: DefaultLogFields = {
-      hash: 'not relevant',
+      hash: 'f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
       date: 'not relevant',
       message: dummyNewJobCommitSubjectText(),
       refs: 'not relevant',
@@ -148,7 +148,7 @@ describe('Queue', () => {
   it('should throw an error when trying to build a message from a no-queue commit', async () => {
     const fn = (): CommittedMessage => {
       const commit: DefaultLogFields = {
-        hash: 'not relevant',
+        hash: 'f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
         date: 'not relevant',
         message: 'NO VALID COMMIT SUBJECT',
         refs: 'not relevant',
@@ -168,7 +168,7 @@ describe('Queue', () => {
   it('should throw an error when trying to build a message with an invalid message key', async () => {
     const fn = (): CommittedMessage => {
       const commit: DefaultLogFields = {
-        hash: 'not relevant',
+        hash: 'f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
         date: 'not relevant',
         message:
           '📝INVALID: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
