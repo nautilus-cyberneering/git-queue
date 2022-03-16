@@ -9,7 +9,9 @@ function dummyNewJobCommitSubjectText(): string {
   return '📝🈺: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
 }
 
-function dummySimpleGitCommit(hash = 'not relevant'): DefaultLogFields {
+function dummySimpleGitCommit(
+  hash = 'f1c69d48a01cc130a64aeac5fff762e4bf685de7'
+): DefaultLogFields {
   return {
     hash,
     date: 'not relevant',
