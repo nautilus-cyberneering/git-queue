@@ -77,11 +77,11 @@ const NO_COMMIT_HASH = '--no-commit-hash--';
 class CommitHash {
     constructor(value) {
         if (value !== NO_COMMIT_HASH) {
-            this.validateHash(value);
+            this.guardThatHashValueIsValid(value);
         }
         this.value = value;
     }
-    validateHash(value) {
+    guardThatHashValueIsValid(value) {
         if (!RegExp('^[0-9a-f]{40}$').test(value)) {
             throw new errors_1.InvalidHash(value);
         }
@@ -1410,11 +1410,11 @@ const NO_SHORT_COMMIT_HASH = '--no-short-commit-hash--';
 class ShortCommitHash {
     constructor(value) {
         if (value !== NO_SHORT_COMMIT_HASH) {
-            this.validateHash(value);
+            this.guardThatShortHashValueIsValid(value);
         }
         this.value = value;
     }
-    validateHash(value) {
+    guardThatShortHashValueIsValid(value) {
         if (!RegExp('^[0-9a-f]{7}$').test(value)) {
             throw new errors_1.InvalidShortHash(value);
         }

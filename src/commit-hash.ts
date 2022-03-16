@@ -9,12 +9,12 @@ export class CommitHash implements Nullable {
 
   constructor(value: string) {
     if (value !== NO_COMMIT_HASH) {
-      this.validateHash(value)
+      this.guardThatHashValueIsValid(value)
     }
     this.value = value
   }
 
-  validateHash(value: string): void {
+  guardThatHashValueIsValid(value: string): void {
     if (!RegExp('^[0-9a-f]{40}$').test(value)) {
       throw new InvalidHash(value)
     }

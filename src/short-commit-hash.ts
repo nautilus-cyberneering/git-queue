@@ -11,12 +11,12 @@ export class ShortCommitHash implements Nullable {
 
   constructor(value: string) {
     if (value !== NO_SHORT_COMMIT_HASH) {
-      this.validateHash(value)
+      this.guardThatShortHashValueIsValid(value)
     }
     this.value = value
   }
 
-  validateHash(value: string): void {
+  guardThatShortHashValueIsValid(value: string): void {
     if (!RegExp('^[0-9a-f]{7}$').test(value)) {
       throw new InvalidShortHash(value)
     }
