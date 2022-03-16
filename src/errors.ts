@@ -76,3 +76,13 @@ export class MissingNewJobMessageError extends Error {
     Object.setPrototypeOf(this, MissingNewJobMessageError.prototype)
   }
 }
+
+export class QueueNameNotValidError extends Error {
+  constructor(queueName: string) {
+    super(
+      `Queue name not valid: ${queueName}.\n` +
+        `Only lowercase letters (a-z), dash and white space are allowed`
+    )
+    Object.setPrototypeOf(this, MissingNewJobMessageError.prototype)
+  }
+}

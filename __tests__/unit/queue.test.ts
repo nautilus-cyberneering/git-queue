@@ -182,7 +182,7 @@ describe('Queue', () => {
     gitRepo.env('GNUPGHOME', gnuPGHomeDir)
 
     const queue = await Queue.create(
-      new QueueName('QUEUE NAME'),
+      new QueueName('queue name'),
       gitRepo,
       commitOptionsForTestsUsingSignature()
     )
@@ -201,7 +201,7 @@ describe('Queue', () => {
 
     const fn = async (): Promise<Queue> => {
       const queue = await Queue.create(
-        new QueueName('QUEUE NAME'),
+        new QueueName('queue name'),
         gitRepo,
         commitOptionsForTests()
       )
@@ -283,7 +283,7 @@ describe('Queue', () => {
     const queue1 = await createTestQueue(commitOptionsForTests())
 
     const queue2 = await Queue.create(
-      new QueueName('QUEUE NAME 2'),
+      new QueueName('queue name two'),
       queue1.getGitRepo(),
       commitOptionsForTests()
     )

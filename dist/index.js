@@ -649,7 +649,7 @@ exports.getErrorMessage = getErrorMessage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+exports.QueueNameNotValidError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
 class MissingQueueNameInCommitSubjectError extends Error {
     constructor(commitSubject) {
         super(`Missing queue name in commit subject: ${commitSubject}`);
@@ -719,6 +719,14 @@ class MissingNewJobMessageError extends Error {
     }
 }
 exports.MissingNewJobMessageError = MissingNewJobMessageError;
+class QueueNameNotValidError extends Error {
+    constructor(queueName) {
+        super(`Queue name not valid: ${queueName}.\n` +
+            `Only lowercase letters (a-z), dash and white space are allowed`);
+        Object.setPrototypeOf(this, MissingNewJobMessageError.prototype);
+    }
+}
+exports.QueueNameNotValidError = QueueNameNotValidError;
 
 
 /***/ }),
@@ -1181,23 +1189,32 @@ exports.JobStartedMessage = JobStartedMessage;
 /***/ }),
 
 /***/ 7894:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nullQueueName = exports.QueueName = void 0;
+const errors_1 = __nccwpck_require__(9292);
 const NO_QUEUE_NAME = '--no-queue-name--';
 class QueueName {
     constructor(value) {
-        // TODO: validation. Issue -> https://github.com/Nautilus-Cyberneering/git-queue/issues/39
-        this.value = value;
+        this.guardThatNameIsValid(value);
+        this.value = this.convertSpacesToDashes(value);
     }
     isNull() {
         return this.value === NO_QUEUE_NAME;
     }
     equalsTo(other) {
         return this.value === other.value;
+    }
+    guardThatNameIsValid(value) {
+        if (!RegExp('^[a-z-_ ]{1,50}$').test(value)) {
+            throw new errors_1.QueueNameNotValidError(value);
+        }
+    }
+    convertSpacesToDashes(value) {
+        return value.replace(/ /g, '-');
     }
     toString() {
         return this.value;
