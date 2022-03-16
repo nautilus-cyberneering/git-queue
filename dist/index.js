@@ -76,13 +76,13 @@ const short_commit_hash_1 = __nccwpck_require__(386);
 const NO_COMMIT_HASH = '--no-commit-hash--';
 class CommitHash {
     constructor(value) {
-        if (value != NO_COMMIT_HASH) {
+        if (value !== NO_COMMIT_HASH) {
             this.validateHash(value);
         }
         this.value = value;
     }
     validateHash(value) {
-        if (!RegExp("^[0-9a-f]{40}$").test(value)) {
+        if (!RegExp('^[0-9a-f]{40}$').test(value)) {
             throw new errors_1.InvalidHash(value);
         }
     }
@@ -220,8 +220,8 @@ exports.CommitOptions = CommitOptions;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommitSubjectParser = exports.commitSubjectBelongsToAQueue = exports.COMMIT_SUBJECT_JOB_REF_PREFIX = exports.COMMIT_SUBJECT_DELIMITER = exports.COMMIT_SUBJECT_PREFIX = void 0;
-const errors_1 = __nccwpck_require__(9292);
 const commit_hash_1 = __nccwpck_require__(5533);
+const errors_1 = __nccwpck_require__(9292);
 const commit_subject_1 = __nccwpck_require__(8798);
 const message_key_1 = __nccwpck_require__(493);
 const queue_name_1 = __nccwpck_require__(7894);
@@ -277,6 +277,9 @@ class CommitSubjectParser {
     }
     getJobRef() {
         const jobRef = this.text.indexOf(exports.COMMIT_SUBJECT_JOB_REF_PREFIX);
+        if (jobRef === -1) {
+            return (0, commit_hash_1.nullCommitHash)();
+        }
         const commitHash = this.text
             .substring(jobRef + exports.COMMIT_SUBJECT_JOB_REF_PREFIX.length)
             .trim();
@@ -416,6 +419,18 @@ class CommittedMessage {
         this.commit = commit;
     }
     static fromCommitInfo(commit) {
+        /*
+          PROBLEMA:
+          En diversos tests (should allow to sign commits), se llega aquí con el siguiente
+          commit message: 🈺: QUEUE_NAME, con lo que falla pillar el job ref dentro de parse text
+          y hace petar el constructor de CommitHash
+          Entiendo que tal vez el parse Text, en el caso de que no encuentre el prefijo de Job Ref,
+          debería poner Hash nulo
+    
+    
+          ----> Añadir el test cuando se parsea un subject sin job ref, y en la implementación
+                del getJobRef devolver hash nulo si no hay jobref
+        */
         const messageKey = commit_subject_parser_1.CommitSubjectParser.parseText(commit.message).getMessageKey();
         switch (messageKey.toString()) {
             case '🈺': {
@@ -657,11 +672,7 @@ exports.getErrorMessage = getErrorMessage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-<<<<<<< HEAD
-exports.InvalidShortHash = exports.InvalidHash = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
-=======
-exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
->>>>>>> main
+exports.InvalidShortHash = exports.InvalidHash = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
 class MissingQueueNameInCommitSubjectError extends Error {
     constructor(commitSubject) {
         super(`Missing queue name in commit subject: ${commitSubject}`);
@@ -1410,13 +1421,13 @@ const NO_SHORT_COMMIT_HASH = '--no-short-commit-hash--';
  */
 class ShortCommitHash {
     constructor(value) {
-        if (value != NO_SHORT_COMMIT_HASH) {
+        if (value !== NO_SHORT_COMMIT_HASH) {
             this.validateHash(value);
         }
         this.value = value;
     }
     validateHash(value) {
-        if (!RegExp("^[0-9a-f]{7}$").test(value)) {
+        if (!RegExp('^[0-9a-f]{7}$').test(value)) {
             throw new errors_1.InvalidShortHash(value);
         }
     }

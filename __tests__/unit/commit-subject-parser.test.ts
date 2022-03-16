@@ -59,7 +59,9 @@ describe('CommitSubjectParser', () => {
 
   it('should fail when the job reference prefix exists but the reference value is invalid in a commit subject', () => {
     const fn = (): string => {
-      const parser = new CommitSubjectParser('📝🈺: queue-name: job.ref.f1a69d48a01cc---af762e4ba685de7')
+      const parser = new CommitSubjectParser(
+        '📝🈺: queue-name: job.ref.f1a69d48a01cc---af762e4ba685de7'
+      )
       return parser.getJobRef().toString()
     }
 
@@ -73,10 +75,9 @@ describe('CommitSubjectParser', () => {
     }
 
     expect(fn).toThrowError()
-  })  
+  })
 
   it('should return a Null Commit when the job reference does not exist', () => {
-
     const parser = new CommitSubjectParser('📝🈺: queue-name: NAME')
     const jobRef = parser.getJobRef()
 
