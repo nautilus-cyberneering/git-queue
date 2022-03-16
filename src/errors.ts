@@ -77,16 +77,16 @@ export class MissingNewJobMessageError extends Error {
   }
 }
 
-export class InvalidHash extends Error {
+export class InvalidHashError extends Error {
   constructor(hash: string) {
     super(`Invalid SHA-1 commit hash: ${hash}`)
-    Object.setPrototypeOf(this, InvalidHash.prototype)
+    Object.setPrototypeOf(this, InvalidHashError.prototype)
   }
 }
 
-export class InvalidShortHash extends Error {
+export class InvalidShortHashError extends Error {
   constructor(hash: string) {
     super(`Invalid 7-characters SHA-1 commit hash: ${hash}`)
-    Object.setPrototypeOf(this, InvalidShortHash.prototype)
+    Object.setPrototypeOf(this, InvalidShortHashError.prototype)
   }
 }

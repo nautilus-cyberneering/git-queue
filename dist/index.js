@@ -83,7 +83,7 @@ class CommitHash {
     }
     guardThatHashValueIsValid(value) {
         if (!RegExp('^[0-9a-f]{40}$').test(value)) {
-            throw new errors_1.InvalidHash(value);
+            throw new errors_1.InvalidHashError(value);
         }
     }
     getHash() {
@@ -660,7 +660,7 @@ exports.getErrorMessage = getErrorMessage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.InvalidShortHash = exports.InvalidHash = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+exports.InvalidShortHashError = exports.InvalidHashError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
 class MissingQueueNameInCommitSubjectError extends Error {
     constructor(commitSubject) {
         super(`Missing queue name in commit subject: ${commitSubject}`);
@@ -730,20 +730,20 @@ class MissingNewJobMessageError extends Error {
     }
 }
 exports.MissingNewJobMessageError = MissingNewJobMessageError;
-class InvalidHash extends Error {
+class InvalidHashError extends Error {
     constructor(hash) {
         super(`Invalid SHA-1 commit hash: ${hash}`);
-        Object.setPrototypeOf(this, InvalidHash.prototype);
+        Object.setPrototypeOf(this, InvalidHashError.prototype);
     }
 }
-exports.InvalidHash = InvalidHash;
-class InvalidShortHash extends Error {
+exports.InvalidHashError = InvalidHashError;
+class InvalidShortHashError extends Error {
     constructor(hash) {
         super(`Invalid 7-characters SHA-1 commit hash: ${hash}`);
-        Object.setPrototypeOf(this, InvalidShortHash.prototype);
+        Object.setPrototypeOf(this, InvalidShortHashError.prototype);
     }
 }
-exports.InvalidShortHash = InvalidShortHash;
+exports.InvalidShortHashError = InvalidShortHashError;
 
 
 /***/ }),
@@ -1416,7 +1416,7 @@ class ShortCommitHash {
     }
     guardThatShortHashValueIsValid(value) {
         if (!RegExp('^[0-9a-f]{7}$').test(value)) {
-            throw new errors_1.InvalidShortHash(value);
+            throw new errors_1.InvalidShortHashError(value);
         }
     }
     getHash() {

@@ -1,4 +1,4 @@
-import {InvalidHash} from './errors'
+import {InvalidHashError} from './errors'
 import {Nullable} from './nullable'
 import {ShortCommitHash} from './short-commit-hash'
 
@@ -16,7 +16,7 @@ export class CommitHash implements Nullable {
 
   guardThatHashValueIsValid(value: string): void {
     if (!RegExp('^[0-9a-f]{40}$').test(value)) {
-      throw new InvalidHash(value)
+      throw new InvalidHashError(value)
     }
   }
 
