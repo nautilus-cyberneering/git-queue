@@ -657,7 +657,11 @@ exports.getErrorMessage = getErrorMessage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+<<<<<<< HEAD
 exports.InvalidShortHash = exports.InvalidHash = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+=======
+exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+>>>>>>> main
 class MissingQueueNameInCommitSubjectError extends Error {
     constructor(commitSubject) {
         super(`Missing queue name in commit subject: ${commitSubject}`);
@@ -693,6 +697,13 @@ class GitDirNotInitializedError extends Error {
     }
 }
 exports.GitDirNotInitializedError = GitDirNotInitializedError;
+class GitDirNotFoundError extends Error {
+    constructor(dir) {
+        super(`Git dir: ${dir} does not exist or is not reachable`);
+        Object.setPrototypeOf(this, GitDirNotFoundError.prototype);
+    }
+}
+exports.GitDirNotFoundError = GitDirNotFoundError;
 class PendingJobsLimitReachedError extends Error {
     constructor(committedMessage) {
         super(`Can't create job. Previous message is not a job finished message. Previous message commit: ${committedMessage
@@ -739,16 +750,27 @@ exports.InvalidShortHash = InvalidShortHash;
 /***/ }),
 
 /***/ 7775:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GitRepoDir = void 0;
+const path_1 = __nccwpck_require__(1017);
+const errors_1 = __nccwpck_require__(9292);
+const fs_1 = __nccwpck_require__(7147);
 class GitRepoDir {
     constructor(dirPath) {
-        // TODO: validate dir path
-        this.dirPath = dirPath;
+        this.validatePath(dirPath);
+        this.dirPath = this.normalizePath(dirPath);
+    }
+    validatePath(dirPath) {
+        if (!(0, fs_1.existsSync)(dirPath)) {
+            throw new errors_1.GitDirNotFoundError(dirPath);
+        }
+    }
+    normalizePath(dirPath) {
+        return (0, path_1.isAbsolute)(dirPath) ? dirPath : (0, path_1.resolve)(dirPath);
     }
     getDirPath() {
         return this.dirPath;
@@ -763,7 +785,7 @@ exports.GitRepoDir = GitRepoDir;
 /***/ }),
 
 /***/ 8432:
-/***/ (function(__unused_webpack_module, exports) {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
@@ -778,15 +800,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GitRepo = void 0;
+const errors_1 = __nccwpck_require__(9292);
+const child_process_1 = __nccwpck_require__(2081);
+const fs_1 = __nccwpck_require__(7147);
 class GitRepo {
     constructor(dir, git) {
         this.dir = dir;
         this.git = git;
     }
     isInitialized() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.git.checkIsRepo();
-        });
+        try {
+            // Make sure the string we will pass to to the shell is an actual dir
+            if (!(0, fs_1.existsSync)(this.dir.getDirPath())) {
+                throw new Error();
+            }
+            (0, child_process_1.execSync)(`git -C ${this.getDirPath()} status`);
+        }
+        catch (_a) {
+            return false;
+        }
+        return true;
     }
     getDir() {
         return this.dir;
@@ -815,19 +848,19 @@ class GitRepo {
     }
     hasCommits() {
         return __awaiter(this, void 0, void 0, function* () {
-            // TODO: find a better way to check if the repo has commits
-            const currentBranch = yield this.getCurrentBranch();
+            if (!this.isInitialized()) {
+                throw new errors_1.GitDirNotInitializedError(this.dir.getDirPath());
+            }
             try {
-                yield this.log();
+                // Make sure the string we will pass to to the shell is an actual dir
+                if (!(0, fs_1.existsSync)(this.dir.getDirPath())) {
+                    throw new Error();
+                }
+                (0, child_process_1.execSync)(`git -C ${this.dir.getDirPath()} log -n 0`);
             }
             catch (err) {
-                if (err.message.includes(`fatal: your current branch '${currentBranch}' does not have any commits yet`)) {
-                    // No commits yet
-                    return false;
-                }
-                else {
-                    throw err;
-                }
+                // No commits yet
+                return false;
             }
             return true;
         });
@@ -1246,7 +1279,7 @@ class Queue {
     }
     guardThatGitRepoHasBeenInitialized() {
         return __awaiter(this, void 0, void 0, function* () {
-            const isInitialized = yield this.gitRepo.isInitialized();
+            const isInitialized = this.gitRepo.isInitialized();
             if (!isInitialized) {
                 throw new errors_1.GitDirNotInitializedError(this.gitRepo.getDirPath());
             }

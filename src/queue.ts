@@ -57,7 +57,7 @@ export class Queue {
   }
 
   private async guardThatGitRepoHasBeenInitialized(): Promise<void> {
-    const isInitialized = await this.gitRepo.isInitialized()
+    const isInitialized = this.gitRepo.isInitialized()
     if (!isInitialized) {
       throw new GitDirNotInitializedError(this.gitRepo.getDirPath())
     }
