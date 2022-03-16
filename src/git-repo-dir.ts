@@ -6,11 +6,11 @@ export class GitRepoDir {
   private readonly dirPath: string
 
   constructor(dirPath: string) {
-    this.validatePath(dirPath)
+    this.guardThatDirExists(dirPath)
     this.dirPath = this.normalizePath(dirPath)
   }
 
-  validatePath(dirPath): void {
+  guardThatDirExists(dirPath): void {
     if (!existsSync(dirPath)) {
       throw new GitDirNotFoundError(dirPath)
     }

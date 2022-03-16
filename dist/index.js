@@ -760,10 +760,10 @@ const errors_1 = __nccwpck_require__(9292);
 const fs_1 = __nccwpck_require__(7147);
 class GitRepoDir {
     constructor(dirPath) {
-        this.validatePath(dirPath);
+        this.guardThatDirExists(dirPath);
         this.dirPath = this.normalizePath(dirPath);
     }
-    validatePath(dirPath) {
+    guardThatDirExists(dirPath) {
         if (!(0, fs_1.existsSync)(dirPath)) {
             throw new errors_1.GitDirNotFoundError(dirPath);
         }
