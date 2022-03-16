@@ -733,14 +733,14 @@ exports.MissingNewJobMessageError = MissingNewJobMessageError;
 class InvalidHash extends Error {
     constructor(hash) {
         super(`Invalid SHA-1 commit hash: ${hash}`);
-        Object.setPrototypeOf(this, MissingQueueNameInCommitSubjectError.prototype);
+        Object.setPrototypeOf(this, InvalidHash.prototype);
     }
 }
 exports.InvalidHash = InvalidHash;
 class InvalidShortHash extends Error {
     constructor(hash) {
         super(`Invalid 7-characters SHA-1 commit hash: ${hash}`);
-        Object.setPrototypeOf(this, MissingQueueNameInCommitSubjectError.prototype);
+        Object.setPrototypeOf(this, InvalidShortHash.prototype);
     }
 }
 exports.InvalidShortHash = InvalidShortHash;

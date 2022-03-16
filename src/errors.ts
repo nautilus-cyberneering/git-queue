@@ -80,13 +80,13 @@ export class MissingNewJobMessageError extends Error {
 export class InvalidHash extends Error {
   constructor(hash: string) {
     super(`Invalid SHA-1 commit hash: ${hash}`)
-    Object.setPrototypeOf(this, MissingQueueNameInCommitSubjectError.prototype)
+    Object.setPrototypeOf(this, InvalidHash.prototype)
   }
 }
 
 export class InvalidShortHash extends Error {
   constructor(hash: string) {
     super(`Invalid 7-characters SHA-1 commit hash: ${hash}`)
-    Object.setPrototypeOf(this, MissingQueueNameInCommitSubjectError.prototype)
+    Object.setPrototypeOf(this, InvalidShortHash.prototype)
   }
 }
