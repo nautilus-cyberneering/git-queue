@@ -9,11 +9,16 @@ import {GitRepo} from '../git-repo'
 import {GitRepoDir} from '../git-repo-dir'
 
 import {createTempDir} from 'jest-fixtures'
+import {join} from 'path'
 import {testConfiguration} from './config'
 
 export async function createTempEmptyDir(): Promise<string> {
   const tempGitDirPath = await createTempDir()
   return tempGitDirPath
+}
+
+export async function createInexistentTempDir(): Promise<string> {
+  return join(await createTempEmptyDir(), `inexistent`)
 }
 
 export async function createInitializedTempGnuPGHomeDir(): Promise<string> {

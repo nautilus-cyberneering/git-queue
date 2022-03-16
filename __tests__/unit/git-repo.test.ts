@@ -23,7 +23,7 @@ describe('GitRepo', () => {
 
     await gitRepo.init()
 
-    expect(await gitRepo.isInitialized()).toBe(true)
+    expect(gitRepo.isInitialized()).toBe(true)
   })
 
   it('should check if a repo has been initialized', async () => {
@@ -31,10 +31,10 @@ describe('GitRepo', () => {
     const git = await newSimpleGitWithCommitterIdentity(gitRepoDir)
     const gitRepo = new GitRepo(gitRepoDir, git)
 
-    expect(await gitRepo.isInitialized()).toBe(false)
+    expect(gitRepo.isInitialized()).toBe(false)
 
     await gitRepo.init()
 
-    expect(await gitRepo.isInitialized()).toBe(true)
+    expect(gitRepo.isInitialized()).toBe(true)
   })
 })
