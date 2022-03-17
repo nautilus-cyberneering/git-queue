@@ -25,14 +25,14 @@ describe('CommitSubject', () => {
     expect(commit.belongsToQueue(new QueueName('queue-name-two'))).toBe(false)
 
     const commit2 = CommitSubjectParser.parseText(
-      '📝🈺: library update - library-aaa: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+      '📝🈺: library aaa update: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
     )
-    expect(
-      commit2.belongsToQueue(new QueueName('library update - library-aaa'))
-    ).toBe(true)
+    expect(commit2.belongsToQueue(new QueueName('library aaa update'))).toBe(
+      true
+    )
 
     const commit3 = CommitSubjectParser.parseText(
-      'standard commit: - this is not a queue commit - missing prefix'
+      'standard commit: not queue commit-no prefix'
     )
     expect(commit3.belongsToQueue(new QueueName('standard commit'))).toBe(false)
   })

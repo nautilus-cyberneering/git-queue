@@ -2,6 +2,7 @@ import {Nullable} from './nullable'
 import {QueueNameNotValidError} from './errors'
 
 const NO_QUEUE_NAME = '--no-queue-name--'
+export const MAX_QUEUE_NAME_LENGTH = 30
 
 export class QueueName implements Nullable {
   value: string
@@ -20,7 +21,7 @@ export class QueueName implements Nullable {
   }
 
   guardThatNameIsValid(value): void {
-    if (!RegExp('^[a-z-_ ]{1,50}$').test(value)) {
+    if (!RegExp(`^[a-z-_ ]{1,${MAX_QUEUE_NAME_LENGTH}}$`).test(value)) {
       throw new QueueNameNotValidError(value)
     }
   }
