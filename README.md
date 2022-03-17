@@ -124,7 +124,7 @@ jobs:
         uses: Nautilus-Cyberneering/git-queue@v1
         with:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
-          queue_name: 'Library Update [library-aaa]'
+          queue_name: 'Library Update - library-aaa'
           action: 'create-job'
           job_payload: '{"field": "value", "state": "pending"}'
 
@@ -134,7 +134,7 @@ jobs:
         uses: Nautilus-Cyberneering/git-queue@v1
         with:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
-          queue_name: 'Library Update [library-aaa]'
+          queue_name: 'Library Update - library-aaa'
           action: 'start-job'
           job_payload: '{"field": "value", "state": "started"}'
 
@@ -148,7 +148,7 @@ jobs:
         uses: Nautilus-Cyberneering/git-queue@v1
         with:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
-          queue_name: 'Library Update [library-aaa]'
+          queue_name: 'Library Update - library-aaa'
           action: 'next-job'
 
       - name: Mark job as finished
@@ -157,7 +157,7 @@ jobs:
         uses: Nautilus-Cyberneering/git-queue@v1
         with:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
-          queue_name: 'Library Update [library-aaa]'
+          queue_name: 'Library Update - library-aaa'
           action: 'finish-job'
           job_payload: '{"field": "value", "state": "finished"}'
 
@@ -205,7 +205,7 @@ If you need to pass environment variables to the `git` child process, you only n
   id: create-job
   uses: Nautilus-Cyberneering/git-queue@v1
   with:
-    queue_name: "Library Update [library-aaa]"
+    queue_name: "Library Update - library-aaa"
     action: "create-job"
     job_payload: "job_payload"
   env:
