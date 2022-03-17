@@ -823,7 +823,7 @@ class GitRepo {
             if (!(0, fs_1.existsSync)(this.dir.getDirPath())) {
                 throw new Error();
             }
-            (0, child_process_1.execSync)(`git -C ${this.getDirPath()} status`);
+            (0, child_process_1.execSync)(`git -C ${this.getDirPath()} status > /dev/null 2>&1`);
         }
         catch (_a) {
             return false;
@@ -865,7 +865,7 @@ class GitRepo {
                 if (!(0, fs_1.existsSync)(this.dir.getDirPath())) {
                     throw new Error();
                 }
-                (0, child_process_1.execSync)(`git -C ${this.dir.getDirPath()} log -n 0`);
+                (0, child_process_1.execSync)(`git -C ${this.dir.getDirPath()} log -n 0 > /dev/null 2>&1`);
             }
             catch (err) {
                 // No commits yet
