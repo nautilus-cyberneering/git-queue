@@ -71,12 +71,20 @@ exports.CommitBody = CommitBody;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nullCommitHash = exports.CommitHash = void 0;
+const errors_1 = __nccwpck_require__(9292);
 const short_commit_hash_1 = __nccwpck_require__(386);
 const NO_COMMIT_HASH = '--no-commit-hash--';
 class CommitHash {
     constructor(value) {
-        // TODO: validation
+        if (value !== NO_COMMIT_HASH) {
+            this.guardThatHashValueIsValid(value);
+        }
         this.value = value;
+    }
+    guardThatHashValueIsValid(value) {
+        if (!RegExp('^[0-9a-f]{40}$').test(value)) {
+            throw new errors_1.InvalidHashError(value);
+        }
     }
     getHash() {
         return this.value;
@@ -212,8 +220,8 @@ exports.CommitOptions = CommitOptions;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommitSubjectParser = exports.commitSubjectBelongsToAQueue = exports.COMMIT_SUBJECT_JOB_REF_PREFIX = exports.COMMIT_SUBJECT_DELIMITER = exports.COMMIT_SUBJECT_PREFIX = void 0;
-const errors_1 = __nccwpck_require__(9292);
 const commit_hash_1 = __nccwpck_require__(5533);
+const errors_1 = __nccwpck_require__(9292);
 const commit_subject_1 = __nccwpck_require__(8798);
 const message_key_1 = __nccwpck_require__(493);
 const queue_name_1 = __nccwpck_require__(7894);
@@ -269,6 +277,9 @@ class CommitSubjectParser {
     }
     getJobRef() {
         const jobRef = this.text.indexOf(exports.COMMIT_SUBJECT_JOB_REF_PREFIX);
+        if (jobRef === -1) {
+            return (0, commit_hash_1.nullCommitHash)();
+        }
         const commitHash = this.text
             .substring(jobRef + exports.COMMIT_SUBJECT_JOB_REF_PREFIX.length)
             .trim();
@@ -649,7 +660,7 @@ exports.getErrorMessage = getErrorMessage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.QueueNameNotValidError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+exports.InvalidShortHashError = exports.InvalidHashError = exports.QueueNameNotValidError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
 const queue_name_1 = __nccwpck_require__(7894);
 class MissingQueueNameInCommitSubjectError extends Error {
     constructor(commitSubject) {
@@ -729,6 +740,20 @@ class QueueNameNotValidError extends Error {
     }
 }
 exports.QueueNameNotValidError = QueueNameNotValidError;
+class InvalidHashError extends Error {
+    constructor(hash) {
+        super(`Invalid SHA-1 commit hash: ${hash}`);
+        Object.setPrototypeOf(this, InvalidHashError.prototype);
+    }
+}
+exports.InvalidHashError = InvalidHashError;
+class InvalidShortHashError extends Error {
+    constructor(hash) {
+        super(`Invalid 7-characters SHA-1 commit hash: ${hash}`);
+        Object.setPrototypeOf(this, InvalidShortHashError.prototype);
+    }
+}
+exports.InvalidShortHashError = InvalidShortHashError;
 
 
 /***/ }),
@@ -745,10 +770,10 @@ const errors_1 = __nccwpck_require__(9292);
 const fs_1 = __nccwpck_require__(7147);
 class GitRepoDir {
     constructor(dirPath) {
-        this.validatePath(dirPath);
+        this.guardThatDirExists(dirPath);
         this.dirPath = this.normalizePath(dirPath);
     }
-    validatePath(dirPath) {
+    guardThatDirExists(dirPath) {
         if (!(0, fs_1.existsSync)(dirPath)) {
             throw new errors_1.GitDirNotFoundError(dirPath);
         }
@@ -1391,20 +1416,28 @@ exports.Queue = Queue;
 /***/ }),
 
 /***/ 386:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nullShortCommitHash = exports.ShortCommitHash = void 0;
+const errors_1 = __nccwpck_require__(9292);
 const NO_SHORT_COMMIT_HASH = '--no-short-commit-hash--';
 /**
  * 7-character commit hash
  */
 class ShortCommitHash {
     constructor(value) {
-        // TODO: validation
+        if (value !== NO_SHORT_COMMIT_HASH) {
+            this.guardThatShortHashValueIsValid(value);
+        }
         this.value = value;
+    }
+    guardThatShortHashValueIsValid(value) {
+        if (!RegExp('^[0-9a-f]{7}$').test(value)) {
+            throw new errors_1.InvalidShortHashError(value);
+        }
     }
     getHash() {
         return this.value;

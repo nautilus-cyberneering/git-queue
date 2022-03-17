@@ -88,3 +88,17 @@ export class QueueNameNotValidError extends Error {
     Object.setPrototypeOf(this, MissingNewJobMessageError.prototype)
   }
 }
+
+export class InvalidHashError extends Error {
+  constructor(hash: string) {
+    super(`Invalid SHA-1 commit hash: ${hash}`)
+    Object.setPrototypeOf(this, InvalidHashError.prototype)
+  }
+}
+
+export class InvalidShortHashError extends Error {
+  constructor(hash: string) {
+    super(`Invalid 7-characters SHA-1 commit hash: ${hash}`)
+    Object.setPrototypeOf(this, InvalidShortHashError.prototype)
+  }
+}

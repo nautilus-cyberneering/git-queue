@@ -1,9 +1,9 @@
+import {CommitHash, nullCommitHash} from './commit-hash'
 import {
   MissingCommitHashInJobReferenceError,
   MissingMessageKeyInCommitSubjectError,
   MissingQueueNameInCommitSubjectError
 } from './errors'
-import {CommitHash} from './commit-hash'
 import {CommitSubject} from './commit-subject'
 import {MessageKey} from './message-key'
 import {QueueName} from './queue-name'
@@ -85,6 +85,11 @@ export class CommitSubjectParser {
 
   getJobRef(): CommitHash {
     const jobRef = this.text.indexOf(COMMIT_SUBJECT_JOB_REF_PREFIX)
+
+    if (jobRef === -1) {
+      return nullCommitHash()
+    }
+
     const commitHash = this.text
       .substring(jobRef + COMMIT_SUBJECT_JOB_REF_PREFIX.length)
       .trim()
