@@ -1,4 +1,5 @@
 import {CommittedMessage} from './committed-message'
+import {MAX_QUEUE_NAME_LENGTH} from './queue-name'
 
 export class MissingQueueNameInCommitSubjectError extends Error {
   constructor(commitSubject: string) {
@@ -72,6 +73,17 @@ export class MissingNewJobMessageError extends Error {
       `Can't start job. Previous message is not a new job message. Previous message commit: ${committedMessage
         .commitHash()
         .toString()}`
+    )
+    Object.setPrototypeOf(this, MissingNewJobMessageError.prototype)
+  }
+}
+
+export class QueueNameNotValidError extends Error {
+  constructor(queueName: string) {
+    super(
+      `Queue name not valid: ${queueName}.\n` +
+        `Only lowercase letters (a-z), dash and white space are allowed,` +
+        ` ${MAX_QUEUE_NAME_LENGTH} characters max.`
     )
     Object.setPrototypeOf(this, MissingNewJobMessageError.prototype)
   }

@@ -655,12 +655,13 @@ exports.getErrorMessage = getErrorMessage;
 /***/ }),
 
 /***/ 9292:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.InvalidShortHashError = exports.InvalidHashError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+exports.InvalidShortHashError = exports.InvalidHashError = exports.QueueNameNotValidError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+const queue_name_1 = __nccwpck_require__(7894);
 class MissingQueueNameInCommitSubjectError extends Error {
     constructor(commitSubject) {
         super(`Missing queue name in commit subject: ${commitSubject}`);
@@ -730,6 +731,15 @@ class MissingNewJobMessageError extends Error {
     }
 }
 exports.MissingNewJobMessageError = MissingNewJobMessageError;
+class QueueNameNotValidError extends Error {
+    constructor(queueName) {
+        super(`Queue name not valid: ${queueName}.\n` +
+            `Only lowercase letters (a-z), dash and white space are allowed,` +
+            ` ${queue_name_1.MAX_QUEUE_NAME_LENGTH} characters max.`);
+        Object.setPrototypeOf(this, MissingNewJobMessageError.prototype);
+    }
+}
+exports.QueueNameNotValidError = QueueNameNotValidError;
 class InvalidHashError extends Error {
     constructor(hash) {
         super(`Invalid SHA-1 commit hash: ${hash}`);
@@ -1206,23 +1216,33 @@ exports.JobStartedMessage = JobStartedMessage;
 /***/ }),
 
 /***/ 7894:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.nullQueueName = exports.QueueName = void 0;
+exports.nullQueueName = exports.QueueName = exports.MAX_QUEUE_NAME_LENGTH = void 0;
+const errors_1 = __nccwpck_require__(9292);
 const NO_QUEUE_NAME = '--no-queue-name--';
+exports.MAX_QUEUE_NAME_LENGTH = 30;
 class QueueName {
     constructor(value) {
-        // TODO: validation. Issue -> https://github.com/Nautilus-Cyberneering/git-queue/issues/39
-        this.value = value;
+        this.guardThatNameIsValid(value);
+        this.value = this.convertSpacesToDashes(value);
     }
     isNull() {
         return this.value === NO_QUEUE_NAME;
     }
     equalsTo(other) {
         return this.value === other.value;
+    }
+    guardThatNameIsValid(value) {
+        if (!RegExp(`^[a-z-_ ]{1,${exports.MAX_QUEUE_NAME_LENGTH}}$`).test(value)) {
+            throw new errors_1.QueueNameNotValidError(value);
+        }
+    }
+    convertSpacesToDashes(value) {
+        return value.replace(/ /g, '-');
     }
     toString() {
         return this.value;

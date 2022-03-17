@@ -38,7 +38,7 @@ function executeAction(env): string | Buffer {
 function createJob(gitRepo: GitRepo): string | Buffer {
   const env = {
     ...process.env,
-    INPUT_QUEUE_NAME: 'QUEUE-NAME',
+    INPUT_QUEUE_NAME: 'queue-name',
     INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
     INPUT_ACTION: 'create-job',
     INPUT_JOB_PAYLOAD: dummyPayload(),
@@ -74,7 +74,7 @@ describe('GitHub Action', () => {
 
     const env = {
       ...process.env,
-      INPUT_QUEUE_NAME: 'QUEUE-NAME',
+      INPUT_QUEUE_NAME: 'queue-name',
       INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'next-job',
       INPUT_JOB_PAYLOAD: dummyPayload(),
@@ -93,7 +93,7 @@ describe('GitHub Action', () => {
 
     const env = {
       ...process.env,
-      INPUT_QUEUE_NAME: 'QUEUE-NAME',
+      INPUT_QUEUE_NAME: 'queue-name',
       INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'INVALID ACTION',
       INPUT_JOB_PAYLOAD: dummyPayload(),
@@ -114,7 +114,7 @@ describe('GitHub Action', () => {
 
     const env = {
       ...process.env,
-      INPUT_QUEUE_NAME: 'QUEUE-NAME',
+      INPUT_QUEUE_NAME: 'queue-name',
       INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'create-job',
       INPUT_JOB_PAYLOAD: dummyPayload(),
@@ -136,7 +136,7 @@ describe('GitHub Action', () => {
 
     const env = {
       ...process.env,
-      INPUT_QUEUE_NAME: 'QUEUE-NAME',
+      INPUT_QUEUE_NAME: 'queue-name',
       INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'next-job',
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
@@ -159,7 +159,7 @@ describe('GitHub Action', () => {
 
     const env = {
       ...process.env,
-      INPUT_QUEUE_NAME: 'QUEUE-NAME',
+      INPUT_QUEUE_NAME: 'queue-name',
       INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'start-job',
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
@@ -180,7 +180,7 @@ describe('GitHub Action', () => {
 
     executeAction({
       ...process.env,
-      INPUT_QUEUE_NAME: 'QUEUE-NAME',
+      INPUT_QUEUE_NAME: 'queue-name',
       INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'start-job',
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
@@ -188,7 +188,7 @@ describe('GitHub Action', () => {
 
     const output = executeAction({
       ...process.env,
-      INPUT_QUEUE_NAME: 'QUEUE-NAME',
+      INPUT_QUEUE_NAME: 'queue-name',
       INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'finish-job',
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
@@ -208,7 +208,7 @@ describe('GitHub Action', () => {
 
     const env = {
       ...process.env,
-      INPUT_QUEUE_NAME: 'QUEUE-NAME',
+      INPUT_QUEUE_NAME: 'queue-name',
       INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'create-job',
       INPUT_JOB_PAYLOAD: dummyPayload(),
