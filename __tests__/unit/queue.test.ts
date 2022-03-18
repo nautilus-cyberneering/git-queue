@@ -289,11 +289,11 @@ describe('Queue', () => {
     )
 
     const payload1 = JSON.stringify({
-      field1: 'value1'
+      payload: 'value1'
     })
 
     const payload2 = JSON.stringify({
-      field1: 'value2'
+      payload: 'value2'
     })
 
     await queue1.createJob(payload1)

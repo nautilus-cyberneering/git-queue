@@ -9,7 +9,7 @@ function dummyCommitSubjectText(): string {
 describe('CommitMessage', () => {
   it('should contain a subject and a body', () => {
     const subject = CommitSubjectParser.parseText(dummyCommitSubjectText())
-    const body = new CommitBody('body')
+    const body = new CommitBody('{ "payload": "test" }')
 
     const commitMessage = new CommitMessage(subject, body)
 
@@ -19,22 +19,28 @@ describe('CommitMessage', () => {
 
   it('should return the commit message ready to use with simple-git package', () => {
     const subject = CommitSubjectParser.parseText(dummyCommitSubjectText())
-    const body = new CommitBody('body')
+    const body = new CommitBody('{"payload": "test"}')
     const commitMessage = new CommitMessage(subject, body)
 
     const message = commitMessage.forSimpleGit()
 
-    expect(message).toStrictEqual([dummyCommitSubjectText(), 'body'])
+    expect(message).toStrictEqual([
+      dummyCommitSubjectText(),
+      '{"payload": "test"}'
+    ])
   })
 
   it('can be instantiate passing the text of the subject and body', () => {
-    const message = CommitMessage.fromText(dummyCommitSubjectText(), 'body')
+    const message = CommitMessage.fromText(
+      dummyCommitSubjectText(),
+      '{ "payload": "test" }'
+    )
 
     expect(
       message.equalsTo(
         new CommitMessage(
           CommitSubjectParser.parseText(dummyCommitSubjectText()),
-          new CommitBody('body')
+          new CommitBody('{ "payload": "test" }')
         )
       )
     ).toBe(true)

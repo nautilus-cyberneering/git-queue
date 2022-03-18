@@ -80,7 +80,7 @@ export async function createNotInitializedGitRepo(): Promise<GitRepo> {
 
 export function dummyPayload(): string {
   return JSON.stringify({
-    field: 'value'
+    payload: 'test'
   })
 }
 
