@@ -38,11 +38,6 @@ export class CommitBody {
     return typeof object != 'undefined'
   }
 
-  private getParser(): JTDParser<CommitBodyData> {
-    const ajv = new Ajv()
-    return ajv.compileParser(CommitBodySchema)
-  }
-
   toString(): string {
     return JSON.stringify(this.body)
   }
