@@ -1,4 +1,4 @@
-import Ajv, {JTDSchemaType} from 'ajv/dist/jtd'
+import Ajv, {JTDParser, JTDSchemaType} from 'ajv/dist/jtd'
 import {Message} from './message'
 
 interface CommitBodyData {
@@ -12,30 +12,46 @@ const CommitBodySchema: JTDSchemaType<CommitBodyData> = {
 }
 
 export class CommitBody {
-  text: string
+  body: CommitBodyData
+  private static parse = new Ajv().compileParser(CommitBodySchema)
 
   constructor(text: string) {
-    this.guardThatTextCompliesWithSchema(text)
-    this.text = text
+    this.body = this.getParsedBodyData(text)
   }
 
   static fromMessage(message: Message): CommitBody {
-    return new CommitBody(message.getPayload())
+    return new CommitBody(`{ "payload" : "${message.getPayload()}" }`)
+  }
+
+  getParsedBodyData(text): CommitBodyData {
+    const parsedBody = CommitBody.parse(text)
+    if (this.isCommitBodyData(parsedBody)) {
+      return parsedBody
+    } else {
+      throw new Error(`Schema not validated:${text}`)
+    }
+  }
+
+  isCommitBodyData(
+    object: CommitBodyData | undefined
+  ): object is CommitBodyData {
+    return typeof object != 'undefined'
+  }
+
+  private getParser(): JTDParser<CommitBodyData> {
+    const ajv = new Ajv()
+    return ajv.compileParser(CommitBodySchema)
   }
 
   toString(): string {
-    return this.text
+    return JSON.stringify(this.body)
+  }
+
+  getPayload(): string {
+    return this.body?.payload
   }
 
   equalsTo(other: CommitBody): boolean {
-    return this.text === other.text
-  }
-
-  guardThatTextCompliesWithSchema(text): void {
-    const ajv = new Ajv()
-    const parse = ajv.compileParser(CommitBodySchema)
-    if (!parse(text)) {
-      throw new Error(`Schema not validated:${text}`)
-    }
+    return JSON.stringify(this.body) === JSON.stringify(other.body)
   }
 }

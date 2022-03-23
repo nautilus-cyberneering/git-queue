@@ -19,28 +19,28 @@ describe('CommitMessage', () => {
 
   it('should return the commit message ready to use with simple-git package', () => {
     const subject = CommitSubjectParser.parseText(dummyCommitSubjectText())
-    const body = new CommitBody('{"payload": "test"}')
+    const body = new CommitBody('{"payload":"test"}')
     const commitMessage = new CommitMessage(subject, body)
 
     const message = commitMessage.forSimpleGit()
 
     expect(message).toStrictEqual([
       dummyCommitSubjectText(),
-      '{"payload": "test"}'
+      '{"payload":"test"}'
     ])
   })
 
   it('can be instantiate passing the text of the subject and body', () => {
     const message = CommitMessage.fromText(
       dummyCommitSubjectText(),
-      '{ "payload": "test" }'
+      '{"payload":"test"}'
     )
 
     expect(
       message.equalsTo(
         new CommitMessage(
           CommitSubjectParser.parseText(dummyCommitSubjectText()),
-          new CommitBody('{ "payload": "test" }')
+          new CommitBody('{"payload":"test"}')
         )
       )
     ).toBe(true)

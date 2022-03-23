@@ -58,7 +58,7 @@ describe('Job', () => {
       'date',
       'message',
       'refs',
-      'payload',
+      '{"payload":"test"}',
       'author name',
       'author email'
     )
@@ -67,7 +67,7 @@ describe('Job', () => {
 
     const job = Job.fromCommittedMessage(newJobCommittedMessage)
 
-    expect(job.getPayload()).toBe('payload')
+    expect(job.getPayload()).toBe('test')
     expect(
       job
         .getCommitHash()

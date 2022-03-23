@@ -79,9 +79,7 @@ export async function createNotInitializedGitRepo(): Promise<GitRepo> {
 }
 
 export function dummyPayload(): string {
-  return JSON.stringify({
-    payload: 'test'
-  })
+  return 'test'
 }
 
 export function gitLogForLatestCommit(gitRepoDir: string): string {

@@ -275,7 +275,8 @@ describe('Queue', () => {
       const nextJob = queue.getNextJob()
 
       const latestCommit = getLatestCommitHash(queue.getGitRepoDir())
-      expect(nextJob.equalsTo(new Job(dummyPayload(), latestCommit))).toBe(true)
+      const newjob = new Job(dummyPayload(), latestCommit)
+      expect(nextJob.equalsTo(newjob)).toBe(true)
     })
   })
 
@@ -288,13 +289,8 @@ describe('Queue', () => {
       commitOptionsForTests()
     )
 
-    const payload1 = JSON.stringify({
-      payload: 'value1'
-    })
-
-    const payload2 = JSON.stringify({
-      payload: 'value2'
-    })
+    const payload1 = 'value1'
+    const payload2 = 'value2'
 
     await queue1.createJob(payload1)
     await queue2.createJob(payload2)

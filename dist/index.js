@@ -56,27 +56,40 @@ const CommitBodySchema = {
 };
 class CommitBody {
     constructor(text) {
-        this.guardThatTextCompliesWithSchema(text);
-        this.text = text;
+        this.body = this.getParsedBodyData(text);
     }
     static fromMessage(message) {
-        return new CommitBody(message.getPayload());
+        return new CommitBody(`{ "payload" : "${message.getPayload()}" }`);
     }
-    toString() {
-        return this.text;
-    }
-    equalsTo(other) {
-        return this.text === other.text;
-    }
-    guardThatTextCompliesWithSchema(text) {
-        const ajv = new jtd_1.default();
-        const parse = ajv.compileParser(CommitBodySchema);
-        if (!parse(text)) {
+    getParsedBodyData(text) {
+        const parsedBody = CommitBody.parse(text);
+        if (this.isCommitBodyData(parsedBody)) {
+            return parsedBody;
+        }
+        else {
             throw new Error(`Schema not validated:${text}`);
         }
     }
+    isCommitBodyData(object) {
+        return typeof object != 'undefined';
+    }
+    getParser() {
+        const ajv = new jtd_1.default();
+        return ajv.compileParser(CommitBodySchema);
+    }
+    toString() {
+        return JSON.stringify(this.body);
+    }
+    getPayload() {
+        var _a;
+        return (_a = this.body) === null || _a === void 0 ? void 0 : _a.payload;
+    }
+    equalsTo(other) {
+        return JSON.stringify(this.body) === JSON.stringify(other.body);
+    }
 }
 exports.CommitBody = CommitBody;
+CommitBody.parse = new jtd_1.default().compileParser(CommitBodySchema);
 
 
 /***/ }),
@@ -429,6 +442,7 @@ exports.CommittedMessageLog = CommittedMessageLog;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nullMessage = exports.JobStartedCommittedMessage = exports.JobFinishedCommittedMessage = exports.NewJobCommittedMessage = exports.NullCommittedMessage = exports.CommittedMessage = void 0;
 const commit_info_1 = __nccwpck_require__(4136);
+const commit_body_1 = __nccwpck_require__(3801);
 const commit_subject_parser_1 = __nccwpck_require__(8884);
 const errors_1 = __nccwpck_require__(9292);
 class CommittedMessage {
@@ -463,7 +477,7 @@ class CommittedMessage {
         return commit_subject_parser_1.CommitSubjectParser.parseText(this.commit.message);
     }
     payload() {
-        return this.commit.body.trim();
+        return new commit_body_1.CommitBody(this.commit.body).getPayload();
     }
     isNull() {
         return this instanceof NullCommittedMessage;

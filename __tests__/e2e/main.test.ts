@@ -163,7 +163,7 @@ describe('GitHub Action', () => {
       INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'start-job',
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true',
-      INPUT_JOB_PAYLOAD: '{ "payload": "test" }'
+      INPUT_JOB_PAYLOAD: 'test'
     }
 
     const output = executeAction(env)
@@ -185,7 +185,7 @@ describe('GitHub Action', () => {
       INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'start-job',
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true',
-      INPUT_JOB_PAYLOAD: '{ "payload": "test" }'
+      INPUT_JOB_PAYLOAD: 'test'
     })
 
     const output = executeAction({
@@ -194,7 +194,7 @@ describe('GitHub Action', () => {
       INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'finish-job',
       INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true',
-      INPUT_JOB_PAYLOAD: '{ "payload": "test" }'
+      INPUT_JOB_PAYLOAD: 'test'
     })
 
     expect(getOutputVariable('job_finished', output.toString())).toBe('true')
