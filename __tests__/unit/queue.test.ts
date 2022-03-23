@@ -275,8 +275,7 @@ describe('Queue', () => {
       const nextJob = queue.getNextJob()
 
       const latestCommit = getLatestCommitHash(queue.getGitRepoDir())
-      const newjob = new Job(dummyPayload(), latestCommit)
-      expect(nextJob.equalsTo(newjob)).toBe(true)
+      expect(nextJob.equalsTo(new Job(dummyPayload(), latestCommit))).toBe(true)
     })
   })
 
