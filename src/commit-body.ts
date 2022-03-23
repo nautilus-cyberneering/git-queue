@@ -1,4 +1,5 @@
 import Ajv, {JTDParser, JTDSchemaType} from 'ajv/dist/jtd'
+import {InvalidCommitBodyError} from './errors'
 import {Message} from './message'
 
 interface CommitBodyData {
@@ -30,7 +31,7 @@ export class CommitBody {
     if (this.isCommitBodyData(parsedBody)) {
       return parsedBody
     } else {
-      throw new Error(`Schema not validated:${text}`)
+      throw new InvalidCommitBodyError(text)
     }
   }
 

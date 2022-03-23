@@ -49,6 +49,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommitBody = void 0;
 const jtd_1 = __importDefault(__nccwpck_require__(8876));
+const errors_1 = __nccwpck_require__(9292);
 const CommitBodySchema = {
     properties: {
         payload: { type: 'string' }
@@ -67,7 +68,7 @@ class CommitBody {
             return parsedBody;
         }
         else {
-            throw new Error(`Schema not validated:${text}`);
+            throw new errors_1.InvalidCommitBodyError(text);
         }
     }
     isCommitBodyData(object) {
@@ -691,7 +692,7 @@ exports.getErrorMessage = getErrorMessage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.InvalidShortHashError = exports.InvalidHashError = exports.QueueNameNotValidError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+exports.InvalidCommitBodyError = exports.InvalidShortHashError = exports.InvalidHashError = exports.QueueNameNotValidError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
 const queue_name_1 = __nccwpck_require__(7894);
 class MissingQueueNameInCommitSubjectError extends Error {
     constructor(commitSubject) {
@@ -785,6 +786,13 @@ class InvalidShortHashError extends Error {
     }
 }
 exports.InvalidShortHashError = InvalidShortHashError;
+class InvalidCommitBodyError extends Error {
+    constructor(invalidBodyContent) {
+        super(`Commit Body does not conform to specification: ${invalidBodyContent}`);
+        Object.setPrototypeOf(this, InvalidCommitBodyError.prototype);
+    }
+}
+exports.InvalidCommitBodyError = InvalidCommitBodyError;
 
 
 /***/ }),
