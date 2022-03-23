@@ -2,13 +2,25 @@ import Ajv, {JTDParser, JTDSchemaType} from 'ajv/dist/jtd'
 import {InvalidCommitBodyError} from './errors'
 import {Message} from './message'
 
+interface CommitBodyMetaData {
+  version: number
+}
+
 interface CommitBodyData {
+  metadata?: CommitBodyMetaData
   payload: string
 }
 
 const CommitBodySchema: JTDSchemaType<CommitBodyData> = {
   properties: {
     payload: {type: 'string'}
+  },
+  optionalProperties: {
+    metadata: {
+      properties: {
+        version: {type: 'int32'}
+      }
+    }
   }
 }
 
