@@ -50,7 +50,7 @@ export abstract class CommittedMessage implements Nullable {
   }
 
   payload(): string {
-    return new CommitBody(this.commit.body).getPayload()
+    return new CommitBody(this.commit.body).getPayload().trim()
   }
 
   isNull(): boolean {

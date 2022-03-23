@@ -127,7 +127,7 @@ describe('Queue', () => {
       date: 'not relevant',
       message: dummyNewJobCommitSubjectText(),
       refs: 'not relevant',
-      body: '{"payload":"--PAYLOAD--"}',
+      body: '{"payload":"   --PAYLOAD--   "}',
       author_name: 'not relevant',
       author_email: 'not relevant'
     }
