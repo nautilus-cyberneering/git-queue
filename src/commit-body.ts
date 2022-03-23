@@ -13,7 +13,9 @@ const CommitBodySchema: JTDSchemaType<CommitBodyData> = {
 
 export class CommitBody {
   body: CommitBodyData
-  private static parse = new Ajv().compileParser(CommitBodySchema)
+  private static parse: JTDParser<CommitBodyData> = new Ajv().compileParser(
+    CommitBodySchema
+  )
 
   constructor(text: string) {
     this.body = this.getParsedBodyData(text)

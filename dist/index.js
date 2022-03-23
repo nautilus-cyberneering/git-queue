@@ -73,10 +73,6 @@ class CommitBody {
     isCommitBodyData(object) {
         return typeof object != 'undefined';
     }
-    getParser() {
-        const ajv = new jtd_1.default();
-        return ajv.compileParser(CommitBodySchema);
-    }
     toString() {
         return JSON.stringify(this.body);
     }
@@ -477,7 +473,7 @@ class CommittedMessage {
         return commit_subject_parser_1.CommitSubjectParser.parseText(this.commit.message);
     }
     payload() {
-        return new commit_body_1.CommitBody(this.commit.body).getPayload();
+        return new commit_body_1.CommitBody(this.commit.body).getPayload().trim();
     }
     isNull() {
         return this instanceof NullCommittedMessage;
