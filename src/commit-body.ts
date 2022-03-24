@@ -19,7 +19,8 @@ const CommitBodySchema: JTDSchemaType<CommitBodyData> = {
     metadata: {
       properties: {
         version: {type: 'int32'}
-      }
+      },
+      additionalProperties: true
     }
   }
 }

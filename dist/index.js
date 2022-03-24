@@ -52,13 +52,14 @@ const jtd_1 = __importDefault(__nccwpck_require__(8876));
 const errors_1 = __nccwpck_require__(9292);
 const CommitBodySchema = {
     properties: {
-        payload: { type: 'string' },
+        payload: { type: 'string' }
     },
     optionalProperties: {
         metadata: {
             properties: {
                 version: { type: 'int32' }
-            }
+            },
+            additionalProperties: true
         }
     }
 };
