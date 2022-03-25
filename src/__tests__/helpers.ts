@@ -113,3 +113,15 @@ export function getSecondToLatestCommitHash(
     .trim()
   return new CommitHash(output)
 }
+
+export function dummyCommitBodyText(): string {
+  return JSON.stringify({
+    namespace: 'git-queue.commit-body',
+    version: 1,
+    payload: 'test',
+    metadata: {
+      job_number: 1,
+      job_commit: 'abc'
+    }
+  })
+}

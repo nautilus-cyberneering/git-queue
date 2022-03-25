@@ -2,6 +2,7 @@ import {CommitHash} from '../../src/commit-hash'
 import {CommitInfo} from '../../src/commit-info'
 import {Job} from '../../src/job'
 import {NewJobCommittedMessage} from '../../src/committed-message'
+import {dummyCommitBodyText} from '../../src/__tests__/helpers'
 
 describe('Job', () => {
   it('should contain a payload', () => {
@@ -58,7 +59,7 @@ describe('Job', () => {
       'date',
       'message',
       'refs',
-      '{"payload":"test"}',
+      dummyCommitBodyText(),
       'author name',
       'author email'
     )

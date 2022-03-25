@@ -52,23 +52,30 @@ const jtd_1 = __importDefault(__nccwpck_require__(8876));
 const errors_1 = __nccwpck_require__(9292);
 const CommitBodySchema = {
     properties: {
-        payload: { type: 'string' }
-    },
-    optionalProperties: {
+        namespace: { enum: ['git-queue.commit-body'] },
+        version: { type: 'int32' },
+        payload: { type: 'string' },
         metadata: {
-            properties: {
-                version: { type: 'int32' }
+            optionalProperties: {
+                job_number: { type: 'int32' },
+                job_commit: { type: 'string' }
             },
             additionalProperties: true
         }
-    }
+    },
+    additionalProperties: true
 };
 class CommitBody {
     constructor(text) {
         this.body = this.getParsedBodyData(text);
     }
     static fromMessage(message) {
-        return new CommitBody(`{ "payload" : "${message.getPayload()}" }`);
+        return new CommitBody(JSON.stringify({
+            namespace: 'git-queue.commit-body',
+            version: 1,
+            metadata: {},
+            payload: message.getPayload()
+        }));
     }
     getParsedBodyData(text) {
         const parsedBody = CommitBody.parse(text);

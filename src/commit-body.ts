@@ -3,26 +3,31 @@ import {InvalidCommitBodyError} from './errors'
 import {Message} from './message'
 
 interface CommitBodyMetaData {
-  version: number
+  job_number?: number
+  job_commit?: string
 }
 
 interface CommitBodyData {
-  metadata?: CommitBodyMetaData
+  namespace: 'git-queue.commit-body'
+  version: number
+  metadata: CommitBodyMetaData
   payload: string
 }
 
 const CommitBodySchema: JTDSchemaType<CommitBodyData> = {
   properties: {
-    payload: {type: 'string'}
-  },
-  optionalProperties: {
+    namespace: {enum: ['git-queue.commit-body']},
+    version: {type: 'int32'},
+    payload: {type: 'string'},
     metadata: {
-      properties: {
-        version: {type: 'int32'}
+      optionalProperties: {
+        job_number: {type: 'int32'},
+        job_commit: {type: 'string'}
       },
       additionalProperties: true
     }
-  }
+  },
+  additionalProperties: true
 }
 
 export class CommitBody {
@@ -36,7 +41,14 @@ export class CommitBody {
   }
 
   static fromMessage(message: Message): CommitBody {
-    return new CommitBody(`{ "payload" : "${message.getPayload()}" }`)
+    return new CommitBody(
+      JSON.stringify({
+        namespace: 'git-queue.commit-body',
+        version: 1,
+        metadata: {},
+        payload: message.getPayload()
+      })
+    )
   }
 
   getParsedBodyData(text): CommitBodyData {

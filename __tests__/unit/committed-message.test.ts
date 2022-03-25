@@ -7,6 +7,7 @@ import {
 import {CommitHash} from '../../src/commit-hash'
 import {CommitInfo} from '../../src/commit-info'
 import {DefaultLogFields} from 'simple-git'
+import {dummyCommitBodyText} from '../../src/__tests__/helpers'
 
 function dummyNewJobCommitSubjectText(): string {
   return '📝🈺: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
@@ -109,7 +110,7 @@ describe('Queue', () => {
       date: 'not relevant',
       message: dummyNewJobCommitSubjectText(),
       refs: 'not relevant',
-      body: '{"payload":"--PAYLOAD--"}',
+      body: dummyCommitBodyText(),
       author_name: 'not relevant',
       author_email: 'not relevant'
     }
@@ -118,16 +119,26 @@ describe('Queue', () => {
       CommitInfo.fromDefaultLogFields(commit)
     )
 
-    expect(message.payload()).toBe('--PAYLOAD--')
+    expect(message.payload()).toBe('test')
   })
 
   it('should trim the payload', async () => {
+    const bodyText = JSON.stringify({
+      namespace: 'git-queue.commit-body',
+      version: 1,
+      payload: '   --PAYLOAD--   ',
+      metadata: {
+        job_number: 1,
+        job_commit: 'abc'
+      }
+    })
+
     const commit: DefaultLogFields = {
       hash: 'f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
       date: 'not relevant',
       message: dummyNewJobCommitSubjectText(),
       refs: 'not relevant',
-      body: '{"payload":"   --PAYLOAD--   "}',
+      body: bodyText,
       author_name: 'not relevant',
       author_email: 'not relevant'
     }
