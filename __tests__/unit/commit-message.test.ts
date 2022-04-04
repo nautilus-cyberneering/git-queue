@@ -4,7 +4,7 @@ import {CommitSubjectParser} from '../../src/commit-subject-parser'
 import {dummyCommitBodyText} from '../../src/__tests__/helpers'
 
 function dummyCommitSubjectText(): string {
-  return '📝🈺: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+  return '📝🈺: queue-name: job.id.1 job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
 }
 
 describe('CommitMessage', () => {

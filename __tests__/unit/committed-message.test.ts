@@ -10,11 +10,11 @@ import {DefaultLogFields} from 'simple-git'
 import {dummyCommitBodyText} from '../../src/__tests__/helpers'
 
 function dummyNewJobCommitSubjectText(): string {
-  return '📝🈺: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+  return '📝🈺: queue-name: job.id.1 job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
 }
 
 function dummyJobFinishedCommitSubjectText(): string {
-  return '📝✅: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+  return '📝✅: queue-name: job.id.1 job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
 }
 
 describe('Queue', () => {
@@ -154,7 +154,7 @@ describe('Queue', () => {
         hash: 'f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
         date: 'not relevant',
         message:
-          '📝INVALID: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
+          '📝INVALID: queue-name: job.id.1 job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
         refs: 'not relevant',
         body: 'not relevant',
         author_name: 'not relevant',

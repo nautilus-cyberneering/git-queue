@@ -3,14 +3,17 @@ import {NewJobCommittedMessage} from './committed-message'
 import {Nullable} from './nullable'
 
 const NO_JOB = '--no-job--'
+export const NO_JOB_ID = -1
 
 export class Job implements Nullable {
   private payload: string
   private commitHash: CommitHash
+  private id: Number
 
-  constructor(payload: string, commitHash: CommitHash) {
+  constructor(payload: string, commitHash: CommitHash, id: Number) {
     this.payload = payload
     this.commitHash = commitHash
+    this.id = id
   }
 
   static fromCommittedMessage(
@@ -18,7 +21,8 @@ export class Job implements Nullable {
   ): Job {
     return new Job(
       newJobCommittedMessage.payload(),
-      newJobCommittedMessage.commitHash()
+      newJobCommittedMessage.commitHash(),
+      NO_JOB_ID
     )
   }
 
@@ -30,6 +34,10 @@ export class Job implements Nullable {
     return this.commitHash
   }
 
+  getId(): Number {
+    return this.id
+  }
+
   isNull(): boolean {
     return this.payload === NO_JOB && this.commitHash.isNull()
   }
@@ -37,11 +45,12 @@ export class Job implements Nullable {
   equalsTo(other: Job): boolean {
     return (
       this.payload === other.getPayload() &&
-      this.commitHash.equalsTo(other.getCommitHash())
+      this.commitHash.equalsTo(other.getCommitHash()) &&
+      this.id === other.id
     )
   }
 }
 
 export function nullJob(): Job {
-  return new Job(NO_JOB, nullCommitHash())
+  return new Job(NO_JOB, nullCommitHash(), NO_JOB_ID)
 }

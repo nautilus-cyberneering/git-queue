@@ -3,11 +3,11 @@ import {CommitSubjectParser} from '../../src/commit-subject-parser'
 import {QueueName} from '../../src/queue-name'
 
 function dummyCommitSubjectText(): string {
-  return '📝🈺: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+  return '📝🈺: queue-name: job.id.1 job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
 }
 
 function dummyCommitSubjectText2(): string {
-  return '📝🈺: queue-name: job.ref.69062fe1104d187277aaec72ea56e8d993daca33'
+  return '📝🈺: queue-name: job.id.1 job.ref.69062fe1104d187277aaec72ea56e8d993daca33'
 }
 
 describe('CommitSubject', () => {
@@ -25,7 +25,7 @@ describe('CommitSubject', () => {
     expect(commit.belongsToQueue(new QueueName('queue-name-two'))).toBe(false)
 
     const commit2 = CommitSubjectParser.parseText(
-      '📝🈺: library aaa update: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+      '📝🈺: library aaa update: job.id.1 job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
     )
     expect(commit2.belongsToQueue(new QueueName('library aaa update'))).toBe(
       true

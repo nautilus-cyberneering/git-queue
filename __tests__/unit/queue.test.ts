@@ -1,3 +1,4 @@
+import {Job, NO_JOB_ID} from '../../src/job'
 import {
   createInitializedGitRepo,
   createInitializedTempGnuPGHomeDir,
@@ -7,12 +8,10 @@ import {
   getSecondToLatestCommitHash,
   gitLogForLatestCommit
 } from '../../src/__tests__/helpers'
-
 import {CommitAuthor} from '../../src/commit-author'
 import {CommitInfo} from '../../src/commit-info'
 import {CommitOptions} from '../../src/commit-options'
 import {GitRepo} from '../../src/git-repo'
-import {Job} from '../../src/job'
 import {Queue} from '../../src/queue'
 import {QueueName} from '../../src/queue-name'
 import {SigningKeyId} from '../../src/signing-key-id'
@@ -92,7 +91,7 @@ describe('Queue', () => {
     const job = await queue.createJob(dummyPayload())
 
     const commitHash = getLatestCommitHash(queue.getGitRepoDir())
-    expect(job.equalsTo(new Job(dummyPayload(), commitHash))).toBe(true)
+    expect(job.equalsTo(new Job(dummyPayload(), commitHash, 0))).toBe(true)
   })
 
   it('should fail when trying to create a job if the previous job has not finished yet', async () => {
@@ -275,7 +274,9 @@ describe('Queue', () => {
       const nextJob = queue.getNextJob()
 
       const latestCommit = getLatestCommitHash(queue.getGitRepoDir())
-      expect(nextJob.equalsTo(new Job(dummyPayload(), latestCommit))).toBe(true)
+      expect(
+        nextJob.equalsTo(new Job(dummyPayload(), latestCommit, NO_JOB_ID))
+      ).toBe(true)
     })
   })
 
@@ -298,9 +299,13 @@ describe('Queue', () => {
     const nextJob2 = queue2.getNextJob()
 
     const newJob1Commit = getSecondToLatestCommitHash(queue1.getGitRepoDir())
-    expect(nextJob1.equalsTo(new Job(payload1, newJob1Commit))).toBe(true)
+    expect(nextJob1.equalsTo(new Job(payload1, newJob1Commit, NO_JOB_ID))).toBe(
+      true
+    )
 
     const latestCommit = getLatestCommitHash(queue2.getGitRepoDir())
-    expect(nextJob2.equalsTo(new Job(payload2, latestCommit))).toBe(true)
+    expect(nextJob2.equalsTo(new Job(payload2, latestCommit, NO_JOB_ID))).toBe(
+      true
+    )
   })
 })

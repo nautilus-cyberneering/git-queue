@@ -8,25 +8,37 @@ describe('Job', () => {
   it('should contain a payload', () => {
     const job = new Job(
       'payload',
-      new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf')
+      new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf'),
+      1
     )
 
     expect(job.getPayload()).toBe('payload')
   })
 
-  it('should contain a commit has where the job was created', () => {
+  it('should contain a commit hash where the job was created', () => {
     const commitHash = new CommitHash(
       'a362802b98c78df052a78796a1a7cde60a5c1faf'
     )
-    const job = new Job('payload', commitHash)
+    const job = new Job('payload', commitHash, 1)
 
     expect(job.getCommitHash()).toBe(commitHash)
+  })
+
+  it('should contain a Job Id', () => {
+    const job = new Job(
+      'payload',
+      new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf'),
+      42
+    )
+
+    expect(job.getId()).toBe(42)
   })
 
   it('should be nullable', () => {
     const job = new Job(
       'payload',
-      new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf')
+      new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf'),
+      0
     )
 
     expect(job.getPayload()).toBe('payload')
@@ -35,17 +47,20 @@ describe('Job', () => {
   it('should compare two jobs', () => {
     const job1 = new Job(
       'payload',
-      new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf')
+      new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf'),
+      0
     )
 
     const job2 = new Job(
       'payload',
-      new CommitHash('8f51fa0a019b277103acc5ef75c52dfb2a9bcce3')
+      new CommitHash('8f51fa0a019b277103acc5ef75c52dfb2a9bcce3'),
+      0
     )
 
     const job3 = new Job(
       'payload3',
-      new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf')
+      new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf'),
+      0
     )
 
     expect(job1.equalsTo(job1)).toBe(true)

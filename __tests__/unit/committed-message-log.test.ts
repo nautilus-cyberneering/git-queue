@@ -5,7 +5,7 @@ import {CommittedMessageLog} from '../../src/committed-message-log'
 import {DefaultLogFields} from 'simple-git'
 
 function dummyNewJobCommitSubjectText(): string {
-  return '📝🈺: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+  return '📝🈺: queue-name: job.id.1 job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
 }
 
 function dummySimpleGitCommit(
