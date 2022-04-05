@@ -70,7 +70,7 @@ jobs:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'library update - library-aaa'
           action: 'create-job'
-          job_payload: '{\"field\": \"value\", \"state\": \"pending\"}'
+          job_payload: '{"field": "value", "state": "pending"}'
 
       - name: Debug
         run: |
@@ -85,7 +85,7 @@ jobs:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'library update - library-aaa'
           action: 'start-job'
-          job_payload: '{\"field\": \"value\", \"state\": \"started\"}'
+          job_payload: '{"field": "value", "state": "started"}'
 
       - name: Debug
         run: |
@@ -118,7 +118,7 @@ jobs:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'library update - library-aaa'
           action: 'finish-job'
-          job_payload: '{\"field\": \"value\", \"state\": \"finished\"}'
+          job_payload: '{"field": "value", "state": "finished"}'
 
       - name: Debug
         run: |
@@ -174,7 +174,7 @@ jobs:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'library update - library-aaa'
           action: 'create-job'
-          job_payload: '{\"field\": \"value\", \"state\": \"pending\"}'
+          job_payload: '{"field": "value", "state": "pending"}'
 
       - name: Debug
         run: |
@@ -189,7 +189,7 @@ jobs:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'library update - library-aaa'
           action: 'start-job'
-          job_payload: '{\"field\": \"value\", \"state\": \"started\"}'
+          job_payload: '{"field": "value", "state": "started"}'
 
       - name: Debug
         run: |
@@ -222,7 +222,7 @@ jobs:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'library update - library-aaa'
           action: 'finish-job'
-          job_payload: '{\"field\": \"value\", \"state\": \"finished\"}'
+          job_payload: '{"field": "value", "state": "finished"}'
 
       - name: Debug
         run: |
