@@ -3432,7 +3432,7 @@ function setup(env) {
 			namespaces = split[i].replace(/\*/g, '.*?');
 
 			if (namespaces[0] === '-') {
-				createDebug.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
+				createDebug.skips.push(new RegExp('^' + namespaces.slice(1) + '$'));
 			} else {
 				createDebug.names.push(new RegExp('^' + namespaces + '$'));
 			}
@@ -6544,7 +6544,7 @@ var init_StatusSummary = __esm({
       }]
     ]);
     parseStatusSummary = function(text) {
-      const lines = text.trim().split("\n");
+      const lines = text.trim().split(NULL);
       const status = new StatusSummary();
       for (let i = 0, l = lines.length; i < l; i++) {
         splitLine(status, lines[i]);
@@ -6556,17 +6556,27 @@ var init_StatusSummary = __esm({
 
 // src/lib/tasks/status.ts
 function statusTask(customArgs) {
+  const commands = [
+    "status",
+    "--porcelain",
+    "-b",
+    "-u",
+    "--null",
+    ...customArgs.filter((arg) => !ignoredOptions.includes(arg))
+  ];
   return {
     format: "utf-8",
-    commands: ["status", "--porcelain", "-b", "-u", ...customArgs],
+    commands,
     parser(text) {
       return parseStatusSummary(text);
     }
   };
 }
+var ignoredOptions;
 var init_status = __esm({
   "src/lib/tasks/status.ts"() {
     init_StatusSummary();
+    ignoredOptions = ["--null", "-z"];
   }
 });
 
@@ -6948,13 +6958,16 @@ __export(clone_exports, {
   cloneMirrorTask: () => cloneMirrorTask,
   cloneTask: () => cloneTask
 });
+function disallowedCommand(command) {
+  return /^--upload-pack(=|$)/.test(command);
+}
 function cloneTask(repo, directory, customArgs) {
   const commands = ["clone", ...customArgs];
-  if (typeof repo === "string") {
-    commands.push(repo);
-  }
-  if (typeof directory === "string") {
-    commands.push(directory);
+  filterString(repo) && commands.push(repo);
+  filterString(directory) && commands.push(directory);
+  const banned = commands.find(disallowedCommand);
+  if (banned) {
+    return configurationErrorTask(`git.fetch: potential exploit argument blocked.`);
   }
   return straightThroughStringTask(commands);
 }
@@ -7103,10 +7116,17 @@ var fetch_exports = {};
 __export(fetch_exports, {
   fetchTask: () => fetchTask
 });
+function disallowedCommand2(command) {
+  return /^--upload-pack(=|$)/.test(command);
+}
 function fetchTask(remote, branch, customArgs) {
   const commands = ["fetch", ...customArgs];
   if (remote && branch) {
     commands.push(remote, branch);
+  }
+  const banned = commands.find(disallowedCommand2);
+  if (banned) {
+    return configurationErrorTask(`git.fetch: potential exploit argument blocked.`);
   }
   return {
     commands,
@@ -7117,6 +7137,7 @@ function fetchTask(remote, branch, customArgs) {
 var init_fetch = __esm({
   "src/lib/tasks/fetch.ts"() {
     init_parse_fetch();
+    init_task();
   }
 });
 
