@@ -133,7 +133,7 @@ jobs:
           git show --pretty="fuller" --show-signature ${{ steps.finish-job.outputs.job_commit }}
 
       - name: Upload test git dir
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Integration test git dir
           path: ${{ runner.temp }}/temp_git_dir
@@ -237,7 +237,7 @@ jobs:
           git show --pretty="fuller" --show-signature ${{ steps.finish-job.outputs.job_commit }}
 
       - name: Upload test git dir
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Integration test git dir
           path: ${{ runner.temp }}/temp_git_dir
