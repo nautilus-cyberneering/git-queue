@@ -1,5 +1,6 @@
 # Git Queue
 
+<!-- markdownlint-disable-next-line MD013 -->
 [![Check dist/](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/check-dist.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/check-dist.yml) [![MegaLinter](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/mega-linter.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/mega-linter.yml) [![Test](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test.yml) [![Test build](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test-build.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test-build.yml)
 
 This GitHub Action is a job queue with the following characteristics:
