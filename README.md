@@ -251,13 +251,7 @@ INPUT_ACTION="next-job" \
   node dist/index.js
 ```
 
-Run the test workflow locally with `act`:
-
-```shell
-act -w ./.github/workflows/test.yml -j build
-```
-
-> NOTE: act is not working because [they have not released yet](https://github.com/nektos/act/issues/910#issuecomment-1017536955) the new version supporting `node16`.
+You can run workflows locally with [act](https://github.com/nektos/act).
 
 ## Release
 
