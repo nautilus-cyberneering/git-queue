@@ -27,7 +27,7 @@ import {CommittedMessageLog} from './committed-message-log'
 import {GitRepo} from './git-repo'
 import {GitRepoDir} from './git-repo-dir'
 import {QueueName} from './queue-name'
-import {ShortCommitHash} from './short-commit-hash'
+import {CommitHash} from './commit-hash'
 
 export class Queue {
   private readonly name: QueueName
@@ -115,8 +115,8 @@ export class Queue {
 
     await this.loadMessagesFromGit()
 
-    const committedMessage = this.committedMessages.findByShortCommitHash(
-      new ShortCommitHash(commitResult.commit)
+    const committedMessage = this.committedMessages.findByCommitHash(
+      new CommitHash(commitResult.commit)
     )
 
     return committedMessage.commitInfo()

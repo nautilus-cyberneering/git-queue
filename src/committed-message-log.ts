@@ -4,7 +4,6 @@ import {DefaultLogFields, ListLogLine} from 'simple-git'
 import {CommitHash} from './commit-hash'
 import {CommitInfo} from './commit-info'
 import {QueueName} from './queue-name'
-import {ShortCommitHash} from './short-commit-hash'
 
 import {commitSubjectBelongsToAQueue} from './commit-subject-parser'
 
@@ -62,18 +61,6 @@ export class CommittedMessageLog {
   findByCommitHash(commitHash: CommitHash): CommittedMessage {
     const commits = this.messages.filter(message =>
       message.commitHash().equalsTo(commitHash)
-    )
-
-    if (commits.length === 0) {
-      return nullMessage()
-    }
-
-    return commits[0]
-  }
-
-  findByShortCommitHash(shortCommitHash: ShortCommitHash): CommittedMessage {
-    const commits = this.messages.filter(message =>
-      message.shortCommitHash().equalsTo(shortCommitHash)
     )
 
     if (commits.length === 0) {

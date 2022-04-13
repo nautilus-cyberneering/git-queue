@@ -1,6 +1,5 @@
 import {InvalidHashError} from './errors'
 import {Nullable} from './nullable'
-import {ShortCommitHash} from './short-commit-hash'
 
 const NO_COMMIT_HASH = '--no-commit-hash--'
 
@@ -22,10 +21,6 @@ export class CommitHash implements Nullable {
 
   getHash(): string {
     return this.value
-  }
-
-  getShortHash(): ShortCommitHash {
-    return new ShortCommitHash(this.value.substring(0, 7))
   }
 
   isNull(): boolean {
