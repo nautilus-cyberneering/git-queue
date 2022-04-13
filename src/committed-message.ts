@@ -1,4 +1,5 @@
 import {CommitInfo, nullCommitInfo} from './commit-info'
+import {CommitBody} from './commit-body'
 import {CommitHash} from './commit-hash'
 import {CommitSubject} from './commit-subject'
 import {CommitSubjectParser} from './commit-subject-parser'
@@ -49,7 +50,7 @@ export abstract class CommittedMessage implements Nullable {
   }
 
   payload(): string {
-    return this.commit.body.trim()
+    return new CommitBody(this.commit.body).getPayload()
   }
 
   isNull(): boolean {

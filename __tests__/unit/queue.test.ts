@@ -288,13 +288,8 @@ describe('Queue', () => {
       commitOptionsForTests()
     )
 
-    const payload1 = JSON.stringify({
-      field1: 'value1'
-    })
-
-    const payload2 = JSON.stringify({
-      field1: 'value2'
-    })
+    const payload1 = 'value1'
+    const payload2 = 'value2'
 
     await queue1.createJob(payload1)
     await queue2.createJob(payload2)
