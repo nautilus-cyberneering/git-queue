@@ -37,6 +37,7 @@ You can use it if:
 
 ### Why to use it
 
+<!-- markdown-link-check-disable-next-line -->
 There are other alternatives like [GitHub concurrency groups](https://docs.github.com/en/actions/using-jobs/using-concurrency), but:
 
 - In some cases, it could be convenient not to couple your application to the GitHub infrastructure.
@@ -65,6 +66,7 @@ The problem this action was trying to solve initially was updating a submodule i
 
 It requires to enable only fast forward merges.
 
+<!-- markdown-link-check-disable-next-line -->
 It works on Linux, macOS and Windows [virtual environments](https://help.github.com/en/articles/virtual-environments-for-github-actions#supported-virtual-environments-and-hardware-resources).
 
 The action has 3 different commands (specified by the input `action`):
