@@ -20,6 +20,7 @@ Formal definition:
   - [Outputs](#outputs)
   - [Environment variables](#environment-variables)
 - [Development](#development)
+  - [Commit conventions](#commit-conventions)
 - [Release](#release)
 - [Credits](#credits)
 - [License](#license)
@@ -256,7 +257,29 @@ INPUT_ACTION="next-job" \
 
 You can run workflows locally with [act](https://github.com/nektos/act).
 
+### Commit conventions
+
+General conventions:
+
+- We follow [Conventional Commits Specification](https://www.conventionalcommits.org/en/v1.0.0/).
+- When we integrate a new dependency, or upgrade dependencies, each indivisible dependency change (update, remove, add) should have it's own commit including:
+  - Updated `package.json` file.
+  - Updated `yarn.lock`.
+  - Regenerated `dist` directory.
+  - Updated documentation, if needed.
+  - Minimal changes to the code to accommodate the change in the dependencies.
+
+Conventions related to releases:
+
+- Every commit should build the application with: `yarn build && yarn package` because every single commit should be executable on a third party workflow and the action has to be already built in the `dist` folder.
+<!-- markdownlint-disable-next-line MD013 -->
+- In some cases, commits are generated automatically, for example by the `dependabot` or `MegaLinter` (if enabled). Those bots do not build and package the action, so whoever is responsible for merging those commits should change them to include the built app. That could be a very tedious work so very often could be more convenient just to re-create manually those changes including the built app (for example when you are updating some node packages at the same time). The same logic applies to signed commits (`dependabot` creates signed commits but `MegaLinter` does not), that's one of the the reasons why auto-fix is not enabled for `MegaLinter`.
+<!-- markdownlint-disable-next-line MD013 -->
+- For some commits, the `dist` folder might not be affected, which means if you run `yarn build && yarn package` again the commit content for the `dist` folder is not going to change. In such cases, you could merge `dependabot` commits directly from the GitHub interface. That happens when `dependabot` upgrades an action in a workflow. In general, changes in `.github` folder do not affect the `dist` folder.
+
 ## Release
+
+Please read [commit conventions](#commit-conventions) related to releases.
 
 ### Publish to a distribution branch
 
