@@ -1,5 +1,6 @@
 # Git Queue
 
+<!-- markdownlint-disable-next-line MD013 -->
 [![Check dist/](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/check-dist.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/check-dist.yml) [![MegaLinter](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/mega-linter.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/mega-linter.yml) [![Test](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test.yml) [![Test build](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test-build.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test-build.yml)
 
 This GitHub Action is a job queue with the following characteristics:
@@ -37,6 +38,7 @@ You can use it if:
 
 ### Why to use it
 
+<!-- markdown-link-check-disable-next-line -->
 There are other alternatives like [GitHub concurrency groups](https://docs.github.com/en/actions/using-jobs/using-concurrency), but:
 
 - In some cases, it could be convenient not to couple your application to the GitHub infrastructure.
@@ -65,6 +67,7 @@ The problem this action was trying to solve initially was updating a submodule i
 
 It requires to enable only fast forward merges.
 
+<!-- markdown-link-check-disable-next-line -->
 It works on Linux, macOS and Windows [virtual environments](https://help.github.com/en/articles/virtual-environments-for-github-actions#supported-virtual-environments-and-hardware-resources).
 
 The action has 3 different commands (specified by the input `action`):
