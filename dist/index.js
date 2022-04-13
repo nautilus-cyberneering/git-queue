@@ -123,7 +123,6 @@ CommitBody.parse = new jtd_1.default().compileParser(CommitBodySchema);
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nullCommitHash = exports.CommitHash = void 0;
 const errors_1 = __nccwpck_require__(9292);
-const short_commit_hash_1 = __nccwpck_require__(386);
 const NO_COMMIT_HASH = '--no-commit-hash--';
 class CommitHash {
     constructor(value) {
@@ -139,9 +138,6 @@ class CommitHash {
     }
     getHash() {
         return this.value;
-    }
-    getShortHash() {
-        return new short_commit_hash_1.ShortCommitHash(this.value.substring(0, 7));
     }
     isNull() {
         return this.value === NO_COMMIT_HASH;
@@ -210,7 +206,7 @@ exports.nullCommitInfo = nullCommitInfo;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommitMessage = void 0;
 const commit_body_1 = __nccwpck_require__(3801);
-const commit_subject_parser_1 = __nccwpck_require__(8884);
+const commit_subject_parser_1 = __nccwpck_require__(386);
 class CommitMessage {
     constructor(subject, body) {
         this.subject = subject;
@@ -264,7 +260,7 @@ exports.CommitOptions = CommitOptions;
 
 /***/ }),
 
-/***/ 8884:
+/***/ 386:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -352,7 +348,7 @@ exports.CommitSubjectParser = CommitSubjectParser;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommitSubject = void 0;
-const commit_subject_parser_1 = __nccwpck_require__(8884);
+const commit_subject_parser_1 = __nccwpck_require__(386);
 /* The first line of a commit message.
  * Format: {COMMIT_SUBJECT_PREFIX}{MESSAGE_KEY}: {QUEUE_NAME}: job.ref.{COMMIT_HASH}
  * Example: 📝✅: queue_name: job.ref.1e31b549c630f806961a291b4e3d4a1471f37490
@@ -399,7 +395,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommittedMessageLog = void 0;
 const committed_message_1 = __nccwpck_require__(6537);
 const commit_info_1 = __nccwpck_require__(4136);
-const commit_subject_parser_1 = __nccwpck_require__(8884);
+const commit_subject_parser_1 = __nccwpck_require__(386);
 /**
  * A readonly list of ordered commit messages.
  * A memory version of `git log` command containing only queue commits.
@@ -438,13 +434,6 @@ class CommittedMessageLog {
         }
         return commits[0];
     }
-    findByShortCommitHash(shortCommitHash) {
-        const commits = this.messages.filter(message => message.shortCommitHash().equalsTo(shortCommitHash));
-        if (commits.length === 0) {
-            return (0, committed_message_1.nullMessage)();
-        }
-        return commits[0];
-    }
     filterCommitsByQueue(queueName) {
         const filteredMessages = this.messages.filter(committedMessage => committedMessage.belongsToQueue(queueName));
         return new CommittedMessageLog(filteredMessages);
@@ -464,7 +453,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nullMessage = exports.JobStartedCommittedMessage = exports.JobFinishedCommittedMessage = exports.NewJobCommittedMessage = exports.NullCommittedMessage = exports.CommittedMessage = void 0;
 const commit_info_1 = __nccwpck_require__(4136);
 const commit_body_1 = __nccwpck_require__(3801);
-const commit_subject_parser_1 = __nccwpck_require__(8884);
+const commit_subject_parser_1 = __nccwpck_require__(386);
 const errors_1 = __nccwpck_require__(9292);
 class CommittedMessage {
     constructor(commit) {
@@ -490,9 +479,6 @@ class CommittedMessage {
     }
     commitHash() {
         return this.commit.hash;
-    }
-    shortCommitHash() {
-        return this.commit.hash.getShortHash();
     }
     commitSubject() {
         return commit_subject_parser_1.CommitSubjectParser.parseText(this.commit.message);
@@ -1352,7 +1338,7 @@ const commit_body_1 = __nccwpck_require__(3801);
 const commit_message_1 = __nccwpck_require__(1961);
 const commit_subject_1 = __nccwpck_require__(8798);
 const committed_message_log_1 = __nccwpck_require__(6472);
-const short_commit_hash_1 = __nccwpck_require__(386);
+const commit_hash_1 = __nccwpck_require__(5533);
 class Queue {
     constructor(name, gitRepo, commitOptions) {
         this.name = name;
@@ -1410,7 +1396,7 @@ class Queue {
             const commitMessage = this.buildCommitMessage(message);
             const commitResult = yield this.gitRepo.commit(commitMessage, this.commitOptions);
             yield this.loadMessagesFromGit();
-            const committedMessage = this.committedMessages.findByShortCommitHash(new short_commit_hash_1.ShortCommitHash(commitResult.commit));
+            const committedMessage = this.committedMessages.findByCommitHash(new commit_hash_1.CommitHash(commitResult.commit));
             return committedMessage.commitInfo();
         });
     }
@@ -1482,52 +1468,6 @@ class Queue {
     }
 }
 exports.Queue = Queue;
-
-
-/***/ }),
-
-/***/ 386:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.nullShortCommitHash = exports.ShortCommitHash = void 0;
-const errors_1 = __nccwpck_require__(9292);
-const NO_SHORT_COMMIT_HASH = '--no-short-commit-hash--';
-/**
- * 7-character commit hash
- */
-class ShortCommitHash {
-    constructor(value) {
-        if (value !== NO_SHORT_COMMIT_HASH) {
-            this.guardThatShortHashValueIsValid(value);
-        }
-        this.value = value;
-    }
-    guardThatShortHashValueIsValid(value) {
-        if (!RegExp('^[0-9a-f]{7}$').test(value)) {
-            throw new errors_1.InvalidShortHashError(value);
-        }
-    }
-    getHash() {
-        return this.value;
-    }
-    isNull() {
-        return this.value === NO_SHORT_COMMIT_HASH;
-    }
-    equalsTo(other) {
-        return this.value === other.value;
-    }
-    toString() {
-        return this.value;
-    }
-}
-exports.ShortCommitHash = ShortCommitHash;
-function nullShortCommitHash() {
-    return new ShortCommitHash(NO_SHORT_COMMIT_HASH);
-}
-exports.nullShortCommitHash = nullShortCommitHash;
 
 
 /***/ }),
@@ -11550,6 +11490,101 @@ var init_change_working_directory = __esm({
   }
 });
 
+// src/lib/parsers/parse-commit.ts
+function parseCommitResult(stdOut) {
+  const result = {
+    author: null,
+    branch: "",
+    commit: "",
+    root: false,
+    summary: {
+      changes: 0,
+      insertions: 0,
+      deletions: 0
+    }
+  };
+  return parseStringResponse(result, parsers, stdOut);
+}
+var parsers;
+var init_parse_commit = __esm({
+  "src/lib/parsers/parse-commit.ts"() {
+    init_utils();
+    parsers = [
+      new LineParser(/^\[([^\s]+)( \([^)]+\))? ([^\]]+)/, (result, [branch, root, commit]) => {
+        result.branch = branch;
+        result.commit = commit;
+        result.root = !!root;
+      }),
+      new LineParser(/\s*Author:\s(.+)/i, (result, [author]) => {
+        const parts = author.split("<");
+        const email = parts.pop();
+        if (!email || !email.includes("@")) {
+          return;
+        }
+        result.author = {
+          email: email.substr(0, email.length - 1),
+          name: parts.join("<").trim()
+        };
+      }),
+      new LineParser(/(\d+)[^,]*(?:,\s*(\d+)[^,]*)(?:,\s*(\d+))/g, (result, [changes, insertions, deletions]) => {
+        result.summary.changes = parseInt(changes, 10) || 0;
+        result.summary.insertions = parseInt(insertions, 10) || 0;
+        result.summary.deletions = parseInt(deletions, 10) || 0;
+      }),
+      new LineParser(/^(\d+)[^,]*(?:,\s*(\d+)[^(]+\(([+-]))?/, (result, [changes, lines, direction]) => {
+        result.summary.changes = parseInt(changes, 10) || 0;
+        const count = parseInt(lines, 10) || 0;
+        if (direction === "-") {
+          result.summary.deletions = count;
+        } else if (direction === "+") {
+          result.summary.insertions = count;
+        }
+      })
+    ];
+  }
+});
+
+// src/lib/tasks/commit.ts
+var commit_exports = {};
+__export(commit_exports, {
+  commitTask: () => commitTask,
+  default: () => commit_default
+});
+function commitTask(message, files, customArgs) {
+  const commands = [
+    "-c",
+    "core.abbrev=40",
+    "commit",
+    ...prefixedArray(message, "-m"),
+    ...files,
+    ...customArgs
+  ];
+  return {
+    commands,
+    format: "utf-8",
+    parser: parseCommitResult
+  };
+}
+function commit_default() {
+  return {
+    commit(message, ...rest) {
+      const next = trailingFunctionArgument(arguments);
+      const task = rejectDeprecatedSignatures(message) || commitTask(asArray(message), asArray(filterType(rest[0], filterStringOrStringArray, [])), [...filterType(rest[1], filterArray, []), ...getTrailingOptions(arguments, 0, true)]);
+      return this._runTask(task, next);
+    }
+  };
+  function rejectDeprecatedSignatures(message) {
+    return !filterStringOrStringArray(message) && configurationErrorTask(`git.commit: requires the commit message to be supplied as a string/string[]`);
+  }
+}
+var init_commit = __esm({
+  "src/lib/tasks/commit.ts"() {
+    init_parse_commit();
+    init_utils();
+    init_task();
+  }
+});
+
 // src/lib/tasks/hash-object.ts
 function hashObjectTask(filePath, write) {
   const commands = ["hash-object", filePath];
@@ -11979,14 +12014,14 @@ var init_parse_remote_objects = __esm({
 
 // src/lib/parsers/parse-remote-messages.ts
 function parseRemoteMessages(_stdOut, stdErr) {
-  return parseStringResponse({ remoteMessages: new RemoteMessageSummary() }, parsers, stdErr);
+  return parseStringResponse({ remoteMessages: new RemoteMessageSummary() }, parsers2, stdErr);
 }
-var parsers, RemoteMessageSummary;
+var parsers2, RemoteMessageSummary;
 var init_parse_remote_messages = __esm({
   "src/lib/parsers/parse-remote-messages.ts"() {
     init_utils();
     init_parse_remote_objects();
-    parsers = [
+    parsers2 = [
       new RemoteLineParser(/^remote:\s*(.+)$/, (result, [text]) => {
         result.remoteMessages.all.push(text.trim());
         return false;
@@ -12016,7 +12051,7 @@ function parsePullErrorResult(stdOut, stdErr) {
   const pullError = parseStringResponse(new PullFailedSummary(), errorParsers, stdOut, stdErr);
   return pullError.message && pullError;
 }
-var FILE_UPDATE_REGEX, SUMMARY_REGEX, ACTION_REGEX, parsers2, errorParsers, parsePullDetail, parsePullResult;
+var FILE_UPDATE_REGEX, SUMMARY_REGEX, ACTION_REGEX, parsers3, errorParsers, parsePullDetail, parsePullResult;
 var init_parse_pull = __esm({
   "src/lib/parsers/parse-pull.ts"() {
     init_PullSummary();
@@ -12025,7 +12060,7 @@ var init_parse_pull = __esm({
     FILE_UPDATE_REGEX = /^\s*(.+?)\s+\|\s+\d+\s*(\+*)(-*)/;
     SUMMARY_REGEX = /(\d+)\D+((\d+)\D+\(\+\))?(\D+(\d+)\D+\(-\))?/;
     ACTION_REGEX = /^(create|delete) mode \d+ (.+)/;
-    parsers2 = [
+    parsers3 = [
       new LineParser(FILE_UPDATE_REGEX, (result, [file, insertions, deletions]) => {
         result.files.push(file);
         if (insertions) {
@@ -12060,7 +12095,7 @@ var init_parse_pull = __esm({
       })
     ];
     parsePullDetail = (stdOut, stdErr) => {
-      return parseStringResponse(new PullSummary(), parsers2, stdOut, stdErr);
+      return parseStringResponse(new PullSummary(), parsers3, stdOut, stdErr);
     };
     parsePullResult = (stdOut, stdErr) => {
       return Object.assign(new PullSummary(), parsePullDetail(stdOut, stdErr), parseRemoteMessages(stdOut, stdErr));
@@ -12069,13 +12104,13 @@ var init_parse_pull = __esm({
 });
 
 // src/lib/parsers/parse-merge.ts
-var parsers3, parseMergeResult, parseMergeDetail;
+var parsers4, parseMergeResult, parseMergeDetail;
 var init_parse_merge = __esm({
   "src/lib/parsers/parse-merge.ts"() {
     init_MergeSummary();
     init_utils();
     init_parse_pull();
-    parsers3 = [
+    parsers4 = [
       new LineParser(/^Auto-merging\s+(.+)$/, (summary, [autoMerge]) => {
         summary.merges.push(autoMerge);
       }),
@@ -12096,7 +12131,7 @@ var init_parse_merge = __esm({
       return Object.assign(parseMergeDetail(stdOut, stdErr), parsePullResult(stdOut, stdErr));
     };
     parseMergeDetail = (stdOut) => {
-      return parseStringResponse(new MergeSummaryDetail(), parsers3, stdOut);
+      return parseStringResponse(new MergeSummaryDetail(), parsers4, stdOut);
     };
   }
 });
@@ -12141,12 +12176,12 @@ function pushResultPushedItem(local, remote, status) {
     remote
   };
 }
-var parsers4, parsePushResult, parsePushDetail;
+var parsers5, parsePushResult, parsePushDetail;
 var init_parse_push = __esm({
   "src/lib/parsers/parse-push.ts"() {
     init_utils();
     init_parse_remote_messages();
-    parsers4 = [
+    parsers5 = [
       new LineParser(/^Pushing to (.+)$/, (result, [repo]) => {
         result.repo = repo;
       }),
@@ -12184,7 +12219,7 @@ var init_parse_push = __esm({
       return __spreadValues(__spreadValues({}, pushDetail), responseDetail);
     };
     parsePushDetail = (stdOut, stdErr) => {
-      return parseStringResponse({ pushed: [] }, parsers4, stdOut, stdErr);
+      return parseStringResponse({ pushed: [] }, parsers5, stdOut, stdErr);
     };
   }
 });
@@ -12275,7 +12310,7 @@ function splitLine(result, lineStr) {
   }
   function data(index, workingDir, path) {
     const raw = `${index}${workingDir}`;
-    const handler = parsers5.get(raw);
+    const handler = parsers6.get(raw);
     if (handler) {
       handler(result, path);
     }
@@ -12284,7 +12319,7 @@ function splitLine(result, lineStr) {
     }
   }
 }
-var StatusSummary, parsers5, parseStatusSummary;
+var StatusSummary, parsers6, parseStatusSummary;
 var init_StatusSummary = __esm({
   "src/lib/responses/StatusSummary.ts"() {
     init_utils();
@@ -12310,7 +12345,7 @@ var init_StatusSummary = __esm({
         };
       }
     };
-    parsers5 = new Map([
+    parsers6 = new Map([
       parser2(" " /* NONE */, "A" /* ADDED */, (result, file) => append(result.created, file)),
       parser2(" " /* NONE */, "D" /* DELETED */, (result, file) => append(result.deleted, file)),
       parser2(" " /* NONE */, "M" /* MODIFIED */, (result, file) => append(result.modified, file)),
@@ -12401,6 +12436,7 @@ var init_simple_git_api = __esm({
   "src/lib/simple-git-api.ts"() {
     init_task_callback();
     init_change_working_directory();
+    init_commit();
     init_config();
     init_grep();
     init_hash_object();
@@ -12473,7 +12509,7 @@ var init_simple_git_api = __esm({
         return this._runTask(statusTask(getTrailingOptions(arguments)), trailingFunctionArgument(arguments));
       }
     };
-    Object.assign(SimpleGitApi.prototype, config_default(), grep_default(), log_default());
+    Object.assign(SimpleGitApi.prototype, commit_default(), config_default(), grep_default(), log_default());
   }
 });
 
@@ -12580,14 +12616,14 @@ var init_BranchDeleteSummary = __esm({
 function hasBranchDeletionError(data, processExitCode) {
   return processExitCode === 1 /* ERROR */ && deleteErrorRegex.test(data);
 }
-var deleteSuccessRegex, deleteErrorRegex, parsers6, parseBranchDeletions;
+var deleteSuccessRegex, deleteErrorRegex, parsers7, parseBranchDeletions;
 var init_parse_branch_delete = __esm({
   "src/lib/parsers/parse-branch-delete.ts"() {
     init_BranchDeleteSummary();
     init_utils();
     deleteSuccessRegex = /(\S+)\s+\(\S+\s([^)]+)\)/;
     deleteErrorRegex = /^error[^']+'([^']+)'/m;
-    parsers6 = [
+    parsers7 = [
       new LineParser(deleteSuccessRegex, (result, [branch, hash]) => {
         const deletion = branchDeletionSuccess(branch, hash);
         result.all.push(deletion);
@@ -12601,7 +12637,7 @@ var init_parse_branch_delete = __esm({
       })
     ];
     parseBranchDeletions = (stdOut, stdErr) => {
-      return parseStringResponse(new BranchDeletionBatch(), parsers6, stdOut, stdErr);
+      return parseStringResponse(new BranchDeletionBatch(), parsers7, stdOut, stdErr);
     };
   }
 });
@@ -12636,14 +12672,14 @@ var init_BranchSummary = __esm({
 
 // src/lib/parsers/parse-branch.ts
 function parseBranchSummary(stdOut) {
-  return parseStringResponse(new BranchSummaryResult(), parsers7, stdOut);
+  return parseStringResponse(new BranchSummaryResult(), parsers8, stdOut);
 }
-var parsers7;
+var parsers8;
 var init_parse_branch = __esm({
   "src/lib/parsers/parse-branch.ts"() {
     init_BranchSummary();
     init_utils();
-    parsers7 = [
+    parsers8 = [
       new LineParser(/^(\*\s)?\((?:HEAD )?detached (?:from|at) (\S+)\)\s+([a-z0-9]+)\s(.*)$/, (result, [current, name, commit, label]) => {
         result.push(!!current, true, name, commit, label);
       }),
@@ -12790,81 +12826,6 @@ var init_clone = __esm({
   "src/lib/tasks/clone.ts"() {
     init_task();
     init_utils();
-  }
-});
-
-// src/lib/parsers/parse-commit.ts
-function parseCommitResult(stdOut) {
-  const result = {
-    author: null,
-    branch: "",
-    commit: "",
-    root: false,
-    summary: {
-      changes: 0,
-      insertions: 0,
-      deletions: 0
-    }
-  };
-  return parseStringResponse(result, parsers8, stdOut);
-}
-var parsers8;
-var init_parse_commit = __esm({
-  "src/lib/parsers/parse-commit.ts"() {
-    init_utils();
-    parsers8 = [
-      new LineParser(/^\[([^\s]+)( \([^)]+\))? ([^\]]+)/, (result, [branch, root, commit]) => {
-        result.branch = branch;
-        result.commit = commit;
-        result.root = !!root;
-      }),
-      new LineParser(/\s*Author:\s(.+)/i, (result, [author]) => {
-        const parts = author.split("<");
-        const email = parts.pop();
-        if (!email || !email.includes("@")) {
-          return;
-        }
-        result.author = {
-          email: email.substr(0, email.length - 1),
-          name: parts.join("<").trim()
-        };
-      }),
-      new LineParser(/(\d+)[^,]*(?:,\s*(\d+)[^,]*)(?:,\s*(\d+))/g, (result, [changes, insertions, deletions]) => {
-        result.summary.changes = parseInt(changes, 10) || 0;
-        result.summary.insertions = parseInt(insertions, 10) || 0;
-        result.summary.deletions = parseInt(deletions, 10) || 0;
-      }),
-      new LineParser(/^(\d+)[^,]*(?:,\s*(\d+)[^(]+\(([+-]))?/, (result, [changes, lines, direction]) => {
-        result.summary.changes = parseInt(changes, 10) || 0;
-        const count = parseInt(lines, 10) || 0;
-        if (direction === "-") {
-          result.summary.deletions = count;
-        } else if (direction === "+") {
-          result.summary.insertions = count;
-        }
-      })
-    ];
-  }
-});
-
-// src/lib/tasks/commit.ts
-var commit_exports = {};
-__export(commit_exports, {
-  commitTask: () => commitTask
-});
-function commitTask(message, files, customArgs) {
-  const commands = ["commit"];
-  message.forEach((m) => commands.push("-m", m));
-  commands.push(...files, ...customArgs);
-  return {
-    commands,
-    format: "utf-8",
-    parser: parseCommitResult
-  };
-}
-var init_commit = __esm({
-  "src/lib/tasks/commit.ts"() {
-    init_parse_commit();
   }
 });
 
@@ -13320,13 +13281,6 @@ var require_git = __commonJS({
           git.checkout(tags.latest, then);
         });
       });
-    };
-    Git2.prototype.commit = function(message, files, options, then) {
-      const next = trailingFunctionArgument2(arguments);
-      if (!filterStringOrStringArray2(message)) {
-        return this._runTask(configurationErrorTask2("git.commit: requires the commit message to be supplied as a string/string[]"), next);
-      }
-      return this._runTask(commitTask2(asArray2(message), asArray2(filterType2(files, filterStringOrStringArray2, [])), [...filterType2(options, filterArray2, []), ...getTrailingOptions2(arguments, 0, true)]), next);
     };
     Git2.prototype.pull = function(remote, branch, options, then) {
       return this._runTask(pullTask2(filterType2(remote, filterString2), filterType2(branch, filterString2), getTrailingOptions2(arguments)), trailingFunctionArgument2(arguments));
