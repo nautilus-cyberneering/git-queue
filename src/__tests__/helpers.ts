@@ -79,9 +79,7 @@ export async function createNotInitializedGitRepo(): Promise<GitRepo> {
 }
 
 export function dummyPayload(): string {
-  return JSON.stringify({
-    field: 'value'
-  })
+  return 'test'
 }
 
 export function gitLogForLatestCommit(gitRepoDir: string): string {
@@ -114,4 +112,16 @@ export function getSecondToLatestCommitHash(
     .toString()
     .trim()
   return new CommitHash(output)
+}
+
+export function dummyCommitBodyText(): string {
+  return JSON.stringify({
+    namespace: 'git-queue.commit-body',
+    version: 1,
+    payload: 'test',
+    metadata: {
+      job_number: 1,
+      job_commit: 'abc'
+    }
+  })
 }

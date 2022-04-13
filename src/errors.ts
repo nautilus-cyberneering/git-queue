@@ -102,3 +102,12 @@ export class InvalidShortHashError extends Error {
     Object.setPrototypeOf(this, InvalidShortHashError.prototype)
   }
 }
+
+export class InvalidCommitBodyError extends Error {
+  constructor(invalidBodyContent: string) {
+    super(
+      `Commit Body does not conform to specification: ${invalidBodyContent}`
+    )
+    Object.setPrototypeOf(this, InvalidCommitBodyError.prototype)
+  }
+}
