@@ -7,6 +7,7 @@ import {
 import {CommitHash} from '../../src/commit-hash'
 import {CommitInfo} from '../../src/commit-info'
 import {DefaultLogFields} from 'simple-git'
+import {dummyCommitBodyText} from '../../src/__tests__/helpers'
 
 function dummyNewJobCommitSubjectText(): string {
   return '📝🈺: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
@@ -109,7 +110,7 @@ describe('Queue', () => {
       date: 'not relevant',
       message: dummyNewJobCommitSubjectText(),
       refs: 'not relevant',
-      body: '--PAYLOAD--',
+      body: dummyCommitBodyText(),
       author_name: 'not relevant',
       author_email: 'not relevant'
     }
@@ -118,25 +119,7 @@ describe('Queue', () => {
       CommitInfo.fromDefaultLogFields(commit)
     )
 
-    expect(message.payload()).toBe('--PAYLOAD--')
-  })
-
-  it('should trim the payload', async () => {
-    const commit: DefaultLogFields = {
-      hash: 'f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
-      date: 'not relevant',
-      message: dummyNewJobCommitSubjectText(),
-      refs: 'not relevant',
-      body: '  --PAYLOAD--  ',
-      author_name: 'not relevant',
-      author_email: 'not relevant'
-    }
-
-    const message = CommittedMessage.fromCommitInfo(
-      CommitInfo.fromDefaultLogFields(commit)
-    )
-
-    expect(message.payload()).toBe('--PAYLOAD--')
+    expect(message.payload()).toBe('test')
   })
 
   it('should have an special empty message which represents NO message', async () => {
