@@ -1144,9 +1144,9 @@ function run() {
                 case ACTION_CREATE_JOB: {
                     const job = yield queue.createJob(inputs.jobPayload);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
-                        context.setOutput('job_created', true);
+                        context.setOutput('job_created', !job.getCommitHash().isNull());
                         context.setOutput('job_commit', job.getCommitHash().toString());
-                        core.info(`job_created: true`);
+                        core.info(`job_created: ${!job.getCommitHash().isNull()}`);
                         core.info(`job_commit: ${job.getCommitHash().toString()}`);
                     }));
                     break;
@@ -1167,9 +1167,9 @@ function run() {
                 case ACTION_START_JOB: {
                     const commit = yield queue.markJobAsStarted(inputs.jobPayload);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
-                        context.setOutput('job_started', true);
+                        context.setOutput('job_started', !commit.hash.isNull());
                         context.setOutput('job_commit', commit.hash.toString());
-                        core.info(`job_started: true`);
+                        core.info(`job_started: ${!commit.hash.isNull()}`);
                         core.info(`job_commit: ${commit.hash.toString()}`);
                     }));
                     break;
@@ -1177,9 +1177,9 @@ function run() {
                 case ACTION_FINISH_JOB: {
                     const commit = yield queue.markJobAsFinished(inputs.jobPayload);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
-                        context.setOutput('job_finished', true);
+                        context.setOutput('job_finished', !commit.hash.isNull());
                         context.setOutput('job_commit', commit.hash.toString());
-                        core.info(`job_finished: true`);
+                        core.info(`job_finished: ${!commit.hash.isNull()}`);
                         core.info(`job_commit: ${commit.hash.toString()}`);
                     }));
                     break;

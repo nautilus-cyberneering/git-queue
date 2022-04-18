@@ -99,10 +99,10 @@ async function run(): Promise<void> {
         const job = await queue.createJob(inputs.jobPayload)
 
         await core.group(`Setting outputs`, async () => {
-          context.setOutput('job_created', true)
+          context.setOutput('job_created', !job.getCommitHash().isNull())
           context.setOutput('job_commit', job.getCommitHash().toString())
 
-          core.info(`job_created: true`)
+          core.info(`job_created: ${!job.getCommitHash().isNull()}`)
           core.info(`job_commit: ${job.getCommitHash().toString()}`)
         })
 
@@ -129,10 +129,10 @@ async function run(): Promise<void> {
         const commit = await queue.markJobAsStarted(inputs.jobPayload)
 
         await core.group(`Setting outputs`, async () => {
-          context.setOutput('job_started', true)
+          context.setOutput('job_started', !commit.hash.isNull())
           context.setOutput('job_commit', commit.hash.toString())
 
-          core.info(`job_started: true`)
+          core.info(`job_started: ${!commit.hash.isNull()}`)
           core.info(`job_commit: ${commit.hash.toString()}`)
         })
 
@@ -142,10 +142,10 @@ async function run(): Promise<void> {
         const commit = await queue.markJobAsFinished(inputs.jobPayload)
 
         await core.group(`Setting outputs`, async () => {
-          context.setOutput('job_finished', true)
+          context.setOutput('job_finished', !commit.hash.isNull())
           context.setOutput('job_commit', commit.hash.toString())
 
-          core.info(`job_finished: true`)
+          core.info(`job_finished: ${!commit.hash.isNull()}`)
           core.info(`job_commit: ${commit.hash.toString()}`)
         })
 
