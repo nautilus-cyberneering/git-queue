@@ -255,6 +255,20 @@ INPUT_ACTION="next-job" \
   node dist/index.js
 ```
 
+Run `TypeScript` linter:
+
+```shell
+yarn format && yarn lint
+```
+
+Run [MegaLinter](https://github.com/megalinter/megalinter) locally:
+
+```shell
+mega-linter-runner -e 'ENABLE=MARKDOWN'
+```
+
+You can use the `-e` option to select the linters you want to execute.
+
 You can run workflows locally with [act](https://github.com/nektos/act).
 
 ### Commit conventions
@@ -268,6 +282,12 @@ General conventions:
   - Regenerated `dist` directory.
   - Updated documentation, if needed.
   - Minimal changes to the code to accommodate the change in the dependencies.
+
+Conventions related to pull requests:
+
+- We only allow rebase merges.
+<!-- markdownlint-disable-next-line MD013 --><!-- markdown-link-check-disable-next-line -->
+- Pull request merges must be done using the console because [GitHub Rebase](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges) does not work exactly like [Git Rebase](https://git-scm.com/docs/git-rebase) and commits are re-created not signed.
 
 Conventions related to releases:
 
