@@ -31,8 +31,8 @@
   "dependencies": {
     "@actions/core": "^1.6.0",
     "@actions/exec": "^1.1.1",
-    "simple-git": "3.6.0",
-    "ajv": "^8.11.0"
+    "ajv": "^8.11.0",
+    "simple-git": "3.6.0"
   },
   "devDependencies": {
     "@types/jest": "^27.4.1",
