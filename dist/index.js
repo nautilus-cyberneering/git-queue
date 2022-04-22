@@ -11078,6 +11078,7 @@ function timeoutPlugin({ block }) {
           (_b2 = context.spawned.stderr) == null ? void 0 : _b2.off("data", wait);
           context.spawned.off("exit", stop);
           context.spawned.off("close", stop);
+          timeout && clearTimeout(timeout);
         }
         function kill() {
           stop();
