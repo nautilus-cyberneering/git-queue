@@ -29,7 +29,7 @@
   "author": "Nautilus-Cyberneering",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.6.0",
+    "@actions/core": "^1.7.0",
     "@actions/exec": "^1.1.1",
     "ajv": "^8.11.0",
     "simple-git": "^3.7.0"
