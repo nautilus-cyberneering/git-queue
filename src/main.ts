@@ -101,9 +101,11 @@ async function run(): Promise<void> {
         await core.group(`Setting outputs`, async () => {
           context.setOutput('job_created', !job.getCommitHash().isNull())
           context.setOutput('job_commit', job.getCommitHash().toString())
+          context.setOutput('job_id', job.getId().toString())
 
           core.info(`job_created: ${!job.getCommitHash().isNull()}`)
           core.info(`job_commit: ${job.getCommitHash().toString()}`)
+          core.info(`job_id: ${job.getId().toString()}`)
         })
 
         break

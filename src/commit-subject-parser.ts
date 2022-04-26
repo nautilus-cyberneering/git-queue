@@ -1,12 +1,12 @@
 import {CommitHash, nullCommitHash} from './commit-hash'
 import {
   MissingCommitHashInJobReferenceError,
+  MissingJobIdInCommitSubjectError,
   MissingMessageKeyInCommitSubjectError,
   MissingQueueNameInCommitSubjectError
 } from './errors'
 import {CommitSubject} from './commit-subject'
 import {MessageKey} from './message-key'
-import {NO_JOB_ID} from './job'
 import {QueueName} from './queue-name'
 
 export const COMMIT_SUBJECT_PREFIX = '📝'
@@ -34,25 +34,30 @@ export class CommitSubjectParser {
     return new CommitSubject(
       parser.getMessageKey(),
       parser.getQueueName(),
-      parser.getJobRef(),
-      parser.getJobId()
+      parser.getJobId(),
+      parser.getJobRef()
     )
   }
 
   static toText(commitSubject: CommitSubject): string {
     const jobRef = commitSubject.getJobRef().isNull()
       ? ''
-      : `${COMMIT_SUBJECT_DELIMITER} ${COMMIT_SUBJECT_JOB_ID_PREFIX}${commitSubject
-          .getJobId()
-          .toString()} ${COMMIT_SUBJECT_JOB_REF_PREFIX}${commitSubject
+      : ` ${COMMIT_SUBJECT_JOB_REF_PREFIX}${commitSubject
           .getJobRef()
           .toString()}`
+
+    const jobId =
+      commitSubject.getJobId() === -1
+        ? ''
+        : ` ${COMMIT_SUBJECT_JOB_ID_PREFIX}${commitSubject
+            .getJobId()
+            .toString()}`
 
     return `${COMMIT_SUBJECT_PREFIX}${commitSubject
       .getMessageKey()
       .toString()}${COMMIT_SUBJECT_DELIMITER} ${commitSubject
       .getQueueName()
-      .toString()}${jobRef}`
+      .toString()}${COMMIT_SUBJECT_DELIMITER}${jobId}${jobRef}`
   }
 
   getQueueName(): QueueName {
@@ -106,24 +111,26 @@ export class CommitSubjectParser {
     return new CommitHash(commitHash)
   }
 
-  getJobId(): Number {
+  getJobId(): number {
     const jobIdPosition = this.text.indexOf(COMMIT_SUBJECT_JOB_ID_PREFIX)
 
     if (jobIdPosition === -1) {
-      return NO_JOB_ID
+      throw new MissingJobIdInCommitSubjectError(this.text)
     }
+
+    const nextTokenPosition = this.text.indexOf(' ', jobIdPosition)
 
     const jobId = parseInt(
       this.text
         .substring(
           jobIdPosition + COMMIT_SUBJECT_JOB_ID_PREFIX.length,
-          this.text.indexOf(' ', jobIdPosition)
+          nextTokenPosition === -1 ? this.text.length : nextTokenPosition
         )
         .trim()
     )
 
     if (isNaN(jobId)) {
-      return NO_JOB_ID
+      throw new MissingJobIdInCommitSubjectError(this.text)
     }
 
     return jobId

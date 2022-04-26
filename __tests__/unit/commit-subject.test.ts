@@ -32,7 +32,7 @@ describe('CommitSubject', () => {
     )
 
     const commit3 = CommitSubjectParser.parseText(
-      'standard commit: not queue commit-no prefix'
+      '📝🈺: other-queue: not queue job.id.1 commit-no prefix'
     )
     expect(commit3.belongsToQueue(new QueueName('standard commit'))).toBe(false)
   })

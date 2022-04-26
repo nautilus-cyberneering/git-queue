@@ -35,17 +35,47 @@ function executeAction(env): string | Buffer {
   return output
 }
 
-function createJob(gitRepo: GitRepo): string | Buffer {
-  const env = {
+function createSampleJob(gitRepo: GitRepo, payload: String): string | Buffer {
+  return executeAction({
     ...process.env,
     INPUT_QUEUE_NAME: 'queue-name',
     INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
     INPUT_ACTION: 'create-job',
-    INPUT_JOB_PAYLOAD: dummyPayload(),
-    INPUT_GIT_COMMIT_NO_GPG_SIGN: true
-  }
+    INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true',
+    INPUT_JOB_PAYLOAD: payload
+  })
+}
 
-  return executeAction(env)
+function nextSampleJob(gitRepo: GitRepo): string | Buffer {
+  return executeAction({
+    ...process.env,
+    INPUT_QUEUE_NAME: 'queue-name',
+    INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
+    INPUT_ACTION: 'next-job',
+    INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
+  })
+}
+
+function startSampleJob(gitRepo: GitRepo, payload: String): string | Buffer {
+  return executeAction({
+    ...process.env,
+    INPUT_QUEUE_NAME: 'queue-name',
+    INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
+    INPUT_ACTION: 'start-job',
+    INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true',
+    INPUT_JOB_PAYLOAD: payload
+  })
+}
+
+function finishSampleJob(gitRepo: GitRepo, payload: String): string | Buffer {
+  return executeAction({
+    ...process.env,
+    INPUT_QUEUE_NAME: 'queue-name',
+    INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
+    INPUT_ACTION: 'finish-job',
+    INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true',
+    INPUT_JOB_PAYLOAD: payload
+  })
 }
 
 /**
@@ -72,16 +102,7 @@ describe('GitHub Action', () => {
   it('should print the git repo dir at the beginning of the action execution', async () => {
     const gitRepo = await createInitializedGitRepo()
 
-    const env = {
-      ...process.env,
-      INPUT_QUEUE_NAME: 'queue-name',
-      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
-      INPUT_ACTION: 'next-job',
-      INPUT_JOB_PAYLOAD: dummyPayload(),
-      INPUT_GIT_COMMIT_NO_GPG_SIGN: true
-    }
-
-    const output = executeAction(env)
+    const output = nextSampleJob(gitRepo)
 
     expect(output).toEqual(
       expect.stringContaining(`git_repo_dir: ${gitRepo.getDirPath()}`)
@@ -112,16 +133,7 @@ describe('GitHub Action', () => {
   it('should create a new job', async () => {
     const gitRepo = await createInitializedGitRepo()
 
-    const env = {
-      ...process.env,
-      INPUT_QUEUE_NAME: 'queue-name',
-      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
-      INPUT_ACTION: 'create-job',
-      INPUT_JOB_PAYLOAD: dummyPayload(),
-      INPUT_GIT_COMMIT_NO_GPG_SIGN: true
-    }
-
-    const output = executeAction(env)
+    const output = createSampleJob(gitRepo, dummyPayload())
 
     expect(getOutputVariable('job_created', output.toString())).toBe('true')
     expect(getOutputVariable('job_commit', output.toString())).toBe(
@@ -132,17 +144,8 @@ describe('GitHub Action', () => {
   it('should get the next job', async () => {
     const gitRepo = await createInitializedGitRepo()
 
-    createJob(gitRepo)
-
-    const env = {
-      ...process.env,
-      INPUT_QUEUE_NAME: 'queue-name',
-      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
-      INPUT_ACTION: 'next-job',
-      INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true'
-    }
-
-    const output = executeAction(env)
+    createSampleJob(gitRepo, dummyPayload())
+    const output = nextSampleJob(gitRepo)
 
     expect(getOutputVariable('job_payload', output.toString())).toBe(
       dummyPayload()
@@ -155,18 +158,9 @@ describe('GitHub Action', () => {
   it('should mark the pending job as started', async () => {
     const gitRepo = await createInitializedGitRepo()
 
-    createJob(gitRepo)
+    createSampleJob(gitRepo, dummyPayload())
 
-    const env = {
-      ...process.env,
-      INPUT_QUEUE_NAME: 'queue-name',
-      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
-      INPUT_ACTION: 'start-job',
-      INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true',
-      INPUT_JOB_PAYLOAD: 'test'
-    }
-
-    const output = executeAction(env)
+    const output = startSampleJob(gitRepo, dummyPayload())
 
     expect(getOutputVariable('job_started', output.toString())).toBe('true')
     expect(getOutputVariable('job_commit', output.toString())).toBe(
@@ -177,30 +171,36 @@ describe('GitHub Action', () => {
   it('should mark the pending job as finished', async () => {
     const gitRepo = await createInitializedGitRepo()
 
-    createJob(gitRepo)
-
-    executeAction({
-      ...process.env,
-      INPUT_QUEUE_NAME: 'queue-name',
-      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
-      INPUT_ACTION: 'start-job',
-      INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true',
-      INPUT_JOB_PAYLOAD: 'test'
-    })
-
-    const output = executeAction({
-      ...process.env,
-      INPUT_QUEUE_NAME: 'queue-name',
-      INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
-      INPUT_ACTION: 'finish-job',
-      INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true',
-      INPUT_JOB_PAYLOAD: 'test'
-    })
+    createSampleJob(gitRepo, dummyPayload())
+    startSampleJob(gitRepo, 'test')
+    const output = finishSampleJob(gitRepo, 'test')
 
     expect(getOutputVariable('job_finished', output.toString())).toBe('true')
     expect(getOutputVariable('job_commit', output.toString())).toBe(
       getLatestCommitHash(gitRepo.getDir()).getHash()
     )
+  })
+
+  it('should assign job id 0 to the first created job', async () => {
+    const gitRepo = await createInitializedGitRepo()
+
+    const output = createSampleJob(gitRepo, dummyPayload())
+
+    expect(getOutputVariable('job_id', output.toString())).toBe('0')
+  })
+
+  it('should assign job id 1 to the second created job', async () => {
+    const gitRepo = await createInitializedGitRepo()
+
+    const firstOutput = createSampleJob(gitRepo, dummyPayload())
+
+    expect(getOutputVariable('job_id', firstOutput.toString())).toBe('0')
+    startSampleJob(gitRepo, dummyPayload())
+    finishSampleJob(gitRepo, dummyPayload())
+
+    const output = createSampleJob(gitRepo, dummyPayload())
+
+    expect(getOutputVariable('job_id', output.toString())).toBe('1')
   })
 
   it('should allow to overwrite commit signing key', async () => {

@@ -22,7 +22,7 @@ export class Job implements Nullable {
     return new Job(
       newJobCommittedMessage.payload(),
       newJobCommittedMessage.commitHash(),
-      NO_JOB_ID
+      newJobCommittedMessage.jobId()
     )
   }
 

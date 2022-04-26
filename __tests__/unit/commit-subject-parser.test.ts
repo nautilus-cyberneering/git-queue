@@ -80,10 +80,35 @@ describe('CommitSubjectParser', () => {
   })
 
   it('should return a Null Commit when the job reference does not exist', () => {
-    const parser = new CommitSubjectParser('📝🈺: queue-name: NAME job.id.1 ')
+    const parser = new CommitSubjectParser('📝🈺: queue-name: job.id.1 ')
     const jobRef = parser.getJobRef()
 
     expect(jobRef).toBeInstanceOf(CommitHash)
     expect(jobRef.isNull()).toBe(true)
+  })
+
+  it('should fail when the job Id does not exist', () => {
+    const fn = (): number => {
+      const parser = new CommitSubjectParser(
+        '📝🈺: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+      )
+      return parser.getJobId()
+    }
+
+    expect(fn).toThrowError()
+  })
+
+  it('should parse the job id from a commit subject', () => {
+    const parser = new CommitSubjectParser(
+      '📝🈺: queue-name: job.id.42 job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+    )
+
+    expect(parser.getJobId().toString()).toBe('42')
+  })
+
+  it('should parse the job id from a commit subject when there is no job ref', () => {
+    const parser = new CommitSubjectParser('📝🈺: queue-name: job.id.42')
+
+    expect(parser.getJobId().toString()).toBe('42')
   })
 })

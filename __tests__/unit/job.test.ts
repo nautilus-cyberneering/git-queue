@@ -1,6 +1,6 @@
 import {CommitHash} from '../../src/commit-hash'
 import {CommitInfo} from '../../src/commit-info'
-import {Job} from '../../src/job'
+import {Job, nullJob} from '../../src/job'
 import {NewJobCommittedMessage} from '../../src/committed-message'
 import {dummyCommitBodyText} from '../../src/__tests__/helpers'
 
@@ -35,13 +35,9 @@ describe('Job', () => {
   })
 
   it('should be nullable', () => {
-    const job = new Job(
-      'payload',
-      new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf'),
-      0
-    )
+    const job = nullJob()
 
-    expect(job.getPayload()).toBe('payload')
+    expect(job.isNull()).toBe(true)
   })
 
   it('should compare two jobs', () => {
@@ -72,7 +68,7 @@ describe('Job', () => {
     const commitInfo = new CommitInfo(
       new CommitHash('ad5cea6308f69d7955d8de5f0da19f675d5ba75f'),
       'date',
-      'message',
+      '📝🈺: queue-name: job.id.1 job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7',
       'refs',
       dummyCommitBodyText(),
       'author name',

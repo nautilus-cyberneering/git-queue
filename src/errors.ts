@@ -15,6 +15,13 @@ export class MissingMessageKeyInCommitSubjectError extends Error {
   }
 }
 
+export class MissingJobIdInCommitSubjectError extends Error {
+  constructor(commitSubject: string) {
+    super(`Missing job ID in commit subject: ${commitSubject}`)
+    Object.setPrototypeOf(this, MissingJobIdInCommitSubjectError.prototype)
+  }
+}
+
 export class MissingCommitHashInJobReferenceError extends Error {
   constructor(commitSubject: string) {
     super(

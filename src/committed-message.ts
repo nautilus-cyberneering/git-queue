@@ -44,6 +44,10 @@ export abstract class CommittedMessage implements Nullable {
     return CommitSubjectParser.parseText(this.commit.message)
   }
 
+  jobId(): number {
+    return CommitSubjectParser.parseText(this.commit.message).getJobId()
+  }
+
   payload(): string {
     return new CommitBody(this.commit.body).getPayload()
   }

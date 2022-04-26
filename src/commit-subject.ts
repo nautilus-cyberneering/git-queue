@@ -12,18 +12,18 @@ export class CommitSubject {
   private messageKey: MessageKey
   private queueName: QueueName
   private jobRef: CommitHash
-  private id: Number
+  private jobId: number
 
   constructor(
     messageKey: MessageKey,
     queueName: QueueName,
-    jobRef: CommitHash,
-    id: Number
+    jobId: number,
+    jobRef: CommitHash
   ) {
     this.messageKey = messageKey
     this.queueName = queueName
+    this.jobId = jobId
     this.jobRef = jobRef
-    this.id = id
   }
 
   static fromMessageAndQueueName(
@@ -33,8 +33,8 @@ export class CommitSubject {
     return new CommitSubject(
       message.getKey(),
       queueName,
-      message.getJobRef(),
-      message.getId()
+      message.getId(),
+      message.getJobRef()
     )
   }
 
@@ -62,7 +62,7 @@ export class CommitSubject {
     return this.jobRef
   }
 
-  getJobId(): Number {
-    return this.id
+  getJobId(): number {
+    return this.jobId
   }
 }

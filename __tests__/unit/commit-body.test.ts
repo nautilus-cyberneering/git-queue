@@ -81,7 +81,7 @@ describe('CommitBody', () => {
 
   it('could be built from a Message', () => {
     const commitBody = CommitBody.fromMessage(
-      new NewJobMessage('message-payload')
+      new NewJobMessage('message-payload', 0)
     )
 
     const builtBody = JSON.stringify({

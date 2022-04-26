@@ -5,16 +5,16 @@ import {NO_JOB_ID} from './job'
 export abstract class Message {
   payload: string
   jobRef: CommitHash
-  id: Number
+  jobId: number
 
   constructor(
     payload: string,
-    jobRef: CommitHash = nullCommitHash(),
-    id = NO_JOB_ID
+    jobId: number,
+    jobRef: CommitHash = nullCommitHash()
   ) {
     this.payload = payload
+    this.jobId = jobId
     this.jobRef = jobRef
-    this.id = id
   }
 
   getPayload(): string {
@@ -25,8 +25,8 @@ export abstract class Message {
     return this.jobRef
   }
 
-  getId(): Number {
-    return this.id
+  getId(): number {
+    return this.jobId
   }
 
   hasJobRef(): boolean {
@@ -34,15 +34,15 @@ export abstract class Message {
   }
 
   hasId(): boolean {
-    return this.id !== NO_JOB_ID
+    return this.jobId !== NO_JOB_ID
   }
 
   abstract getKey(): MessageKey
 }
 
 export class NewJobMessage extends Message {
-  constructor(payload: string) {
-    super(payload, nullCommitHash())
+  constructor(payload: string, jobId: number) {
+    super(payload, jobId, nullCommitHash())
   }
 
   getKey(): MessageKey {
