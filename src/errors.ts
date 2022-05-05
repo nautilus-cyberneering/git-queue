@@ -103,6 +103,20 @@ export class InvalidHashError extends Error {
   }
 }
 
+export class InvalidJobIdError extends Error {
+  constructor(id: number) {
+    super(`Invalid Job Id: ${id}`)
+    Object.setPrototypeOf(this, InvalidJobIdError.prototype)
+  }
+}
+
+export class InvalidShortHashError extends Error {
+  constructor(hash: string) {
+    super(`Invalid 7-characters SHA-1 commit hash: ${hash}`)
+    Object.setPrototypeOf(this, InvalidShortHashError.prototype)
+  }
+}
+
 export class InvalidCommitBodyError extends Error {
   constructor(invalidBodyContent: string) {
     super(

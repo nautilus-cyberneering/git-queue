@@ -1,4 +1,5 @@
 import {CommitInfo, nullCommitInfo} from './commit-info'
+import {JobId, nullJobId} from './job-id'
 import {CommitBody} from './commit-body'
 import {CommitHash} from './commit-hash'
 import {CommitSubject} from './commit-subject'
@@ -44,8 +45,10 @@ export abstract class CommittedMessage implements Nullable {
     return CommitSubjectParser.parseText(this.commit.message)
   }
 
-  jobId(): number {
-    return CommitSubjectParser.parseText(this.commit.message).getJobId()
+  jobId(): JobId {
+    return this.isNull()
+      ? nullJobId()
+      : CommitSubjectParser.parseText(this.commit.message).getJobId()
   }
 
   payload(): string {

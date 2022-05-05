@@ -1,4 +1,5 @@
 import {CommitBody} from '../../src/commit-body'
+import {JobId} from '../../src/job-id'
 import {NewJobMessage} from '../../src/message'
 import {dummyCommitBodyText} from '../../src/__tests__/helpers'
 import {nullCommitHash} from '../../src/commit-hash'
@@ -81,7 +82,7 @@ describe('CommitBody', () => {
 
   it('could be built from a Message', () => {
     const commitBody = CommitBody.fromMessage(
-      new NewJobMessage('message-payload', 0)
+      new NewJobMessage('message-payload', new JobId(0))
     )
 
     const builtBody = JSON.stringify({

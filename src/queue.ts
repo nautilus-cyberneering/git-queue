@@ -26,6 +26,7 @@ import {CommitSubject} from './commit-subject'
 import {CommittedMessageLog} from './committed-message-log'
 import {GitRepo} from './git-repo'
 import {GitRepoDir} from './git-repo-dir'
+import {JobId} from './job-id'
 import {QueueName} from './queue-name'
 import {CommitHash} from './commit-hash'
 
@@ -182,11 +183,11 @@ export class Queue {
 
   // Job states: new -> started -> finished
 
-  getNextJobId(): number {
+  getNextJobId(): JobId {
     const latestMessage = this.getLatestMessage()
     this.guardThatLastMessageWasJobFinishedOrNull(latestMessage)
 
-    return latestMessage.isNull() ? 0 : latestMessage.jobId() + 1
+    return latestMessage.jobId().getNextJobId()
   }
 
   async createJob(payload: string): Promise<Job> {

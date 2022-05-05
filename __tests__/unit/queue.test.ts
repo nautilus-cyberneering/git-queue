@@ -17,6 +17,7 @@ import {QueueName} from '../../src/queue-name'
 import {SigningKeyId} from '../../src/signing-key-id'
 
 import {testConfiguration} from '../../src/__tests__/config'
+import {JobId} from '../../src/job-id'
 
 function commitOptionsForTests(): CommitOptions {
   const author = CommitAuthor.fromNameAndEmail(
@@ -91,7 +92,9 @@ describe('Queue', () => {
     const job = await queue.createJob(dummyPayload())
 
     const commitHash = getLatestCommitHash(queue.getGitRepoDir())
-    expect(job.equalsTo(new Job(dummyPayload(), commitHash, 0))).toBe(true)
+    expect(
+      job.equalsTo(new Job(dummyPayload(), commitHash, new JobId(0)))
+    ).toBe(true)
   })
 
   it('should fail when trying to create a job if the previous job has not finished yet', async () => {
@@ -274,9 +277,9 @@ describe('Queue', () => {
       const nextJob = queue.getNextJob()
 
       const latestCommit = getLatestCommitHash(queue.getGitRepoDir())
-      expect(nextJob.equalsTo(new Job(dummyPayload(), latestCommit, 1))).toBe(
-        true
-      )
+      expect(
+        nextJob.equalsTo(new Job(dummyPayload(), latestCommit, new JobId(1)))
+      ).toBe(true)
     })
   })
 
@@ -299,16 +302,22 @@ describe('Queue', () => {
     const nextJob2 = queue2.getNextJob()
 
     const newJob1Commit = getSecondToLatestCommitHash(queue1.getGitRepoDir())
-    expect(nextJob1.equalsTo(new Job(payload1, newJob1Commit, 0))).toBe(true)
+    expect(
+      nextJob1.equalsTo(new Job(payload1, newJob1Commit, new JobId(0)))
+    ).toBe(true)
 
     let latestCommit = getLatestCommitHash(queue2.getGitRepoDir())
-    expect(nextJob2.equalsTo(new Job(payload2, latestCommit, 0))).toBe(true)
+    expect(
+      nextJob2.equalsTo(new Job(payload2, latestCommit, new JobId(0)))
+    ).toBe(true)
 
     await queue1.markJobAsStarted(payload1)
     await queue1.markJobAsFinished(payload1)
     await queue1.createJob(payload2)
     const nextJob3 = queue1.getNextJob()
     latestCommit = getLatestCommitHash(queue1.getGitRepoDir())
-    expect(nextJob3.equalsTo(new Job(payload2, latestCommit, 1))).toBe(true)
+    expect(
+      nextJob3.equalsTo(new Job(payload2, latestCommit, new JobId(1)))
+    ).toBe(true)
   })
 })

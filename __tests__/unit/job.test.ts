@@ -1,6 +1,7 @@
 import {CommitHash} from '../../src/commit-hash'
 import {CommitInfo} from '../../src/commit-info'
 import {Job, nullJob} from '../../src/job'
+import {JobId} from '../../src/job-id'
 import {NewJobCommittedMessage} from '../../src/committed-message'
 import {dummyCommitBodyText} from '../../src/__tests__/helpers'
 
@@ -9,7 +10,7 @@ describe('Job', () => {
     const job = new Job(
       'payload',
       new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf'),
-      1
+      new JobId(1)
     )
 
     expect(job.getPayload()).toBe('payload')
@@ -19,7 +20,7 @@ describe('Job', () => {
     const commitHash = new CommitHash(
       'a362802b98c78df052a78796a1a7cde60a5c1faf'
     )
-    const job = new Job('payload', commitHash, 1)
+    const job = new Job('payload', commitHash, new JobId(1))
 
     expect(job.getCommitHash()).toBe(commitHash)
   })
@@ -28,10 +29,12 @@ describe('Job', () => {
     const job = new Job(
       'payload',
       new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf'),
-      42
+      new JobId(42)
     )
 
-    expect(job.getId()).toBe(42)
+    const expectedJobId = new JobId(42)
+
+    expect(job.getJobId().equalsTo(expectedJobId)).toBe(true)
   })
 
   it('should be nullable', () => {
@@ -44,19 +47,19 @@ describe('Job', () => {
     const job1 = new Job(
       'payload',
       new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf'),
-      0
+      new JobId(0)
     )
 
     const job2 = new Job(
       'payload',
       new CommitHash('8f51fa0a019b277103acc5ef75c52dfb2a9bcce3'),
-      0
+      new JobId(0)
     )
 
     const job3 = new Job(
       'payload3',
       new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf'),
-      0
+      new JobId(0)
     )
 
     expect(job1.equalsTo(job1)).toBe(true)

@@ -1,5 +1,6 @@
 import {CommitHash} from '../../src/commit-hash'
 import {CommitSubjectParser} from '../../src/commit-subject-parser'
+import {JobId} from '../../src/job-id'
 
 describe('CommitSubjectParser', () => {
   it('should parse the message key from a commit subject', () => {
@@ -88,7 +89,7 @@ describe('CommitSubjectParser', () => {
   })
 
   it('should fail when the job Id does not exist', () => {
-    const fn = (): number => {
+    const fn = (): JobId => {
       const parser = new CommitSubjectParser(
         '📝🈺: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
       )

@@ -270,6 +270,7 @@ exports.CommitSubjectParser = exports.commitSubjectBelongsToAQueue = exports.COM
 const commit_hash_1 = __nccwpck_require__(5533);
 const errors_1 = __nccwpck_require__(9292);
 const commit_subject_1 = __nccwpck_require__(8798);
+const job_id_1 = __nccwpck_require__(9654);
 const message_key_1 = __nccwpck_require__(493);
 const queue_name_1 = __nccwpck_require__(7894);
 exports.COMMIT_SUBJECT_PREFIX = '📝';
@@ -297,11 +298,9 @@ class CommitSubjectParser {
             : ` ${exports.COMMIT_SUBJECT_JOB_REF_PREFIX}${commitSubject
                 .getJobRef()
                 .toString()}`;
-        const jobId = commitSubject.getJobId() === -1
+        const jobId = commitSubject.getJobId().isNull()
             ? ''
-            : ` ${exports.COMMIT_SUBJECT_JOB_ID_PREFIX}${commitSubject
-                .getJobId()
-                .toString()}`;
+            : ` ${exports.COMMIT_SUBJECT_JOB_ID_PREFIX}${commitSubject.getJobId().toString()}`;
         return `${exports.COMMIT_SUBJECT_PREFIX}${commitSubject
             .getMessageKey()
             .toString()}${exports.COMMIT_SUBJECT_DELIMITER} ${commitSubject
@@ -347,13 +346,10 @@ class CommitSubjectParser {
             throw new errors_1.MissingJobIdInCommitSubjectError(this.text);
         }
         const nextTokenPosition = this.text.indexOf(' ', jobIdPosition);
-        const jobId = parseInt(this.text
+        const jobId = this.text
             .substring(jobIdPosition + exports.COMMIT_SUBJECT_JOB_ID_PREFIX.length, nextTokenPosition === -1 ? this.text.length : nextTokenPosition)
-            .trim());
-        if (isNaN(jobId)) {
-            throw new errors_1.MissingJobIdInCommitSubjectError(this.text);
-        }
-        return jobId;
+            .trim();
+        return new job_id_1.JobId(parseInt(jobId));
     }
 }
 exports.CommitSubjectParser = CommitSubjectParser;
@@ -381,7 +377,7 @@ class CommitSubject {
         this.jobRef = jobRef;
     }
     static fromMessageAndQueueName(message, queueName) {
-        return new CommitSubject(message.getKey(), queueName, message.getId(), message.getJobRef());
+        return new CommitSubject(message.getKey(), queueName, message.getJobId(), message.getJobRef());
     }
     toString() {
         return commit_subject_parser_1.CommitSubjectParser.toText(this);
@@ -476,6 +472,7 @@ exports.CommittedMessageLog = CommittedMessageLog;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nullMessage = exports.JobStartedCommittedMessage = exports.JobFinishedCommittedMessage = exports.NewJobCommittedMessage = exports.NullCommittedMessage = exports.CommittedMessage = void 0;
 const commit_info_1 = __nccwpck_require__(4136);
+const job_id_1 = __nccwpck_require__(9654);
 const commit_body_1 = __nccwpck_require__(3801);
 const commit_subject_parser_1 = __nccwpck_require__(386);
 const errors_1 = __nccwpck_require__(9292);
@@ -508,7 +505,9 @@ class CommittedMessage {
         return commit_subject_parser_1.CommitSubjectParser.parseText(this.commit.message);
     }
     jobId() {
-        return commit_subject_parser_1.CommitSubjectParser.parseText(this.commit.message).getJobId();
+        return this.isNull()
+            ? (0, job_id_1.nullJobId)()
+            : commit_subject_parser_1.CommitSubjectParser.parseText(this.commit.message).getJobId();
     }
     payload() {
         return new commit_body_1.CommitBody(this.commit.body).getPayload();
@@ -729,7 +728,7 @@ exports.getErrorMessage = getErrorMessage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.InvalidCommitBodyError = exports.InvalidHashError = exports.QueueNameNotValidError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingJobIdInCommitSubjectError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+exports.InvalidCommitBodyError = exports.InvalidShortHashError = exports.InvalidJobIdError = exports.InvalidHashError = exports.QueueNameNotValidError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingJobIdInCommitSubjectError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
 const queue_name_1 = __nccwpck_require__(7894);
 class MissingQueueNameInCommitSubjectError extends Error {
     constructor(commitSubject) {
@@ -823,6 +822,20 @@ class InvalidHashError extends Error {
     }
 }
 exports.InvalidHashError = InvalidHashError;
+class InvalidJobIdError extends Error {
+    constructor(id) {
+        super(`Invalid Job Id: ${id}`);
+        Object.setPrototypeOf(this, InvalidJobIdError.prototype);
+    }
+}
+exports.InvalidJobIdError = InvalidJobIdError;
+class InvalidShortHashError extends Error {
+    constructor(hash) {
+        super(`Invalid 7-characters SHA-1 commit hash: ${hash}`);
+        Object.setPrototypeOf(this, InvalidShortHashError.prototype);
+    }
+}
+exports.InvalidShortHashError = InvalidShortHashError;
 class InvalidCommitBodyError extends Error {
     constructor(invalidBodyContent) {
         super(`Commit Body does not conform to specification: ${invalidBodyContent}`);
@@ -1017,21 +1030,67 @@ exports.getGnupgHome = getGnupgHome;
 
 /***/ }),
 
+/***/ 9654:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.nullJobId = exports.JobId = void 0;
+const errors_1 = __nccwpck_require__(9292);
+const NO_JOB_ID = -1;
+class JobId {
+    constructor(value) {
+        if (value !== NO_JOB_ID) {
+            this.guardThatIdValueIsValid(value);
+        }
+        this.value = value;
+    }
+    guardThatIdValueIsValid(value) {
+        if (isNaN(value) || value < 0) {
+            throw new errors_1.InvalidJobIdError(value);
+        }
+    }
+    getId() {
+        return this.value;
+    }
+    getNextJobId() {
+        return this.isNull() ? new JobId(0) : new JobId(this.value + 1);
+    }
+    isNull() {
+        return this.value === NO_JOB_ID;
+    }
+    equalsTo(other) {
+        return this.value === other.value;
+    }
+    toString() {
+        return `${this.value}`;
+    }
+}
+exports.JobId = JobId;
+function nullJobId() {
+    return new JobId(NO_JOB_ID);
+}
+exports.nullJobId = nullJobId;
+
+
+/***/ }),
+
 /***/ 6420:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.nullJob = exports.Job = exports.NO_JOB_ID = void 0;
+exports.nullJob = exports.Job = void 0;
 const commit_hash_1 = __nccwpck_require__(5533);
+const job_id_1 = __nccwpck_require__(9654);
 const NO_JOB = '--no-job--';
-exports.NO_JOB_ID = -1;
 class Job {
-    constructor(payload, commitHash, id) {
+    constructor(payload, commitHash, jobId) {
         this.payload = payload;
         this.commitHash = commitHash;
-        this.id = id;
+        this.jobId = jobId;
     }
     static fromCommittedMessage(newJobCommittedMessage) {
         return new Job(newJobCommittedMessage.payload(), newJobCommittedMessage.commitHash(), newJobCommittedMessage.jobId());
@@ -1042,8 +1101,8 @@ class Job {
     getCommitHash() {
         return this.commitHash;
     }
-    getId() {
-        return this.id;
+    getJobId() {
+        return this.jobId;
     }
     isNull() {
         return this.payload === NO_JOB && this.commitHash.isNull();
@@ -1051,12 +1110,12 @@ class Job {
     equalsTo(other) {
         return (this.payload === other.getPayload() &&
             this.commitHash.equalsTo(other.getCommitHash()) &&
-            this.id === other.id);
+            this.jobId.equalsTo(other.getJobId()));
     }
 }
 exports.Job = Job;
 function nullJob() {
-    return new Job(NO_JOB, (0, commit_hash_1.nullCommitHash)(), exports.NO_JOB_ID);
+    return new Job(NO_JOB, (0, commit_hash_1.nullCommitHash)(), (0, job_id_1.nullJobId)());
 }
 exports.nullJob = nullJob;
 
@@ -1175,10 +1234,10 @@ function run() {
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_created', !job.getCommitHash().isNull());
                         context.setOutput('job_commit', job.getCommitHash().toString());
-                        context.setOutput('job_id', job.getId().toString());
+                        context.setOutput('job_id', job.getJobId().toString());
                         core.info(`job_created: ${!job.getCommitHash().isNull()}`);
                         core.info(`job_commit: ${job.getCommitHash().toString()}`);
-                        core.info(`job_id: ${job.getId().toString()}`);
+                        core.info(`job_id: ${job.getJobId().toString()}`);
                     }));
                     break;
                 }
@@ -1262,7 +1321,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.JobStartedMessage = exports.JobFinishedMessage = exports.NewJobMessage = exports.Message = void 0;
 const commit_hash_1 = __nccwpck_require__(5533);
 const message_key_1 = __nccwpck_require__(493);
-const job_1 = __nccwpck_require__(6420);
 class Message {
     constructor(payload, jobId, jobRef = (0, commit_hash_1.nullCommitHash)()) {
         this.payload = payload;
@@ -1275,14 +1333,14 @@ class Message {
     getJobRef() {
         return this.jobRef;
     }
-    getId() {
+    getJobId() {
         return this.jobId;
     }
     hasJobRef() {
         return !this.jobRef.isNull();
     }
     hasId() {
-        return this.jobId !== job_1.NO_JOB_ID;
+        return !this.jobId.isNull();
     }
 }
 exports.Message = Message;
@@ -1482,7 +1540,7 @@ class Queue {
     getNextJobId() {
         const latestMessage = this.getLatestMessage();
         this.guardThatLastMessageWasJobFinishedOrNull(latestMessage);
-        return latestMessage.isNull() ? 0 : latestMessage.jobId() + 1;
+        return latestMessage.jobId().getNextJobId();
     }
     createJob(payload) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -2016,15 +2074,10 @@ function getIDToken(aud) {
 }
 exports.getIDToken = getIDToken;
 /**
- * Summary exports
+ * Markdown summary exports
  */
-var summary_1 = __nccwpck_require__(1327);
-Object.defineProperty(exports, "summary", ({ enumerable: true, get: function () { return summary_1.summary; } }));
-/**
- * @deprecated use core.summary
- */
-var summary_2 = __nccwpck_require__(1327);
-Object.defineProperty(exports, "markdownSummary", ({ enumerable: true, get: function () { return summary_2.markdownSummary; } }));
+var markdown_summary_1 = __nccwpck_require__(8042);
+Object.defineProperty(exports, "markdownSummary", ({ enumerable: true, get: function () { return markdown_summary_1.markdownSummary; } }));
 //# sourceMappingURL=core.js.map
 
 /***/ }),
@@ -2075,6 +2128,292 @@ function issueCommand(command, message) {
 }
 exports.issueCommand = issueCommand;
 //# sourceMappingURL=file-command.js.map
+
+/***/ }),
+
+/***/ 8042:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.markdownSummary = exports.SUMMARY_DOCS_URL = exports.SUMMARY_ENV_VAR = void 0;
+const os_1 = __nccwpck_require__(2037);
+const fs_1 = __nccwpck_require__(7147);
+const { access, appendFile, writeFile } = fs_1.promises;
+exports.SUMMARY_ENV_VAR = 'GITHUB_STEP_SUMMARY';
+exports.SUMMARY_DOCS_URL = 'https://docs.github.com/actions/using-workflows/workflow-commands-for-github-actions#adding-a-markdown-summary';
+class MarkdownSummary {
+    constructor() {
+        this._buffer = '';
+    }
+    /**
+     * Finds the summary file path from the environment, rejects if env var is not found or file does not exist
+     * Also checks r/w permissions.
+     *
+     * @returns step summary file path
+     */
+    filePath() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this._filePath) {
+                return this._filePath;
+            }
+            const pathFromEnv = process.env[exports.SUMMARY_ENV_VAR];
+            if (!pathFromEnv) {
+                throw new Error(`Unable to find environment variable for $${exports.SUMMARY_ENV_VAR}. Check if your runtime environment supports markdown summaries.`);
+            }
+            try {
+                yield access(pathFromEnv, fs_1.constants.R_OK | fs_1.constants.W_OK);
+            }
+            catch (_a) {
+                throw new Error(`Unable to access summary file: '${pathFromEnv}'. Check if the file has correct read/write permissions.`);
+            }
+            this._filePath = pathFromEnv;
+            return this._filePath;
+        });
+    }
+    /**
+     * Wraps content in an HTML tag, adding any HTML attributes
+     *
+     * @param {string} tag HTML tag to wrap
+     * @param {string | null} content content within the tag
+     * @param {[attribute: string]: string} attrs key-value list of HTML attributes to add
+     *
+     * @returns {string} content wrapped in HTML element
+     */
+    wrap(tag, content, attrs = {}) {
+        const htmlAttrs = Object.entries(attrs)
+            .map(([key, value]) => ` ${key}="${value}"`)
+            .join('');
+        if (!content) {
+            return `<${tag}${htmlAttrs}>`;
+        }
+        return `<${tag}${htmlAttrs}>${content}</${tag}>`;
+    }
+    /**
+     * Writes text in the buffer to the summary buffer file and empties buffer. Will append by default.
+     *
+     * @param {SummaryWriteOptions} [options] (optional) options for write operation
+     *
+     * @returns {Promise<MarkdownSummary>} markdown summary instance
+     */
+    write(options) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const overwrite = !!(options === null || options === void 0 ? void 0 : options.overwrite);
+            const filePath = yield this.filePath();
+            const writeFunc = overwrite ? writeFile : appendFile;
+            yield writeFunc(filePath, this._buffer, { encoding: 'utf8' });
+            return this.emptyBuffer();
+        });
+    }
+    /**
+     * Clears the summary buffer and wipes the summary file
+     *
+     * @returns {MarkdownSummary} markdown summary instance
+     */
+    clear() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.emptyBuffer().write({ overwrite: true });
+        });
+    }
+    /**
+     * Returns the current summary buffer as a string
+     *
+     * @returns {string} string of summary buffer
+     */
+    stringify() {
+        return this._buffer;
+    }
+    /**
+     * If the summary buffer is empty
+     *
+     * @returns {boolen} true if the buffer is empty
+     */
+    isEmptyBuffer() {
+        return this._buffer.length === 0;
+    }
+    /**
+     * Resets the summary buffer without writing to summary file
+     *
+     * @returns {MarkdownSummary} markdown summary instance
+     */
+    emptyBuffer() {
+        this._buffer = '';
+        return this;
+    }
+    /**
+     * Adds raw text to the summary buffer
+     *
+     * @param {string} text content to add
+     * @param {boolean} [addEOL=false] (optional) append an EOL to the raw text (default: false)
+     *
+     * @returns {MarkdownSummary} markdown summary instance
+     */
+    addRaw(text, addEOL = false) {
+        this._buffer += text;
+        return addEOL ? this.addEOL() : this;
+    }
+    /**
+     * Adds the operating system-specific end-of-line marker to the buffer
+     *
+     * @returns {MarkdownSummary} markdown summary instance
+     */
+    addEOL() {
+        return this.addRaw(os_1.EOL);
+    }
+    /**
+     * Adds an HTML codeblock to the summary buffer
+     *
+     * @param {string} code content to render within fenced code block
+     * @param {string} lang (optional) language to syntax highlight code
+     *
+     * @returns {MarkdownSummary} markdown summary instance
+     */
+    addCodeBlock(code, lang) {
+        const attrs = Object.assign({}, (lang && { lang }));
+        const element = this.wrap('pre', this.wrap('code', code), attrs);
+        return this.addRaw(element).addEOL();
+    }
+    /**
+     * Adds an HTML list to the summary buffer
+     *
+     * @param {string[]} items list of items to render
+     * @param {boolean} [ordered=false] (optional) if the rendered list should be ordered or not (default: false)
+     *
+     * @returns {MarkdownSummary} markdown summary instance
+     */
+    addList(items, ordered = false) {
+        const tag = ordered ? 'ol' : 'ul';
+        const listItems = items.map(item => this.wrap('li', item)).join('');
+        const element = this.wrap(tag, listItems);
+        return this.addRaw(element).addEOL();
+    }
+    /**
+     * Adds an HTML table to the summary buffer
+     *
+     * @param {SummaryTableCell[]} rows table rows
+     *
+     * @returns {MarkdownSummary} markdown summary instance
+     */
+    addTable(rows) {
+        const tableBody = rows
+            .map(row => {
+            const cells = row
+                .map(cell => {
+                if (typeof cell === 'string') {
+                    return this.wrap('td', cell);
+                }
+                const { header, data, colspan, rowspan } = cell;
+                const tag = header ? 'th' : 'td';
+                const attrs = Object.assign(Object.assign({}, (colspan && { colspan })), (rowspan && { rowspan }));
+                return this.wrap(tag, data, attrs);
+            })
+                .join('');
+            return this.wrap('tr', cells);
+        })
+            .join('');
+        const element = this.wrap('table', tableBody);
+        return this.addRaw(element).addEOL();
+    }
+    /**
+     * Adds a collapsable HTML details element to the summary buffer
+     *
+     * @param {string} label text for the closed state
+     * @param {string} content collapsable content
+     *
+     * @returns {MarkdownSummary} markdown summary instance
+     */
+    addDetails(label, content) {
+        const element = this.wrap('details', this.wrap('summary', label) + content);
+        return this.addRaw(element).addEOL();
+    }
+    /**
+     * Adds an HTML image tag to the summary buffer
+     *
+     * @param {string} src path to the image you to embed
+     * @param {string} alt text description of the image
+     * @param {SummaryImageOptions} options (optional) addition image attributes
+     *
+     * @returns {MarkdownSummary} markdown summary instance
+     */
+    addImage(src, alt, options) {
+        const { width, height } = options || {};
+        const attrs = Object.assign(Object.assign({}, (width && { width })), (height && { height }));
+        const element = this.wrap('img', null, Object.assign({ src, alt }, attrs));
+        return this.addRaw(element).addEOL();
+    }
+    /**
+     * Adds an HTML section heading element
+     *
+     * @param {string} text heading text
+     * @param {number | string} [level=1] (optional) the heading level, default: 1
+     *
+     * @returns {MarkdownSummary} markdown summary instance
+     */
+    addHeading(text, level) {
+        const tag = `h${level}`;
+        const allowedTag = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag)
+            ? tag
+            : 'h1';
+        const element = this.wrap(allowedTag, text);
+        return this.addRaw(element).addEOL();
+    }
+    /**
+     * Adds an HTML thematic break (<hr>) to the summary buffer
+     *
+     * @returns {MarkdownSummary} markdown summary instance
+     */
+    addSeparator() {
+        const element = this.wrap('hr', null);
+        return this.addRaw(element).addEOL();
+    }
+    /**
+     * Adds an HTML line break (<br>) to the summary buffer
+     *
+     * @returns {MarkdownSummary} markdown summary instance
+     */
+    addBreak() {
+        const element = this.wrap('br', null);
+        return this.addRaw(element).addEOL();
+    }
+    /**
+     * Adds an HTML blockquote to the summary buffer
+     *
+     * @param {string} text quote text
+     * @param {string} cite (optional) citation url
+     *
+     * @returns {MarkdownSummary} markdown summary instance
+     */
+    addQuote(text, cite) {
+        const attrs = Object.assign({}, (cite && { cite }));
+        const element = this.wrap('blockquote', text, attrs);
+        return this.addRaw(element).addEOL();
+    }
+    /**
+     * Adds an HTML anchor tag to the summary buffer
+     *
+     * @param {string} text link text/content
+     * @param {string} href hyperlink
+     *
+     * @returns {MarkdownSummary} markdown summary instance
+     */
+    addLink(text, href) {
+        const element = this.wrap('a', text, { href });
+        return this.addRaw(element).addEOL();
+    }
+}
+// singleton export
+exports.markdownSummary = new MarkdownSummary();
+//# sourceMappingURL=markdown-summary.js.map
 
 /***/ }),
 
@@ -2159,296 +2498,6 @@ class OidcClient {
 }
 exports.OidcClient = OidcClient;
 //# sourceMappingURL=oidc-utils.js.map
-
-/***/ }),
-
-/***/ 1327:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.summary = exports.markdownSummary = exports.SUMMARY_DOCS_URL = exports.SUMMARY_ENV_VAR = void 0;
-const os_1 = __nccwpck_require__(2037);
-const fs_1 = __nccwpck_require__(7147);
-const { access, appendFile, writeFile } = fs_1.promises;
-exports.SUMMARY_ENV_VAR = 'GITHUB_STEP_SUMMARY';
-exports.SUMMARY_DOCS_URL = 'https://docs.github.com/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary';
-class Summary {
-    constructor() {
-        this._buffer = '';
-    }
-    /**
-     * Finds the summary file path from the environment, rejects if env var is not found or file does not exist
-     * Also checks r/w permissions.
-     *
-     * @returns step summary file path
-     */
-    filePath() {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this._filePath) {
-                return this._filePath;
-            }
-            const pathFromEnv = process.env[exports.SUMMARY_ENV_VAR];
-            if (!pathFromEnv) {
-                throw new Error(`Unable to find environment variable for $${exports.SUMMARY_ENV_VAR}. Check if your runtime environment supports job summaries.`);
-            }
-            try {
-                yield access(pathFromEnv, fs_1.constants.R_OK | fs_1.constants.W_OK);
-            }
-            catch (_a) {
-                throw new Error(`Unable to access summary file: '${pathFromEnv}'. Check if the file has correct read/write permissions.`);
-            }
-            this._filePath = pathFromEnv;
-            return this._filePath;
-        });
-    }
-    /**
-     * Wraps content in an HTML tag, adding any HTML attributes
-     *
-     * @param {string} tag HTML tag to wrap
-     * @param {string | null} content content within the tag
-     * @param {[attribute: string]: string} attrs key-value list of HTML attributes to add
-     *
-     * @returns {string} content wrapped in HTML element
-     */
-    wrap(tag, content, attrs = {}) {
-        const htmlAttrs = Object.entries(attrs)
-            .map(([key, value]) => ` ${key}="${value}"`)
-            .join('');
-        if (!content) {
-            return `<${tag}${htmlAttrs}>`;
-        }
-        return `<${tag}${htmlAttrs}>${content}</${tag}>`;
-    }
-    /**
-     * Writes text in the buffer to the summary buffer file and empties buffer. Will append by default.
-     *
-     * @param {SummaryWriteOptions} [options] (optional) options for write operation
-     *
-     * @returns {Promise<Summary>} summary instance
-     */
-    write(options) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const overwrite = !!(options === null || options === void 0 ? void 0 : options.overwrite);
-            const filePath = yield this.filePath();
-            const writeFunc = overwrite ? writeFile : appendFile;
-            yield writeFunc(filePath, this._buffer, { encoding: 'utf8' });
-            return this.emptyBuffer();
-        });
-    }
-    /**
-     * Clears the summary buffer and wipes the summary file
-     *
-     * @returns {Summary} summary instance
-     */
-    clear() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.emptyBuffer().write({ overwrite: true });
-        });
-    }
-    /**
-     * Returns the current summary buffer as a string
-     *
-     * @returns {string} string of summary buffer
-     */
-    stringify() {
-        return this._buffer;
-    }
-    /**
-     * If the summary buffer is empty
-     *
-     * @returns {boolen} true if the buffer is empty
-     */
-    isEmptyBuffer() {
-        return this._buffer.length === 0;
-    }
-    /**
-     * Resets the summary buffer without writing to summary file
-     *
-     * @returns {Summary} summary instance
-     */
-    emptyBuffer() {
-        this._buffer = '';
-        return this;
-    }
-    /**
-     * Adds raw text to the summary buffer
-     *
-     * @param {string} text content to add
-     * @param {boolean} [addEOL=false] (optional) append an EOL to the raw text (default: false)
-     *
-     * @returns {Summary} summary instance
-     */
-    addRaw(text, addEOL = false) {
-        this._buffer += text;
-        return addEOL ? this.addEOL() : this;
-    }
-    /**
-     * Adds the operating system-specific end-of-line marker to the buffer
-     *
-     * @returns {Summary} summary instance
-     */
-    addEOL() {
-        return this.addRaw(os_1.EOL);
-    }
-    /**
-     * Adds an HTML codeblock to the summary buffer
-     *
-     * @param {string} code content to render within fenced code block
-     * @param {string} lang (optional) language to syntax highlight code
-     *
-     * @returns {Summary} summary instance
-     */
-    addCodeBlock(code, lang) {
-        const attrs = Object.assign({}, (lang && { lang }));
-        const element = this.wrap('pre', this.wrap('code', code), attrs);
-        return this.addRaw(element).addEOL();
-    }
-    /**
-     * Adds an HTML list to the summary buffer
-     *
-     * @param {string[]} items list of items to render
-     * @param {boolean} [ordered=false] (optional) if the rendered list should be ordered or not (default: false)
-     *
-     * @returns {Summary} summary instance
-     */
-    addList(items, ordered = false) {
-        const tag = ordered ? 'ol' : 'ul';
-        const listItems = items.map(item => this.wrap('li', item)).join('');
-        const element = this.wrap(tag, listItems);
-        return this.addRaw(element).addEOL();
-    }
-    /**
-     * Adds an HTML table to the summary buffer
-     *
-     * @param {SummaryTableCell[]} rows table rows
-     *
-     * @returns {Summary} summary instance
-     */
-    addTable(rows) {
-        const tableBody = rows
-            .map(row => {
-            const cells = row
-                .map(cell => {
-                if (typeof cell === 'string') {
-                    return this.wrap('td', cell);
-                }
-                const { header, data, colspan, rowspan } = cell;
-                const tag = header ? 'th' : 'td';
-                const attrs = Object.assign(Object.assign({}, (colspan && { colspan })), (rowspan && { rowspan }));
-                return this.wrap(tag, data, attrs);
-            })
-                .join('');
-            return this.wrap('tr', cells);
-        })
-            .join('');
-        const element = this.wrap('table', tableBody);
-        return this.addRaw(element).addEOL();
-    }
-    /**
-     * Adds a collapsable HTML details element to the summary buffer
-     *
-     * @param {string} label text for the closed state
-     * @param {string} content collapsable content
-     *
-     * @returns {Summary} summary instance
-     */
-    addDetails(label, content) {
-        const element = this.wrap('details', this.wrap('summary', label) + content);
-        return this.addRaw(element).addEOL();
-    }
-    /**
-     * Adds an HTML image tag to the summary buffer
-     *
-     * @param {string} src path to the image you to embed
-     * @param {string} alt text description of the image
-     * @param {SummaryImageOptions} options (optional) addition image attributes
-     *
-     * @returns {Summary} summary instance
-     */
-    addImage(src, alt, options) {
-        const { width, height } = options || {};
-        const attrs = Object.assign(Object.assign({}, (width && { width })), (height && { height }));
-        const element = this.wrap('img', null, Object.assign({ src, alt }, attrs));
-        return this.addRaw(element).addEOL();
-    }
-    /**
-     * Adds an HTML section heading element
-     *
-     * @param {string} text heading text
-     * @param {number | string} [level=1] (optional) the heading level, default: 1
-     *
-     * @returns {Summary} summary instance
-     */
-    addHeading(text, level) {
-        const tag = `h${level}`;
-        const allowedTag = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag)
-            ? tag
-            : 'h1';
-        const element = this.wrap(allowedTag, text);
-        return this.addRaw(element).addEOL();
-    }
-    /**
-     * Adds an HTML thematic break (<hr>) to the summary buffer
-     *
-     * @returns {Summary} summary instance
-     */
-    addSeparator() {
-        const element = this.wrap('hr', null);
-        return this.addRaw(element).addEOL();
-    }
-    /**
-     * Adds an HTML line break (<br>) to the summary buffer
-     *
-     * @returns {Summary} summary instance
-     */
-    addBreak() {
-        const element = this.wrap('br', null);
-        return this.addRaw(element).addEOL();
-    }
-    /**
-     * Adds an HTML blockquote to the summary buffer
-     *
-     * @param {string} text quote text
-     * @param {string} cite (optional) citation url
-     *
-     * @returns {Summary} summary instance
-     */
-    addQuote(text, cite) {
-        const attrs = Object.assign({}, (cite && { cite }));
-        const element = this.wrap('blockquote', text, attrs);
-        return this.addRaw(element).addEOL();
-    }
-    /**
-     * Adds an HTML anchor tag to the summary buffer
-     *
-     * @param {string} text link text/content
-     * @param {string} href hyperlink
-     *
-     * @returns {Summary} summary instance
-     */
-    addLink(text, href) {
-        const element = this.wrap('a', text, { href });
-        return this.addRaw(element).addEOL();
-    }
-}
-const _summary = new Summary();
-/**
- * @deprecated use `core.summary`
- */
-exports.markdownSummary = _summary;
-exports.summary = _summary;
-//# sourceMappingURL=summary.js.map
 
 /***/ }),
 

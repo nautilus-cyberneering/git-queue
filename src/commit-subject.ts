@@ -1,5 +1,6 @@
 import {CommitHash} from './commit-hash'
 import {CommitSubjectParser} from './commit-subject-parser'
+import {JobId} from './job-id'
 import {Message} from './message'
 import {MessageKey} from './message-key'
 import {QueueName} from './queue-name'
@@ -12,12 +13,12 @@ export class CommitSubject {
   private messageKey: MessageKey
   private queueName: QueueName
   private jobRef: CommitHash
-  private jobId: number
+  private jobId: JobId
 
   constructor(
     messageKey: MessageKey,
     queueName: QueueName,
-    jobId: number,
+    jobId: JobId,
     jobRef: CommitHash
   ) {
     this.messageKey = messageKey
@@ -33,7 +34,7 @@ export class CommitSubject {
     return new CommitSubject(
       message.getKey(),
       queueName,
-      message.getId(),
+      message.getJobId(),
       message.getJobRef()
     )
   }
@@ -62,7 +63,7 @@ export class CommitSubject {
     return this.jobRef
   }
 
-  getJobId(): number {
+  getJobId(): JobId {
     return this.jobId
   }
 }
