@@ -702,7 +702,7 @@ exports.getErrorMessage = getErrorMessage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.InvalidCommitBodyError = exports.InvalidShortHashError = exports.InvalidHashError = exports.QueueNameNotValidError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+exports.InvalidCommitBodyError = exports.InvalidShortHashError = exports.InvalidHashError = exports.QueueNameNotValidError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitNotSetupError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
 const queue_name_1 = __nccwpck_require__(7894);
 class MissingQueueNameInCommitSubjectError extends Error {
     constructor(commitSubject) {
@@ -739,6 +739,16 @@ class GitDirNotInitializedError extends Error {
     }
 }
 exports.GitDirNotInitializedError = GitDirNotInitializedError;
+class GitNotSetupError extends Error {
+    constructor() {
+        super(`Git has not been setup:\n` +
+            `Run\n` +
+            `1. Run 'git config --global user.name <your name>'\n` +
+            `2. Run 'git config --global user.email <your email>'`);
+        Object.setPrototypeOf(this, GitNotSetupError.prototype);
+    }
+}
+exports.GitNotSetupError = GitNotSetupError;
 class GitDirNotFoundError extends Error {
     constructor(dir) {
         super(`Git dir: ${dir} does not exist or is not reachable`);
@@ -873,6 +883,16 @@ class GitRepo {
                 throw new Error();
             }
             (0, child_process_1.execSync)(`git -C ${this.getDirPath()} status`, { stdio: 'ignore' });
+        }
+        catch (_a) {
+            return false;
+        }
+        return true;
+    }
+    isSetup() {
+        try {
+            (0, child_process_1.execSync)(`git config user.name`, { stdio: 'ignore' });
+            (0, child_process_1.execSync)(`git config user.email`, { stdio: 'ignore' });
         }
         catch (_a) {
             return false;
@@ -1361,6 +1381,14 @@ class Queue {
             }
         });
     }
+    guardThatGitHasBeenSetup() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const isSetup = this.gitRepo.isSetup();
+            if (!isSetup) {
+                throw new errors_1.GitNotSetupError();
+            }
+        });
+    }
     // Job states: new -> started -> finished
     guardThatLastMessageWasNewJob(latestMessage) {
         if (!(latestMessage instanceof committed_message_1.NewJobCommittedMessage)) {
@@ -1381,6 +1409,7 @@ class Queue {
     }
     loadMessagesFromGit() {
         return __awaiter(this, void 0, void 0, function* () {
+            yield this.guardThatGitHasBeenSetup();
             yield this.guardThatGitRepoHasBeenInitialized();
             const noCommits = !(yield this.gitRepo.hasCommits()) ? true : false;
             if (noCommits) {

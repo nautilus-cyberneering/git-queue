@@ -28,6 +28,16 @@ export class GitRepo {
     return true
   }
 
+  isSetup(): boolean {
+    try {
+      execSync(`git config user.name`, {stdio: 'ignore'})
+      execSync(`git config user.email`, {stdio: 'ignore'})
+    } catch {
+      return false
+    }
+    return true
+  }
+
   getDir(): GitRepoDir {
     return this.dir
   }

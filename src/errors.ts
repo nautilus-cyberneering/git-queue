@@ -38,6 +38,18 @@ export class GitDirNotInitializedError extends Error {
   }
 }
 
+export class GitNotSetupError extends Error {
+  constructor() {
+    super(
+      `Git has not been setup:\n` +
+        `Run\n` +
+        `1. Run 'git config --global user.name <your name>'\n` +
+        `2. Run 'git config --global user.email <your email>'`
+    )
+    Object.setPrototypeOf(this, GitNotSetupError.prototype)
+  }
+}
+
 export class GitDirNotFoundError extends Error {
   constructor(dir: string) {
     super(`Git dir: ${dir} does not exist or is not reachable`)
