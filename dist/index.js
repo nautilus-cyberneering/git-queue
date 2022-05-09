@@ -945,6 +945,10 @@ class GitRepo {
     }
     commit(commitMessage, commitOptions) {
         return __awaiter(this, void 0, void 0, function* () {
+            const isSetup = this.isSetup();
+            if (!isSetup) {
+                throw new errors_1.GitNotSetupError();
+            }
             // TODO: Code Review. Should we use our own CommitResult class?
             // We could return always the 40-character commit hash with:
             // const longCommit = await git.show([commit, '--pretty=%H', '-s']);
@@ -1381,14 +1385,6 @@ class Queue {
             }
         });
     }
-    guardThatGitHasBeenSetup() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const isSetup = this.gitRepo.isSetup();
-            if (!isSetup) {
-                throw new errors_1.GitNotSetupError();
-            }
-        });
-    }
     // Job states: new -> started -> finished
     guardThatLastMessageWasNewJob(latestMessage) {
         if (!(latestMessage instanceof committed_message_1.NewJobCommittedMessage)) {
@@ -1409,7 +1405,6 @@ class Queue {
     }
     loadMessagesFromGit() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.guardThatGitHasBeenSetup();
             yield this.guardThatGitRepoHasBeenInitialized();
             const noCommits = !(yield this.gitRepo.hasCommits()) ? true : false;
             if (noCommits) {

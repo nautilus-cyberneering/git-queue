@@ -6,7 +6,6 @@ import {
 } from './committed-message'
 import {
   GitDirNotInitializedError,
-  GitNotSetupError,
   MissingJobStartedMessageError,
   MissingNewJobMessageError,
   PendingJobsLimitReachedError
@@ -64,13 +63,6 @@ export class Queue {
     }
   }
 
-  private async guardThatGitHasBeenSetup(): Promise<void> {
-    const isSetup = this.gitRepo.isSetup()
-    if (!isSetup) {
-      throw new GitNotSetupError()
-    }
-  }
-
   // Job states: new -> started -> finished
 
   private guardThatLastMessageWasNewJob(latestMessage: CommittedMessage): void {
@@ -98,7 +90,6 @@ export class Queue {
   }
 
   private async loadMessagesFromGit(): Promise<void> {
-    await this.guardThatGitHasBeenSetup()
     await this.guardThatGitRepoHasBeenInitialized()
 
     const noCommits = !(await this.gitRepo.hasCommits()) ? true : false

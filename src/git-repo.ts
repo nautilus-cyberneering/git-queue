@@ -1,7 +1,7 @@
 import {CommitResult, DefaultLogFields, LogResult, SimpleGit} from 'simple-git'
 import {CommitMessage} from './commit-message'
 import {CommitOptions} from './commit-options'
-import {GitDirNotInitializedError} from './errors'
+import {GitDirNotInitializedError, GitNotSetupError} from './errors'
 import {GitRepoDir} from './git-repo-dir'
 import {execSync} from 'child_process'
 import {existsSync} from 'fs'
@@ -84,6 +84,10 @@ export class GitRepo {
     commitMessage: CommitMessage,
     commitOptions: CommitOptions
   ): Promise<CommitResult> {
+    const isSetup = this.isSetup()
+    if (!isSetup) {
+      throw new GitNotSetupError()
+    }
     // TODO: Code Review. Should we use our own CommitResult class?
     // We could return always the 40-character commit hash with:
     // const longCommit = await git.show([commit, '--pretty=%H', '-s']);
