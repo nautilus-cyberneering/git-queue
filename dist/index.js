@@ -853,7 +853,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GitRepo = void 0;
 const errors_1 = __nccwpck_require__(9292);
 const child_process_1 = __nccwpck_require__(2081);
-const fs_1 = __nccwpck_require__(7147);
 class GitRepo {
     constructor(dir, git) {
         this.dir = dir;
@@ -861,11 +860,9 @@ class GitRepo {
     }
     isInitialized() {
         try {
-            // Make sure the string we will pass to to the shell is an actual dir
-            if (!(0, fs_1.existsSync)(this.dir.getDirPath())) {
-                throw new Error();
-            }
-            (0, child_process_1.execSync)(`git -C ${this.getDirPath()} status`, { stdio: 'ignore' });
+            const cmd = `git`;
+            const args = ['-C', this.getDirPath(), 'status'];
+            (0, child_process_1.execFileSync)(cmd, args, { stdio: 'ignore' });
         }
         catch (_a) {
             return false;
@@ -903,11 +900,9 @@ class GitRepo {
                 throw new errors_1.GitDirNotInitializedError(this.dir.getDirPath());
             }
             try {
-                // Make sure the string we will pass to to the shell is an actual dir
-                if (!(0, fs_1.existsSync)(this.dir.getDirPath())) {
-                    throw new Error();
-                }
-                (0, child_process_1.execSync)(`git -C ${this.dir.getDirPath()} log -n 0`, { stdio: 'ignore' });
+                const cmd = `git`;
+                const args = ['-C', this.getDirPath(), 'log', '-n', '0'];
+                (0, child_process_1.execFileSync)(cmd, args, { stdio: 'ignore' });
             }
             catch (err) {
                 // No commits yet
