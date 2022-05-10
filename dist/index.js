@@ -883,12 +883,6 @@ class GitRepo {
     env(name, value) {
         this.git.env(name, value);
     }
-    getCurrentBranch() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const status = yield this.git.status();
-            return status.current;
-        });
-    }
     log() {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.git.log();
