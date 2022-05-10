@@ -702,7 +702,7 @@ exports.getErrorMessage = getErrorMessage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.InvalidCommitBodyError = exports.InvalidShortHashError = exports.InvalidHashError = exports.QueueNameNotValidError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+exports.InvalidCommitBodyError = exports.InvalidHashError = exports.QueueNameNotValidError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.PendingJobsLimitReachedError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
 const queue_name_1 = __nccwpck_require__(7894);
 class MissingQueueNameInCommitSubjectError extends Error {
     constructor(commitSubject) {
@@ -789,13 +789,6 @@ class InvalidHashError extends Error {
     }
 }
 exports.InvalidHashError = InvalidHashError;
-class InvalidShortHashError extends Error {
-    constructor(hash) {
-        super(`Invalid 7-characters SHA-1 commit hash: ${hash}`);
-        Object.setPrototypeOf(this, InvalidShortHashError.prototype);
-    }
-}
-exports.InvalidShortHashError = InvalidShortHashError;
 class InvalidCommitBodyError extends Error {
     constructor(invalidBodyContent) {
         super(`Commit Body does not conform to specification: ${invalidBodyContent}`);
