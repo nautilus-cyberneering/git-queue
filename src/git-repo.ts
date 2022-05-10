@@ -41,11 +41,6 @@ export class GitRepo {
     this.git.env(name, value)
   }
 
-  async getCurrentBranch(): Promise<string | null> {
-    const status = await this.git.status()
-    return status.current
-  }
-
   async log(): Promise<LogResult<DefaultLogFields>> {
     return await this.git.log()
   }
