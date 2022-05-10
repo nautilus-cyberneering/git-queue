@@ -4,9 +4,12 @@ import * as openpgp from './openpgp'
 
 import simpleGit, {SimpleGit, SimpleGitOptions} from 'simple-git'
 
+import {CommitAuthor} from '../commit-author'
 import {CommitHash} from '../commit-hash'
+import {CommitOptions} from '../commit-options'
 import {GitRepo} from '../git-repo'
 import {GitRepoDir} from '../git-repo-dir'
+import {SigningKeyId} from '../signing-key-id'
 
 import {createTempDir} from 'jest-fixtures'
 import {join} from 'path'
@@ -124,4 +127,30 @@ export function dummyCommitBodyText(): string {
       job_commit: 'abc'
     }
   })
+}
+
+export function dummyCommitSubjectText(): string {
+  return '📝🈺: queue-name: job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+}
+
+export function commitOptionsForTests(): CommitOptions {
+  const author = CommitAuthor.fromNameAndEmail(
+    'A committer',
+    'committer@example.com'
+  )
+  const signingKeyId = new SigningKeyId('')
+  const noGpgSig = true
+  return new CommitOptions(author, signingKeyId, noGpgSig)
+}
+
+export function commitOptionsForTestsUsingSignature(): CommitOptions {
+  const author = CommitAuthor.fromNameAndEmail(
+    'A committer',
+    'committer@example.com'
+  )
+  const signingKeyId = new SigningKeyId(
+    testConfiguration().gpg_signing_key.fingerprint
+  )
+  const noGpgSig = false
+  return new CommitOptions(author, signingKeyId, noGpgSig)
 }

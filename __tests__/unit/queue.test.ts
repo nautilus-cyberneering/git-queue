@@ -1,4 +1,6 @@
 import {
+  commitOptionsForTests,
+  commitOptionsForTestsUsingSignature,
   createInitializedGitRepo,
   createInitializedTempGnuPGHomeDir,
   createNotInitializedGitRepo,
@@ -8,38 +10,14 @@ import {
   gitLogForLatestCommit
 } from '../../src/__tests__/helpers'
 
-import {CommitAuthor} from '../../src/commit-author'
 import {CommitInfo} from '../../src/commit-info'
 import {CommitOptions} from '../../src/commit-options'
 import {GitRepo} from '../../src/git-repo'
 import {Job} from '../../src/job'
 import {Queue} from '../../src/queue'
 import {QueueName} from '../../src/queue-name'
-import {SigningKeyId} from '../../src/signing-key-id'
 
 import {testConfiguration} from '../../src/__tests__/config'
-
-function commitOptionsForTests(): CommitOptions {
-  const author = CommitAuthor.fromNameAndEmail(
-    'A committer',
-    'committer@example.com'
-  )
-  const signingKeyId = new SigningKeyId('')
-  const noGpgSig = true
-  return new CommitOptions(author, signingKeyId, noGpgSig)
-}
-
-function commitOptionsForTestsUsingSignature(): CommitOptions {
-  const author = CommitAuthor.fromNameAndEmail(
-    'A committer',
-    'committer@example.com'
-  )
-  const signingKeyId = new SigningKeyId(
-    testConfiguration().gpg_signing_key.fingerprint
-  )
-  const noGpgSig = false
-  return new CommitOptions(author, signingKeyId, noGpgSig)
-}
 
 async function createTestQueue(
   commitOptions: CommitOptions,
