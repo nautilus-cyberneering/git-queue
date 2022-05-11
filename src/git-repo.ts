@@ -74,10 +74,6 @@ export class GitRepo {
     commitMessage: CommitMessage,
     commitOptions: CommitOptions
   ): Promise<CommitResult> {
-    // TODO: Code Review. Should we use our own CommitResult class?
-    // We could return always the 40-character commit hash with:
-    // const longCommit = await git.show([commit, '--pretty=%H', '-s']);
-    // Related issue: https://github.com/steveukx/git-js/issues/757
     return await this.git.commit(
       commitMessage.forSimpleGit(),
       commitOptions.forSimpleGit()
