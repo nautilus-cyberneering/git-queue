@@ -150,6 +150,10 @@ export class Queue {
     return this.committedMessages.getMessages()
   }
 
+  getLatestMessageRelatedToJob(jobId: JobId): CommittedMessage {
+    return this.committedMessages.getLatestMessageRelatedToJob(jobId)
+  }
+
   getLatestMessage(): CommittedMessage {
     return this.committedMessages.getLatestMessage()
   }
@@ -187,7 +191,7 @@ export class Queue {
     const latestMessage = this.getLatestMessage()
     this.guardThatLastMessageWasJobFinishedOrNull(latestMessage)
 
-    return latestMessage.jobId().getNextJobId()
+    return latestMessage.jobId().getNextConsecutiveJobId()
   }
 
   async createJob(payload: string): Promise<Job> {
@@ -200,15 +204,15 @@ export class Queue {
     return new Job(payload, commit.hash, nextJobId)
   }
 
-  async markJobAsStarted(payload: string): Promise<CommitInfo> {
-    const latestMessage = this.getLatestMessage()
+  async markJobAsStarted(jobId: JobId, payload: string): Promise<CommitInfo> {
+    const latestMessage = this.getLatestMessageRelatedToJob(jobId)
     this.guardThatLastMessageWasNewJob(latestMessage)
 
     const pendingJob = this.getNextJob()
 
     const message = new JobStartedMessage(
       payload,
-      latestMessage.jobId(),
+      jobId,
       pendingJob.getCommitHash()
     )
 
@@ -217,15 +221,15 @@ export class Queue {
     return commit
   }
 
-  async markJobAsFinished(payload: string): Promise<CommitInfo> {
-    const latestMessage = this.getLatestMessage()
-    this.guardThatLastMessageWasJobStarted(this.getLatestMessage())
+  async markJobAsFinished(jobId: JobId, payload: string): Promise<CommitInfo> {
+    const latestMessage = this.getLatestMessageRelatedToJob(jobId)
+    this.guardThatLastMessageWasJobStarted(latestMessage)
 
     const pendingJob = this.getNextJob()
 
     const message = new JobFinishedMessage(
       payload,
-      latestMessage.jobId(),
+      jobId,
       pendingJob.getCommitHash()
     )
 

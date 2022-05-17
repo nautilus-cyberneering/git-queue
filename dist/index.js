@@ -447,6 +447,12 @@ class CommittedMessageLog {
         }
         return this.messages[1];
     }
+    getLatestMessageRelatedToJob(jobId) {
+        return this.isEmpty()
+            ? (0, committed_message_1.nullMessage)()
+            : this.messages.find(message => message.jobId().equalsTo(jobId)) ||
+                (0, committed_message_1.nullMessage)();
+    }
     findByCommitHash(commitHash) {
         const commits = this.messages.filter(message => message.commitHash().equalsTo(commitHash));
         if (commits.length === 0) {
@@ -590,6 +596,7 @@ function getInputs() {
             queueName: core.getInput('queue_name', { required: true }),
             action: core.getInput('action', { required: true }),
             jobPayload: core.getInput('job_payload', { required: false }),
+            jobId: parseInt(core.getInput('job_id', { required: false })),
             gitRepoDir: core.getInput('git_repo_dir', { required: false }),
             gitCommitGpgSign: core.getInput('git_commit_gpg_sign', { required: false }),
             gitCommitNoGpgSign: core.getInput('git_commit_no_gpg_sign', { required: false }) === 'true'
@@ -1054,8 +1061,8 @@ class JobId {
     getId() {
         return this.value;
     }
-    getNextJobId() {
-        return this.isNull() ? new JobId(0) : new JobId(this.value + 1);
+    getNextConsecutiveJobId() {
+        return this.isNull() ? new JobId(1) : new JobId(this.value + 1);
     }
     isNull() {
         return this.value === NO_JOB_ID;
@@ -1166,6 +1173,7 @@ const signing_key_id_1 = __nccwpck_require__(9869);
 const commit_options_1 = __nccwpck_require__(360);
 const git_repo_1 = __nccwpck_require__(8432);
 const git_repo_dir_1 = __nccwpck_require__(7775);
+const job_id_1 = __nccwpck_require__(9654);
 const queue_1 = __nccwpck_require__(7065);
 const queue_name_1 = __nccwpck_require__(7894);
 const simple_git_factory_1 = __nccwpck_require__(9649);
@@ -1255,7 +1263,7 @@ function run() {
                     break;
                 }
                 case ACTION_START_JOB: {
-                    const commit = yield queue.markJobAsStarted(inputs.jobPayload);
+                    const commit = yield queue.markJobAsStarted(new job_id_1.JobId(inputs.jobId), inputs.jobPayload);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_started', !commit.hash.isNull());
                         context.setOutput('job_commit', commit.hash.toString());
@@ -1265,7 +1273,7 @@ function run() {
                     break;
                 }
                 case ACTION_FINISH_JOB: {
-                    const commit = yield queue.markJobAsFinished(inputs.jobPayload);
+                    const commit = yield queue.markJobAsFinished(new job_id_1.JobId(inputs.jobId), inputs.jobPayload);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_finished', !commit.hash.isNull());
                         context.setOutput('job_commit', commit.hash.toString());
@@ -1515,6 +1523,9 @@ class Queue {
     getMessages() {
         return this.committedMessages.getMessages();
     }
+    getLatestMessageRelatedToJob(jobId) {
+        return this.committedMessages.getLatestMessageRelatedToJob(jobId);
+    }
     getLatestMessage() {
         return this.committedMessages.getLatestMessage();
     }
@@ -1540,7 +1551,7 @@ class Queue {
     getNextJobId() {
         const latestMessage = this.getLatestMessage();
         this.guardThatLastMessageWasJobFinishedOrNull(latestMessage);
-        return latestMessage.jobId().getNextJobId();
+        return latestMessage.jobId().getNextConsecutiveJobId();
     }
     createJob(payload) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -1550,22 +1561,22 @@ class Queue {
             return new job_1.Job(payload, commit.hash, nextJobId);
         });
     }
-    markJobAsStarted(payload) {
+    markJobAsStarted(jobId, payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const latestMessage = this.getLatestMessage();
+            const latestMessage = this.getLatestMessageRelatedToJob(jobId);
             this.guardThatLastMessageWasNewJob(latestMessage);
             const pendingJob = this.getNextJob();
-            const message = new message_1.JobStartedMessage(payload, latestMessage.jobId(), pendingJob.getCommitHash());
+            const message = new message_1.JobStartedMessage(payload, jobId, pendingJob.getCommitHash());
             const commit = yield this.commitMessage(message);
             return commit;
         });
     }
-    markJobAsFinished(payload) {
+    markJobAsFinished(jobId, payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const latestMessage = this.getLatestMessage();
-            this.guardThatLastMessageWasJobStarted(this.getLatestMessage());
+            const latestMessage = this.getLatestMessageRelatedToJob(jobId);
+            this.guardThatLastMessageWasJobStarted(latestMessage);
             const pendingJob = this.getNextJob();
-            const message = new message_1.JobFinishedMessage(payload, latestMessage.jobId(), pendingJob.getCommitHash());
+            const message = new message_1.JobFinishedMessage(payload, jobId, pendingJob.getCommitHash());
             const commit = yield this.commitMessage(message);
             return commit;
         });

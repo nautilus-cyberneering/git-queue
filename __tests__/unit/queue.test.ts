@@ -93,7 +93,7 @@ describe('Queue', () => {
 
     const commitHash = getLatestCommitHash(queue.getGitRepoDir())
     expect(
-      job.equalsTo(new Job(dummyPayload(), commitHash, new JobId(0)))
+      job.equalsTo(new Job(dummyPayload(), commitHash, new JobId(1)))
     ).toBe(true)
   })
 
@@ -117,7 +117,7 @@ describe('Queue', () => {
     const queue = await createTestQueue(commitOptionsForTests())
 
     await queue.createJob(dummyPayload())
-    await queue.markJobAsStarted(dummyPayload())
+    await queue.markJobAsStarted(new JobId(1), dummyPayload())
 
     const nextJob = queue.getNextJob()
 
@@ -129,7 +129,7 @@ describe('Queue', () => {
     const queue = await createTestQueue(commitOptionsForTests())
 
     const fn = async (): Promise<CommitInfo> => {
-      return queue.markJobAsStarted(dummyPayload())
+      return queue.markJobAsStarted(new JobId(0), dummyPayload())
     }
 
     const expectedError = `Can't start job. Previous message is not a new job message. Previous message commit: --no-commit-hash--`
@@ -141,8 +141,11 @@ describe('Queue', () => {
     const queue = await createTestQueue(commitOptionsForTests())
 
     await queue.createJob(dummyPayload())
-    await queue.markJobAsStarted(dummyPayload())
-    const finishJobCommit = await queue.markJobAsFinished(dummyPayload())
+    await queue.markJobAsStarted(new JobId(1), dummyPayload())
+    const finishJobCommit = await queue.markJobAsFinished(
+      new JobId(1),
+      dummyPayload()
+    )
 
     expect(queue.isEmpty()).toBe(true)
 
@@ -155,7 +158,7 @@ describe('Queue', () => {
     const queue = await createTestQueue(commitOptionsForTests())
 
     const fn = async (): Promise<CommitInfo> => {
-      return queue.markJobAsFinished(dummyPayload())
+      return queue.markJobAsFinished(new JobId(0), dummyPayload())
     }
 
     const expectedError = `Can't finish job. Previous message is not a job started message. Previous message commit: --no-commit-hash--`
@@ -236,8 +239,8 @@ describe('Queue', () => {
       const queue = await createTestQueue(commitOptionsForTests())
 
       await queue.createJob(dummyPayload())
-      await queue.markJobAsStarted(dummyPayload())
-      await queue.markJobAsFinished(dummyPayload())
+      await queue.markJobAsStarted(new JobId(1), dummyPayload())
+      await queue.markJobAsFinished(new JobId(1), dummyPayload())
 
       expect(queue.isEmpty()).toBe(true)
     })
@@ -268,8 +271,8 @@ describe('Queue', () => {
 
       // First completed job
       await queue.createJob(dummyPayload())
-      await queue.markJobAsStarted(dummyPayload())
-      await queue.markJobAsFinished(dummyPayload())
+      await queue.markJobAsStarted(new JobId(1), dummyPayload())
+      await queue.markJobAsFinished(new JobId(1), dummyPayload())
 
       // Second job
       await queue.createJob(dummyPayload())
@@ -278,7 +281,7 @@ describe('Queue', () => {
 
       const latestCommit = getLatestCommitHash(queue.getGitRepoDir())
       expect(
-        nextJob.equalsTo(new Job(dummyPayload(), latestCommit, new JobId(1)))
+        nextJob.equalsTo(new Job(dummyPayload(), latestCommit, new JobId(2)))
       ).toBe(true)
     })
   })
@@ -303,21 +306,21 @@ describe('Queue', () => {
 
     const newJob1Commit = getSecondToLatestCommitHash(queue1.getGitRepoDir())
     expect(
-      nextJob1.equalsTo(new Job(payload1, newJob1Commit, new JobId(0)))
+      nextJob1.equalsTo(new Job(payload1, newJob1Commit, new JobId(1)))
     ).toBe(true)
 
     let latestCommit = getLatestCommitHash(queue2.getGitRepoDir())
     expect(
-      nextJob2.equalsTo(new Job(payload2, latestCommit, new JobId(0)))
+      nextJob2.equalsTo(new Job(payload2, latestCommit, new JobId(1)))
     ).toBe(true)
 
-    await queue1.markJobAsStarted(payload1)
-    await queue1.markJobAsFinished(payload1)
+    await queue1.markJobAsStarted(new JobId(1), payload1)
+    await queue1.markJobAsFinished(new JobId(1), payload1)
     await queue1.createJob(payload2)
     const nextJob3 = queue1.getNextJob()
     latestCommit = getLatestCommitHash(queue1.getGitRepoDir())
     expect(
-      nextJob3.equalsTo(new Job(payload2, latestCommit, new JobId(1)))
+      nextJob3.equalsTo(new Job(payload2, latestCommit, new JobId(2)))
     ).toBe(true)
   })
 })

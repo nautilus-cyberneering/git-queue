@@ -7,6 +7,7 @@ import {CommitOptions} from './commit-options'
 import {GitRepo} from './git-repo'
 import {GitRepoDir} from './git-repo-dir'
 import {Inputs} from './context'
+import {JobId} from './job-id'
 import {Queue} from './queue'
 import {QueueName} from './queue-name'
 
@@ -128,7 +129,10 @@ async function run(): Promise<void> {
         break
       }
       case ACTION_START_JOB: {
-        const commit = await queue.markJobAsStarted(inputs.jobPayload)
+        const commit = await queue.markJobAsStarted(
+          new JobId(inputs.jobId),
+          inputs.jobPayload
+        )
 
         await core.group(`Setting outputs`, async () => {
           context.setOutput('job_started', !commit.hash.isNull())
@@ -141,7 +145,10 @@ async function run(): Promise<void> {
         break
       }
       case ACTION_FINISH_JOB: {
-        const commit = await queue.markJobAsFinished(inputs.jobPayload)
+        const commit = await queue.markJobAsFinished(
+          new JobId(inputs.jobId),
+          inputs.jobPayload
+        )
 
         await core.group(`Setting outputs`, async () => {
           context.setOutput('job_finished', !commit.hash.isNull())

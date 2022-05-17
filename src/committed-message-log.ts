@@ -3,6 +3,7 @@ import {DefaultLogFields, ListLogLine} from 'simple-git'
 
 import {CommitHash} from './commit-hash'
 import {CommitInfo} from './commit-info'
+import {JobId} from './job-id'
 import {QueueName} from './queue-name'
 
 import {commitSubjectBelongsToAQueue} from './commit-subject-parser'
@@ -56,6 +57,13 @@ export class CommittedMessageLog {
     }
 
     return this.messages[1]
+  }
+
+  getLatestMessageRelatedToJob(jobId: JobId): CommittedMessage {
+    return this.isEmpty()
+      ? nullMessage()
+      : this.messages.find(message => message.jobId().equalsTo(jobId)) ||
+          nullMessage()
   }
 
   findByCommitHash(commitHash: CommitHash): CommittedMessage {

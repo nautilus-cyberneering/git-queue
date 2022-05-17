@@ -56,25 +56,35 @@ function nextSampleJob(gitRepo: GitRepo): string | Buffer {
   })
 }
 
-function startSampleJob(gitRepo: GitRepo, payload: String): string | Buffer {
+function startSampleJob(
+  gitRepo: GitRepo,
+  payload: String,
+  jobId: String
+): string | Buffer {
   return executeAction({
     ...process.env,
     INPUT_QUEUE_NAME: 'queue-name',
     INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
     INPUT_ACTION: 'start-job',
     INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true',
-    INPUT_JOB_PAYLOAD: payload
+    INPUT_JOB_PAYLOAD: payload,
+    INPUT_JOB_ID: jobId
   })
 }
 
-function finishSampleJob(gitRepo: GitRepo, payload: String): string | Buffer {
+function finishSampleJob(
+  gitRepo: GitRepo,
+  payload: String,
+  jobId: String
+): string | Buffer {
   return executeAction({
     ...process.env,
     INPUT_QUEUE_NAME: 'queue-name',
     INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
     INPUT_ACTION: 'finish-job',
     INPUT_GIT_COMMIT_NO_GPG_SIGN: 'true',
-    INPUT_JOB_PAYLOAD: payload
+    INPUT_JOB_PAYLOAD: payload,
+    INPUT_JOB_ID: jobId
   })
 }
 
@@ -160,7 +170,7 @@ describe('GitHub Action', () => {
 
     createSampleJob(gitRepo, dummyPayload())
 
-    const output = startSampleJob(gitRepo, dummyPayload())
+    const output = startSampleJob(gitRepo, dummyPayload(), '1')
 
     expect(getOutputVariable('job_started', output.toString())).toBe('true')
     expect(getOutputVariable('job_commit', output.toString())).toBe(
@@ -172,8 +182,8 @@ describe('GitHub Action', () => {
     const gitRepo = await createInitializedGitRepo()
 
     createSampleJob(gitRepo, dummyPayload())
-    startSampleJob(gitRepo, 'test')
-    const output = finishSampleJob(gitRepo, 'test')
+    startSampleJob(gitRepo, 'test', '1')
+    const output = finishSampleJob(gitRepo, 'test', '1')
 
     expect(getOutputVariable('job_finished', output.toString())).toBe('true')
     expect(getOutputVariable('job_commit', output.toString())).toBe(
@@ -181,26 +191,26 @@ describe('GitHub Action', () => {
     )
   })
 
-  it('should assign job id 0 to the first created job', async () => {
+  it('should assign job id 1 to the first created job', async () => {
     const gitRepo = await createInitializedGitRepo()
-
-    const output = createSampleJob(gitRepo, dummyPayload())
-
-    expect(getOutputVariable('job_id', output.toString())).toBe('0')
-  })
-
-  it('should assign job id 1 to the second created job', async () => {
-    const gitRepo = await createInitializedGitRepo()
-
-    const firstOutput = createSampleJob(gitRepo, dummyPayload())
-
-    expect(getOutputVariable('job_id', firstOutput.toString())).toBe('0')
-    startSampleJob(gitRepo, dummyPayload())
-    finishSampleJob(gitRepo, dummyPayload())
 
     const output = createSampleJob(gitRepo, dummyPayload())
 
     expect(getOutputVariable('job_id', output.toString())).toBe('1')
+  })
+
+  it('should assign job id 2 to the second created job', async () => {
+    const gitRepo = await createInitializedGitRepo()
+
+    const firstOutput = createSampleJob(gitRepo, dummyPayload())
+
+    expect(getOutputVariable('job_id', firstOutput.toString())).toBe('1')
+    startSampleJob(gitRepo, dummyPayload(), '1')
+    finishSampleJob(gitRepo, dummyPayload(), '1')
+
+    const output = createSampleJob(gitRepo, dummyPayload())
+
+    expect(getOutputVariable('job_id', output.toString())).toBe('2')
   })
 
   it('should allow to overwrite commit signing key', async () => {

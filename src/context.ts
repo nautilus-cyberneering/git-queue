@@ -5,6 +5,7 @@ export interface Inputs {
   queueName: string
   action: string
   jobPayload: string
+  jobId: number
   gitRepoDir: string
   gitCommitGpgSign: string
   gitCommitNoGpgSign: boolean
@@ -15,6 +16,7 @@ export async function getInputs(): Promise<Inputs> {
     queueName: core.getInput('queue_name', {required: true}),
     action: core.getInput('action', {required: true}),
     jobPayload: core.getInput('job_payload', {required: false}),
+    jobId: parseInt(core.getInput('job_id', {required: false})),
     gitRepoDir: core.getInput('git_repo_dir', {required: false}),
     gitCommitGpgSign: core.getInput('git_commit_gpg_sign', {required: false}),
     gitCommitNoGpgSign:
