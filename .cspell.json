@@ -65,6 +65,7 @@
     "venv",
     "vercel",
     "vuepress",
-    "wscript"
+    "wscript",
+    "zstd"
   ]
 }

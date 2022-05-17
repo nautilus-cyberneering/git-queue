@@ -35,11 +35,10 @@ You can use it if:
 
 - You have workflows running in parallel.
 - The workflows are going to create new commits in a branch and those commits are going to be merged into another branch.
-- And you wan to coordinate them to avoid concurrency problems like duplicate commits or commits in the wrong order.
+- And you want to coordinate them to avoid concurrency problems like duplicate commits or commits in the wrong order.
 
 ### Why to use it
 
-<!-- markdown-link-check-disable-next-line -->
 There are other alternatives like [GitHub concurrency groups](https://docs.github.com/en/actions/using-jobs/using-concurrency), but:
 
 - In some cases, it could be convenient not to couple your application to the GitHub infrastructure.
@@ -68,7 +67,6 @@ The problem this action was trying to solve initially was updating a submodule i
 
 It requires to enable only fast forward merges.
 
-<!-- markdown-link-check-disable-next-line -->
 It works on Linux, macOS and Windows [virtual environments](https://help.github.com/en/articles/virtual-environments-for-github-actions#supported-virtual-environments-and-hardware-resources).
 
 The action has 3 different commands (specified by the input `action`):
@@ -286,7 +284,7 @@ General conventions:
 Conventions related to pull requests:
 
 - We only allow rebase merges.
-<!-- markdownlint-disable-next-line MD013 --><!-- markdown-link-check-disable-next-line -->
+<!-- markdownlint-disable-next-line MD013 -->
 - Pull request merges must be done using the console because [GitHub Rebase](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges) does not work exactly like [Git Rebase](https://git-scm.com/docs/git-rebase) and commits are re-created not signed.
 
 Conventions related to releases:
