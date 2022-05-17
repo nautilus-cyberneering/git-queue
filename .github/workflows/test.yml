@@ -27,10 +27,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      # - name: Set up git committer identity
-      #  run: |
-      #    git config --global user.name 'github-actions[bot]'
-      #    git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+      - name: Set up git committer identity
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
       - name: Install
         run: yarn install
@@ -48,10 +48,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up git committer identity
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+      # - name: Set up git committer identity
+      #  run: |
+      #    git config --global user.name 'github-actions[bot]'
+      #    git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
       - name: Install dependencies and build
         run: yarn install && yarn build && yarn package
