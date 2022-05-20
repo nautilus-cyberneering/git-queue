@@ -37,4 +37,10 @@ describe('JobId', () => {
 
     expect(nullObject.isNull()).toBe(true)
   })
+
+  it('should return a consecutive JobId', () => {
+    const jobId = new JobId(42)
+
+    expect(jobId.getNextConsecutiveJobId().getId()).toBe(43)
+  })
 })

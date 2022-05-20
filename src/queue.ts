@@ -7,8 +7,7 @@ import {
 import {
   GitDirNotInitializedError,
   MissingJobStartedMessageError,
-  MissingNewJobMessageError,
-  PendingJobsLimitReachedError
+  MissingNewJobMessageError
 } from './errors'
 import {Job, nullJob} from './job'
 import {
@@ -80,16 +79,6 @@ export class Queue {
     }
   }
 
-  private guardThatLastMessageWasJobFinishedOrNull(
-    latestMessage: CommittedMessage
-  ): void {
-    if (latestMessage.isNull()) return
-
-    if (!(latestMessage instanceof JobFinishedCommittedMessage)) {
-      throw new PendingJobsLimitReachedError(latestMessage)
-    }
-  }
-
   private async loadMessagesFromGit(): Promise<void> {
     await this.guardThatGitRepoHasBeenInitialized()
 
@@ -158,6 +147,10 @@ export class Queue {
     return this.committedMessages.getLatestMessage()
   }
 
+  latestNewJobMessage(): CommittedMessage {
+    return this.committedMessages.latestNewJobMessage()
+  }
+
   isEmpty(): boolean {
     const nextJob = this.getNextJob()
     return nextJob.isNull()
@@ -188,10 +181,8 @@ export class Queue {
   // Job states: new -> started -> finished
 
   getNextJobId(): JobId {
-    const latestMessage = this.getLatestMessage()
-    this.guardThatLastMessageWasJobFinishedOrNull(latestMessage)
-
-    return latestMessage.jobId().getNextConsecutiveJobId()
+    const latestNewJobMessage = this.latestNewJobMessage()
+    return latestNewJobMessage.jobId().getNextConsecutiveJobId()
   }
 
   async createJob(payload: string): Promise<Job> {

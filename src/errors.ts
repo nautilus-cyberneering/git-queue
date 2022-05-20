@@ -52,21 +52,10 @@ export class GitDirNotFoundError extends Error {
   }
 }
 
-export class PendingJobsLimitReachedError extends Error {
-  constructor(committedMessage: CommittedMessage) {
-    super(
-      `Can't create job. Previous message is not a job finished message. Previous message commit: ${committedMessage
-        .commitHash()
-        .toString()}`
-    )
-    Object.setPrototypeOf(this, PendingJobsLimitReachedError.prototype)
-  }
-}
-
 export class MissingJobStartedMessageError extends Error {
   constructor(committedMessage: CommittedMessage) {
     super(
-      `Can't finish job. Previous message is not a job started message. Previous message commit: ${committedMessage
+      `Can't finish job. Previous message from this job is not a job started message. Previous message commit: ${committedMessage
         .commitHash()
         .toString()}`
     )
@@ -77,7 +66,7 @@ export class MissingJobStartedMessageError extends Error {
 export class MissingNewJobMessageError extends Error {
   constructor(committedMessage: CommittedMessage) {
     super(
-      `Can't start job. Previous message is not a new job message. Previous message commit: ${committedMessage
+      `Can't start job. Previous message from this job is not a new job message. Previous message commit: ${committedMessage
         .commitHash()
         .toString()}`
     )

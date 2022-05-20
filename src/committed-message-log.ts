@@ -1,4 +1,8 @@
-import {CommittedMessage, nullMessage} from './committed-message'
+import {
+  CommittedMessage,
+  NewJobCommittedMessage,
+  nullMessage
+} from './committed-message'
 import {DefaultLogFields, ListLogLine} from 'simple-git'
 
 import {CommitHash} from './commit-hash'
@@ -64,6 +68,14 @@ export class CommittedMessageLog {
       ? nullMessage()
       : this.messages.find(message => message.jobId().equalsTo(jobId)) ||
           nullMessage()
+  }
+
+  latestNewJobMessage(): CommittedMessage {
+    return this.isEmpty()
+      ? nullMessage()
+      : this.messages.find(
+          message => message instanceof NewJobCommittedMessage
+        ) || nullMessage()
   }
 
   findByCommitHash(commitHash: CommitHash): CommittedMessage {

@@ -97,20 +97,14 @@ describe('Queue', () => {
     ).toBe(true)
   })
 
-  it('should fail when trying to create a job if the previous job has not finished yet', async () => {
+  it('should create an additional job without waiting for the previous one to finish', async () => {
     const queue = await createTestQueue(commitOptionsForTests())
 
-    const job = await queue.createJob(dummyPayload())
+    const job1 = await queue.createJob(dummyPayload())
+    const job2 = await queue.createJob(dummyPayload())
 
-    const fn = async (): Promise<Job> => {
-      return queue.createJob(dummyPayload())
-    }
-
-    const expectedError = `Can't create job. Previous message is not a job finished message. Previous message commit: ${job
-      .getCommitHash()
-      .getHash()}`
-
-    await expect(fn()).rejects.toThrowError(expectedError)
+    expect(job1.getJobId().equalsTo(new JobId(1))).toBe(true)
+    expect(job2.getJobId().equalsTo(new JobId(2))).toBe(true)
   })
 
   it('should mark a job as started', async () => {
@@ -132,7 +126,7 @@ describe('Queue', () => {
       return queue.markJobAsStarted(new JobId(0), dummyPayload())
     }
 
-    const expectedError = `Can't start job. Previous message is not a new job message. Previous message commit: --no-commit-hash--`
+    const expectedError = `Can't start job. Previous message from this job is not a new job message. Previous message commit: --no-commit-hash--`
 
     await expect(fn()).rejects.toThrowError(expectedError)
   })
@@ -154,14 +148,45 @@ describe('Queue', () => {
     expect(finishJobCommit.hash.equalsTo(latestCommit)).toBe(true)
   })
 
+  it('should mark a job that is not the last created one as finished', async () => {
+    const queue = await createTestQueue(commitOptionsForTests())
+
+    await queue.createJob(dummyPayload())
+    await queue.createJob(dummyPayload())
+    await queue.markJobAsStarted(new JobId(1), dummyPayload())
+    const finishJobCommit = await queue.markJobAsFinished(
+      new JobId(1),
+      dummyPayload()
+    )
+
+    expect(queue.isEmpty()).toBe(true)
+
+    // Commit was created
+    const latestCommit = getLatestCommitHash(queue.getGitRepoDir())
+    expect(finishJobCommit.hash.equalsTo(latestCommit)).toBe(true)
+  })
+
   it('should fail when trying to finish a job without any pending to finish job', async () => {
     const queue = await createTestQueue(commitOptionsForTests())
 
     const fn = async (): Promise<CommitInfo> => {
-      return queue.markJobAsFinished(new JobId(0), dummyPayload())
+      return queue.markJobAsFinished(new JobId(1), dummyPayload())
     }
 
-    const expectedError = `Can't finish job. Previous message is not a job started message. Previous message commit: --no-commit-hash--`
+    const expectedError = `Can't finish job. Previous message from this job is not a job started message. Previous message commit: --no-commit-hash--`
+
+    await expect(fn()).rejects.toThrowError(expectedError)
+  })
+
+  it('should fail when trying to finish a job that does not exists', async () => {
+    const queue = await createTestQueue(commitOptionsForTests())
+    await queue.createJob(dummyPayload())
+
+    const fn = async (): Promise<CommitInfo> => {
+      return queue.markJobAsFinished(new JobId(2), dummyPayload())
+    }
+
+    const expectedError = `Can't finish job. Previous message from this job is not a job started message. Previous message commit: --no-commit-hash--`
 
     await expect(fn()).rejects.toThrowError(expectedError)
   })
