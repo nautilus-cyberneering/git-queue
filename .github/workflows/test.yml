@@ -86,6 +86,7 @@ jobs:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'library update - library-aaa'
           action: 'start-job'
+          job_id: '1'
           job_payload: '{"field": "value", "state": "started"}'
 
       - name: Debug
@@ -119,6 +120,7 @@ jobs:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'library update - library-aaa'
           action: 'finish-job'
+          job_id: '1'
           job_payload: '{"field": "value", "state": "finished"}'
 
       - name: Debug
@@ -190,6 +192,7 @@ jobs:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'library update - library-aaa'
           action: 'start-job'
+          job_id: '1'
           job_payload: '{"field": "value", "state": "started"}'
 
       - name: Debug
@@ -223,6 +226,7 @@ jobs:
           git_repo_dir: ${{ runner.temp }}/temp_git_dir
           queue_name: 'library update - library-aaa'
           action: 'finish-job'
+          job_id: '1'
           job_payload: '{"field": "value", "state": "finished"}'
 
       - name: Debug
