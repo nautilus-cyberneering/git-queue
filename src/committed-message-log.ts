@@ -1,5 +1,7 @@
 import {
   CommittedMessage,
+  JobFinishedCommittedMessage,
+  JobStartedCommittedMessage,
   NewJobCommittedMessage,
   nullMessage
 } from './committed-message'
@@ -11,6 +13,7 @@ import {JobId} from './job-id'
 import {QueueName} from './queue-name'
 
 import {commitSubjectBelongsToAQueue} from './commit-subject-parser'
+import {Job} from './job'
 
 /**
  * A readonly list of ordered commit messages.
@@ -70,11 +73,37 @@ export class CommittedMessageLog {
           nullMessage()
   }
 
-  latestNewJobMessage(): CommittedMessage {
+  getLatestNewJobMessage(): CommittedMessage {
     return this.isEmpty()
       ? nullMessage()
       : this.messages.find(
           message => message instanceof NewJobCommittedMessage
+        ) || nullMessage()
+  }
+
+  getLatestFinishedJobMessage(): CommittedMessage {
+    return this.isEmpty()
+      ? nullMessage()
+      : this.messages.find(
+          message => message instanceof JobFinishedCommittedMessage
+        ) || nullMessage()
+  }
+
+  getLatestStartedJobMessage(): CommittedMessage {
+    return this.isEmpty()
+      ? nullMessage()
+      : this.messages.find(
+          message => message instanceof JobStartedCommittedMessage
+        ) || nullMessage()
+  }
+
+  getJobCreationMessage(jobId: JobId): CommittedMessage {
+    return this.isEmpty()
+      ? nullMessage()
+      : this.messages.find(
+          message =>
+            message instanceof NewJobCommittedMessage &&
+            Job.fromCommittedMessage(message).getJobId().equalsTo(jobId)
         ) || nullMessage()
   }
 

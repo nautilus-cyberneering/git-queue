@@ -416,6 +416,7 @@ exports.CommittedMessageLog = void 0;
 const committed_message_1 = __nccwpck_require__(6537);
 const commit_info_1 = __nccwpck_require__(4136);
 const commit_subject_parser_1 = __nccwpck_require__(386);
+const job_1 = __nccwpck_require__(6420);
 /**
  * A readonly list of ordered commit messages.
  * A memory version of `git log` command containing only queue commits.
@@ -453,10 +454,26 @@ class CommittedMessageLog {
             : this.messages.find(message => message.jobId().equalsTo(jobId)) ||
                 (0, committed_message_1.nullMessage)();
     }
-    latestNewJobMessage() {
+    getLatestNewJobMessage() {
         return this.isEmpty()
             ? (0, committed_message_1.nullMessage)()
             : this.messages.find(message => message instanceof committed_message_1.NewJobCommittedMessage) || (0, committed_message_1.nullMessage)();
+    }
+    getLatestFinishedJobMessage() {
+        return this.isEmpty()
+            ? (0, committed_message_1.nullMessage)()
+            : this.messages.find(message => message instanceof committed_message_1.JobFinishedCommittedMessage) || (0, committed_message_1.nullMessage)();
+    }
+    getLatestStartedJobMessage() {
+        return this.isEmpty()
+            ? (0, committed_message_1.nullMessage)()
+            : this.messages.find(message => message instanceof committed_message_1.JobStartedCommittedMessage) || (0, committed_message_1.nullMessage)();
+    }
+    getJobCreationMessage(jobId) {
+        return this.isEmpty()
+            ? (0, committed_message_1.nullMessage)()
+            : this.messages.find(message => message instanceof committed_message_1.NewJobCommittedMessage &&
+                job_1.Job.fromCommittedMessage(message).getJobId().equalsTo(jobId)) || (0, committed_message_1.nullMessage)();
     }
     findByCommitHash(commitHash) {
         const commits = this.messages.filter(message => message.commitHash().equalsTo(commitHash));
@@ -740,7 +757,7 @@ exports.getErrorMessage = getErrorMessage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.InvalidCommitBodyError = exports.InvalidShortHashError = exports.InvalidJobIdError = exports.InvalidHashError = exports.QueueNameNotValidError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingJobIdInCommitSubjectError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+exports.InvalidCommitBodyError = exports.InvalidShortHashError = exports.InvalidJobIdError = exports.InvalidHashError = exports.QueueNameNotValidError = exports.UnfinishedJobMessageError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingJobIdInCommitSubjectError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
 const queue_name_1 = __nccwpck_require__(7894);
 class MissingQueueNameInCommitSubjectError extends Error {
     constructor(commitSubject) {
@@ -809,6 +826,13 @@ class MissingNewJobMessageError extends Error {
     }
 }
 exports.MissingNewJobMessageError = MissingNewJobMessageError;
+class UnfinishedJobMessageError extends Error {
+    constructor(jobId) {
+        super(`Can't start job. A previously started Job has not finished yer. Unfinished Job Id: ${jobId.toString()}`);
+        Object.setPrototypeOf(this, MissingNewJobMessageError.prototype);
+    }
+}
+exports.UnfinishedJobMessageError = UnfinishedJobMessageError;
 class QueueNameNotValidError extends Error {
     constructor(queueName) {
         super(`Queue name not valid: ${queueName}.\n` +
@@ -1473,6 +1497,17 @@ class Queue {
             throw new errors_1.MissingJobStartedMessageError(latestMessage);
         }
     }
+    guardThatLastStartedJobIsFinished() {
+        const lastStartedJobMessageJobId = this.committedMessages
+            .getLatestStartedJobMessage()
+            .jobId();
+        const lastFinishedJobMessageJobId = this.committedMessages
+            .getLatestFinishedJobMessage()
+            .jobId();
+        if (!lastFinishedJobMessageJobId.equalsTo(lastStartedJobMessageJobId)) {
+            throw new errors_1.UnfinishedJobMessageError(lastStartedJobMessageJobId);
+        }
+    }
     loadMessagesFromGit() {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.guardThatGitRepoHasBeenInitialized();
@@ -1518,8 +1553,14 @@ class Queue {
     getLatestMessage() {
         return this.committedMessages.getLatestMessage();
     }
-    latestNewJobMessage() {
-        return this.committedMessages.latestNewJobMessage();
+    getLatestNewJobMessage() {
+        return this.committedMessages.getLatestNewJobMessage();
+    }
+    getLatestFinishedJobMessage() {
+        return this.committedMessages.getLatestFinishedJobMessage();
+    }
+    getJobCreationMessage(jobId) {
+        return this.committedMessages.getJobCreationMessage(jobId);
     }
     isEmpty() {
         const nextJob = this.getNextJob();
@@ -1527,22 +1568,24 @@ class Queue {
     }
     getNextJob() {
         // Job states: new -> started -> finished
-        const latestMessage = this.getLatestMessage();
-        if (latestMessage instanceof committed_message_1.NewJobCommittedMessage) {
-            return job_1.Job.fromCommittedMessage(latestMessage);
-        }
-        if (latestMessage instanceof committed_message_1.JobStartedCommittedMessage) {
-            return job_1.Job.fromCommittedMessage(this.committedMessages.getNextToLatestMessage());
-        }
-        if (latestMessage instanceof committed_message_1.JobFinishedCommittedMessage) {
+        const latestFinishedJobMessage = this.getLatestFinishedJobMessage();
+        const possibleNextJobId = latestFinishedJobMessage.isNull()
+            ? (0, job_1.nullJob)().getJobId().getNextConsecutiveJobId()
+            : job_1.Job.fromCommittedMessage(latestFinishedJobMessage)
+                .getJobId()
+                .getNextConsecutiveJobId();
+        const jobCreationCommit = this.getJobCreationMessage(possibleNextJobId);
+        if (jobCreationCommit.isNull()) {
             return (0, job_1.nullJob)();
         }
-        return (0, job_1.nullJob)();
+        else {
+            return job_1.Job.fromCommittedMessage(jobCreationCommit);
+        }
     }
     // Job states: new -> started -> finished
     getNextJobId() {
-        const latestNewJobMessage = this.latestNewJobMessage();
-        return latestNewJobMessage.jobId().getNextConsecutiveJobId();
+        const getLatestNewJobMessage = this.getLatestNewJobMessage();
+        return getLatestNewJobMessage.jobId().getNextConsecutiveJobId();
     }
     createJob(payload) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -1556,8 +1599,8 @@ class Queue {
         return __awaiter(this, void 0, void 0, function* () {
             const latestMessage = this.getLatestMessageRelatedToJob(jobId);
             this.guardThatLastMessageWasNewJob(latestMessage);
-            const pendingJob = this.getNextJob();
-            const message = new message_1.JobStartedMessage(payload, jobId, pendingJob.getCommitHash());
+            this.guardThatLastStartedJobIsFinished();
+            const message = new message_1.JobStartedMessage(payload, jobId, latestMessage.commitHash());
             const commit = yield this.commitMessage(message);
             return commit;
         });
@@ -1566,8 +1609,7 @@ class Queue {
         return __awaiter(this, void 0, void 0, function* () {
             const latestMessage = this.getLatestMessageRelatedToJob(jobId);
             this.guardThatLastMessageWasJobStarted(latestMessage);
-            const pendingJob = this.getNextJob();
-            const message = new message_1.JobFinishedMessage(payload, jobId, pendingJob.getCommitHash());
+            const message = new message_1.JobFinishedMessage(payload, jobId, latestMessage.commitSubject().getJobRef());
             const commit = yield this.commitMessage(message);
             return commit;
         });
