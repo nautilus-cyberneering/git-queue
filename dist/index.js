@@ -415,6 +415,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommittedMessageLog = void 0;
 const committed_message_1 = __nccwpck_require__(6537);
 const commit_info_1 = __nccwpck_require__(4136);
+const job_id_1 = __nccwpck_require__(9654);
 const commit_subject_parser_1 = __nccwpck_require__(386);
 const job_1 = __nccwpck_require__(6420);
 /**
@@ -458,6 +459,20 @@ class CommittedMessageLog {
         return this.isEmpty()
             ? (0, committed_message_1.nullMessage)()
             : this.messages.find(message => message instanceof committed_message_1.NewJobCommittedMessage) || (0, committed_message_1.nullMessage)();
+    }
+    // TO-DO: Test this
+    jobIsPending(jobId) {
+        return (this.getLatestMessageRelatedToJob(jobId) instanceof committed_message_1.NewJobCommittedMessage);
+    }
+    // TO-DO: Test this
+    getOldestPendingJob() {
+        for (let index = this.messages.length - 1; index >= 0; index--) {
+            if (this.messages[index] instanceof committed_message_1.NewJobCommittedMessage &&
+                this.jobIsPending(this.messages[index].jobId())) {
+                return this.messages[index].jobId();
+            }
+        }
+        return (0, job_id_1.nullJobId)();
     }
     getLatestFinishedJobMessage() {
         return this.isEmpty()
@@ -1340,7 +1355,7 @@ function run() {
                     break;
                 }
                 case ACTION_START_JOB: {
-                    const commit = yield queue.markJobAsStarted(new job_id_1.JobId(inputs.jobId), inputs.jobPayload);
+                    const commit = yield queue.markJobAsStarted(inputs.jobPayload);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_started', !commit.hash.isNull());
                         context.setOutput('job_commit', commit.hash.toString());
@@ -1613,8 +1628,14 @@ class Queue {
     getLatestNewJobMessage() {
         return this.committedMessages.getLatestNewJobMessage();
     }
+    getOldestPendingJob() {
+        return this.committedMessages.getOldestPendingJob();
+    }
     getLatestFinishedJobMessage() {
         return this.committedMessages.getLatestFinishedJobMessage();
+    }
+    getLatestStartedJobMessage() {
+        return this.committedMessages.getLatestStartedJobMessage();
     }
     getJobCreationMessage(jobId) {
         return this.committedMessages.getJobCreationMessage(jobId);
@@ -1652,12 +1673,13 @@ class Queue {
             return new job_1.Job(payload, commit.hash, nextJobId);
         });
     }
-    markJobAsStarted(jobId, payload) {
+    markJobAsStarted(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const latestMessage = this.getLatestMessageRelatedToJob(jobId);
+            const oldestPendingJobId = this.getOldestPendingJob();
+            const latestMessage = this.getLatestMessageRelatedToJob(oldestPendingJobId);
             this.guardThatLastMessageWasNewJob(latestMessage);
             this.guardThatLastStartedJobIsFinished();
-            const message = new message_1.JobStartedMessage(payload, jobId, latestMessage.commitHash());
+            const message = new message_1.JobStartedMessage(payload, oldestPendingJobId, latestMessage.commitHash());
             const commit = yield this.commitMessage(message);
             return commit;
         });

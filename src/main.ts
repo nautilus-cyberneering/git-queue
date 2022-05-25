@@ -129,10 +129,7 @@ async function run(): Promise<void> {
         break
       }
       case ACTION_START_JOB: {
-        const commit = await queue.markJobAsStarted(
-          new JobId(inputs.jobId),
-          inputs.jobPayload
-        )
+        const commit = await queue.markJobAsStarted(inputs.jobPayload)
 
         await core.group(`Setting outputs`, async () => {
           context.setOutput('job_started', !commit.hash.isNull())

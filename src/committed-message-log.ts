@@ -9,7 +9,7 @@ import {DefaultLogFields, ListLogLine} from 'simple-git'
 
 import {CommitHash} from './commit-hash'
 import {CommitInfo} from './commit-info'
-import {JobId} from './job-id'
+import {JobId, nullJobId} from './job-id'
 import {QueueName} from './queue-name'
 
 import {commitSubjectBelongsToAQueue} from './commit-subject-parser'
@@ -79,6 +79,26 @@ export class CommittedMessageLog {
       : this.messages.find(
           message => message instanceof NewJobCommittedMessage
         ) || nullMessage()
+  }
+
+  // TO-DO: Test this
+  jobIsPending(jobId: JobId): boolean {
+    return (
+      this.getLatestMessageRelatedToJob(jobId) instanceof NewJobCommittedMessage
+    )
+  }
+
+  // TO-DO: Test this
+  getOldestPendingJob(): JobId {
+    for (let index = this.messages.length - 1; index >= 0; index--) {
+      if (
+        this.messages[index] instanceof NewJobCommittedMessage &&
+        this.jobIsPending(this.messages[index].jobId())
+      ) {
+        return this.messages[index].jobId()
+      }
+    }
+    return nullJobId()
   }
 
   getLatestFinishedJobMessage(): CommittedMessage {
