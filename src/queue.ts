@@ -1,5 +1,6 @@
 import {
   CommittedMessage,
+  JobFinishedCommittedMessage,
   JobStartedCommittedMessage,
   NewJobCommittedMessage
 } from './committed-message'
@@ -80,12 +81,9 @@ export class Queue {
   }
 
   private guardThatLastStartedJobIsFinished(): void {
-    const lastStartedJobMessageJobId = this.committedMessages
-      .getLatestStartedJobMessage()
-      .jobId()
-    const lastFinishedJobMessageJobId = this.committedMessages
-      .getLatestFinishedJobMessage()
-      .jobId()
+    const lastStartedJobMessageJobId = this.getLatestStartedJobMessage().jobId()
+    const lastFinishedJobMessageJobId =
+      this.getLatestFinishedJobMessage().jobId()
     if (!lastFinishedJobMessageJobId.equalsTo(lastStartedJobMessageJobId)) {
       throw new UnfinishedJobMessageError(lastStartedJobMessageJobId)
     }
@@ -163,16 +161,32 @@ export class Queue {
     return this.committedMessages.getLatestNewJobMessage()
   }
 
+  jobIsPending(jobId: JobId): boolean {
+    return (
+      this.getLatestMessageRelatedToJob(jobId) instanceof NewJobCommittedMessage
+    )
+  }
+
   getOldestPendingJob(): JobId {
-    return this.committedMessages.getOldestPendingJob()
+    return this.committedMessages
+      .findOldestMessage(
+        message =>
+          message instanceof NewJobCommittedMessage &&
+          this.jobIsPending(message.jobId())
+      )
+      .jobId()
   }
 
   getLatestFinishedJobMessage(): CommittedMessage {
-    return this.committedMessages.getLatestFinishedJobMessage()
+    return this.committedMessages.findLatestsMessage(
+      message => message instanceof JobFinishedCommittedMessage
+    )
   }
 
   getLatestStartedJobMessage(): CommittedMessage {
-    return this.committedMessages.getLatestStartedJobMessage()
+    return this.committedMessages.findLatestsMessage(
+      message => message instanceof JobStartedCommittedMessage
+    )
   }
 
   getJobCreationMessage(jobId: JobId): CommittedMessage {

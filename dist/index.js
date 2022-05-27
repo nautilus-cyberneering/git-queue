@@ -415,7 +415,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommittedMessageLog = void 0;
 const committed_message_1 = __nccwpck_require__(6537);
 const commit_info_1 = __nccwpck_require__(4136);
-const job_id_1 = __nccwpck_require__(9654);
 const commit_subject_parser_1 = __nccwpck_require__(386);
 const job_1 = __nccwpck_require__(6420);
 /**
@@ -461,28 +460,18 @@ class CommittedMessageLog {
             : this.messages.find(message => message instanceof committed_message_1.NewJobCommittedMessage) || (0, committed_message_1.nullMessage)();
     }
     // TO-DO: Test this
-    jobIsPending(jobId) {
-        return (this.getLatestMessageRelatedToJob(jobId) instanceof committed_message_1.NewJobCommittedMessage);
+    findLatestsMessage(condition) {
+        return this.isEmpty()
+            ? (0, committed_message_1.nullMessage)()
+            : this.messages.find(condition) || (0, committed_message_1.nullMessage)();
     }
-    // TO-DO: Test this
-    getOldestPendingJob() {
+    findOldestMessage(condition) {
         for (let index = this.messages.length - 1; index >= 0; index--) {
-            if (this.messages[index] instanceof committed_message_1.NewJobCommittedMessage &&
-                this.jobIsPending(this.messages[index].jobId())) {
-                return this.messages[index].jobId();
+            if (condition(this.messages[index])) {
+                return this.messages[index];
             }
         }
-        return (0, job_id_1.nullJobId)();
-    }
-    getLatestFinishedJobMessage() {
-        return this.isEmpty()
-            ? (0, committed_message_1.nullMessage)()
-            : this.messages.find(message => message instanceof committed_message_1.JobFinishedCommittedMessage) || (0, committed_message_1.nullMessage)();
-    }
-    getLatestStartedJobMessage() {
-        return this.isEmpty()
-            ? (0, committed_message_1.nullMessage)()
-            : this.messages.find(message => message instanceof committed_message_1.JobStartedCommittedMessage) || (0, committed_message_1.nullMessage)();
+        return (0, committed_message_1.nullMessage)();
     }
     getJobCreationMessage(jobId) {
         return this.isEmpty()
@@ -1570,12 +1559,8 @@ class Queue {
         }
     }
     guardThatLastStartedJobIsFinished() {
-        const lastStartedJobMessageJobId = this.committedMessages
-            .getLatestStartedJobMessage()
-            .jobId();
-        const lastFinishedJobMessageJobId = this.committedMessages
-            .getLatestFinishedJobMessage()
-            .jobId();
+        const lastStartedJobMessageJobId = this.getLatestStartedJobMessage().jobId();
+        const lastFinishedJobMessageJobId = this.getLatestFinishedJobMessage().jobId();
         if (!lastFinishedJobMessageJobId.equalsTo(lastStartedJobMessageJobId)) {
             throw new errors_1.UnfinishedJobMessageError(lastStartedJobMessageJobId);
         }
@@ -1628,14 +1613,20 @@ class Queue {
     getLatestNewJobMessage() {
         return this.committedMessages.getLatestNewJobMessage();
     }
+    jobIsPending(jobId) {
+        return (this.getLatestMessageRelatedToJob(jobId) instanceof committed_message_1.NewJobCommittedMessage);
+    }
     getOldestPendingJob() {
-        return this.committedMessages.getOldestPendingJob();
+        return this.committedMessages
+            .findOldestMessage(message => message instanceof committed_message_1.NewJobCommittedMessage &&
+            this.jobIsPending(message.jobId()))
+            .jobId();
     }
     getLatestFinishedJobMessage() {
-        return this.committedMessages.getLatestFinishedJobMessage();
+        return this.committedMessages.findLatestsMessage(message => message instanceof committed_message_1.JobFinishedCommittedMessage);
     }
     getLatestStartedJobMessage() {
-        return this.committedMessages.getLatestStartedJobMessage();
+        return this.committedMessages.findLatestsMessage(message => message instanceof committed_message_1.JobStartedCommittedMessage);
     }
     getJobCreationMessage(jobId) {
         return this.committedMessages.getJobCreationMessage(jobId);

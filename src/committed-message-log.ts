@@ -1,7 +1,5 @@
 import {
   CommittedMessage,
-  JobFinishedCommittedMessage,
-  JobStartedCommittedMessage,
   NewJobCommittedMessage,
   nullMessage
 } from './committed-message'
@@ -9,7 +7,7 @@ import {DefaultLogFields, ListLogLine} from 'simple-git'
 
 import {CommitHash} from './commit-hash'
 import {CommitInfo} from './commit-info'
-import {JobId, nullJobId} from './job-id'
+import {JobId} from './job-id'
 import {QueueName} from './queue-name'
 
 import {commitSubjectBelongsToAQueue} from './commit-subject-parser'
@@ -82,39 +80,23 @@ export class CommittedMessageLog {
   }
 
   // TO-DO: Test this
-  jobIsPending(jobId: JobId): boolean {
-    return (
-      this.getLatestMessageRelatedToJob(jobId) instanceof NewJobCommittedMessage
-    )
+  findLatestsMessage(
+    condition: (message: CommittedMessage) => boolean
+  ): CommittedMessage {
+    return this.isEmpty()
+      ? nullMessage()
+      : this.messages.find(condition) || nullMessage()
   }
 
-  // TO-DO: Test this
-  getOldestPendingJob(): JobId {
+  findOldestMessage(
+    condition: (message: CommittedMessage) => boolean
+  ): CommittedMessage {
     for (let index = this.messages.length - 1; index >= 0; index--) {
-      if (
-        this.messages[index] instanceof NewJobCommittedMessage &&
-        this.jobIsPending(this.messages[index].jobId())
-      ) {
-        return this.messages[index].jobId()
+      if (condition(this.messages[index])) {
+        return this.messages[index]
       }
     }
-    return nullJobId()
-  }
-
-  getLatestFinishedJobMessage(): CommittedMessage {
-    return this.isEmpty()
-      ? nullMessage()
-      : this.messages.find(
-          message => message instanceof JobFinishedCommittedMessage
-        ) || nullMessage()
-  }
-
-  getLatestStartedJobMessage(): CommittedMessage {
-    return this.isEmpty()
-      ? nullMessage()
-      : this.messages.find(
-          message => message instanceof JobStartedCommittedMessage
-        ) || nullMessage()
+    return nullMessage()
   }
 
   getJobCreationMessage(jobId: JobId): CommittedMessage {
