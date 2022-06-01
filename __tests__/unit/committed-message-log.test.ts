@@ -133,7 +133,7 @@ describe('CommittedMessageLog', () => {
       ).toBe(true)
     })
 
-    describe('should returnthe latest message that meets the condition, returning. ...', () => {
+    describe('should return the latest message that meets the condition, returning. ...', () => {
       it('the committed message if there are two or more commits', async () => {
         const commit1 = dummySimpleGitCommitWithHash(
           'f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
