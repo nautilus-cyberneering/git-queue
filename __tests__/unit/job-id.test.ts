@@ -1,12 +1,6 @@
 import {JobId, nullJobId} from '../../src/job-id'
 
 describe('JobId', () => {
-  it('should contain the Id of a Job', () => {
-    const jobId = new JobId(42)
-
-    expect(jobId.getId()).toBe(42)
-  })
-
   it('should fail when using invalid job value', () => {
     const negativeJobId = (): JobId => {
       return new JobId(-2)
@@ -41,6 +35,6 @@ describe('JobId', () => {
   it('should return a consecutive JobId', () => {
     const jobId = new JobId(42)
 
-    expect(jobId.getNextConsecutiveJobId().getId()).toBe(43)
+    expect(jobId.getNextConsecutiveJobId().equalsTo(new JobId(43))).toBe(true)
   })
 })

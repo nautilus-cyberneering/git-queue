@@ -1078,9 +1078,6 @@ class JobId {
             throw new errors_1.InvalidJobIdError(value);
         }
     }
-    getId() {
-        return this.value;
-    }
     getNextConsecutiveJobId() {
         return this.isNull() ? new JobId(1) : new JobId(this.value + 1);
     }

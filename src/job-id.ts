@@ -19,10 +19,6 @@ export class JobId implements Nullable {
     }
   }
 
-  getId(): number {
-    return this.value
-  }
-
   getNextConsecutiveJobId(): JobId {
     return this.isNull() ? new JobId(1) : new JobId(this.value + 1)
   }
