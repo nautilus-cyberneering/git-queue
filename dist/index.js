@@ -1245,7 +1245,6 @@ const signing_key_id_1 = __nccwpck_require__(9869);
 const commit_options_1 = __nccwpck_require__(360);
 const git_repo_1 = __nccwpck_require__(8432);
 const git_repo_dir_1 = __nccwpck_require__(7775);
-const job_id_1 = __nccwpck_require__(9654);
 const queue_1 = __nccwpck_require__(7065);
 const queue_name_1 = __nccwpck_require__(7894);
 const simple_git_factory_1 = __nccwpck_require__(9649);
@@ -1345,7 +1344,7 @@ function run() {
                     break;
                 }
                 case ACTION_FINISH_JOB: {
-                    const commit = yield queue.markJobAsFinished(new job_id_1.JobId(inputs.jobId), inputs.jobPayload);
+                    const commit = yield queue.markJobAsFinished(inputs.jobPayload);
                     yield core.group(`Setting outputs`, () => __awaiter(this, void 0, void 0, function* () {
                         context.setOutput('job_finished', !commit.hash.isNull());
                         context.setOutput('job_commit', commit.hash.toString());
@@ -1660,11 +1659,11 @@ class Queue {
             return commit;
         });
     }
-    markJobAsFinished(jobId, payload) {
+    markJobAsFinished(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const latestMessage = this.getLatestMessageRelatedToJob(jobId);
-            this.guardThatLastMessageWasJobStarted(latestMessage);
-            const message = new message_1.JobFinishedMessage(payload, jobId, latestMessage.commitSubject().getJobRef());
+            const latestStartedJobMessageSubject = this.getLatestStartedJobMessage();
+            this.guardThatLastMessageWasJobStarted(latestStartedJobMessageSubject);
+            const message = new message_1.JobFinishedMessage(payload, latestStartedJobMessageSubject.commitSubject().getJobId(), latestStartedJobMessageSubject.commitSubject().getJobRef());
             const commit = yield this.commitMessage(message);
             return commit;
         });

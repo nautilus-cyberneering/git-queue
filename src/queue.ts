@@ -242,14 +242,14 @@ export class Queue {
     return commit
   }
 
-  async markJobAsFinished(jobId: JobId, payload: string): Promise<CommitInfo> {
-    const latestMessage = this.getLatestMessageRelatedToJob(jobId)
-    this.guardThatLastMessageWasJobStarted(latestMessage)
+  async markJobAsFinished(payload: string): Promise<CommitInfo> {
+    const latestStartedJobMessageSubject = this.getLatestStartedJobMessage()
+    this.guardThatLastMessageWasJobStarted(latestStartedJobMessageSubject)
 
     const message = new JobFinishedMessage(
       payload,
-      jobId,
-      latestMessage.commitSubject().getJobRef()
+      latestStartedJobMessageSubject.commitSubject().getJobId(),
+      latestStartedJobMessageSubject.commitSubject().getJobRef()
     )
 
     const commit = await this.commitMessage(message)

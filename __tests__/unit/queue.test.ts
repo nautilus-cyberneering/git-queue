@@ -134,12 +134,9 @@ describe('Queue', () => {
   it('should mark a job as finished', async () => {
     const queue = await createTestQueue(commitOptionsForTests())
 
-    const createdJob = await queue.createJob(dummyPayload())
+    await queue.createJob(dummyPayload())
     await queue.markJobAsStarted(dummyPayload())
-    const finishJobCommit = await queue.markJobAsFinished(
-      createdJob.getJobId(),
-      dummyPayload()
-    )
+    const finishJobCommit = await queue.markJobAsFinished(dummyPayload())
     expect(queue.isEmpty()).toBe(true)
 
     // Commit was created
@@ -150,13 +147,10 @@ describe('Queue', () => {
   it('should mark a job that is not the last created one as finished', async () => {
     const queue = await createTestQueue(commitOptionsForTests())
 
-    const firstCreatedJob = await queue.createJob(dummyPayload())
+    await queue.createJob(dummyPayload())
     await queue.createJob(dummyPayload())
     await queue.markJobAsStarted(dummyPayload())
-    const finishJobCommit = await queue.markJobAsFinished(
-      firstCreatedJob.getJobId(),
-      dummyPayload()
-    )
+    const finishJobCommit = await queue.markJobAsFinished(dummyPayload())
     expect(queue.isEmpty()).toBe(false)
 
     // Commit was created
@@ -168,7 +162,7 @@ describe('Queue', () => {
     const queue = await createTestQueue(commitOptionsForTests())
 
     const fn = async (): Promise<CommitInfo> => {
-      return queue.markJobAsFinished(new JobId(1), dummyPayload())
+      return queue.markJobAsFinished(dummyPayload())
     }
 
     const expectedError = `Can't finish job. Previous message from this job is not a job started message. Previous message commit: --no-commit-hash--`
@@ -181,7 +175,7 @@ describe('Queue', () => {
     await queue.createJob(dummyPayload())
 
     const fn = async (): Promise<CommitInfo> => {
-      return queue.markJobAsFinished(new JobId(2), dummyPayload())
+      return queue.markJobAsFinished(dummyPayload())
     }
 
     const expectedError = `Can't finish job. Previous message from this job is not a job started message. Previous message commit: --no-commit-hash--`
@@ -261,9 +255,9 @@ describe('Queue', () => {
     it('all jobs are finished', async () => {
       const queue = await createTestQueue(commitOptionsForTests())
 
-      const newJob = await queue.createJob(dummyPayload())
+      await queue.createJob(dummyPayload())
       await queue.markJobAsStarted(dummyPayload())
-      await queue.markJobAsFinished(newJob.getJobId(), dummyPayload())
+      await queue.markJobAsFinished(dummyPayload())
 
       expect(queue.isEmpty()).toBe(true)
     })
@@ -293,9 +287,9 @@ describe('Queue', () => {
       const queue = await createTestQueue(commitOptionsForTests())
 
       // First completed job
-      const firstJobCreated = await queue.createJob(dummyPayload())
+      await queue.createJob(dummyPayload())
       await queue.markJobAsStarted(dummyPayload())
-      await queue.markJobAsFinished(firstJobCreated.getJobId(), dummyPayload())
+      await queue.markJobAsFinished(dummyPayload())
 
       // Second job
       const secondJobCreated = await queue.createJob(dummyPayload())
@@ -313,12 +307,12 @@ describe('Queue', () => {
     it('a previous job when more recent jobs have been created', async () => {
       const queue = await createTestQueue(commitOptionsForTests())
 
-      const firstJobCreated = await queue.createJob(dummyPayload())
+      await queue.createJob(dummyPayload())
       const secondJobCreated = await queue.createJob(dummyPayload())
       const secondJobCommit = getLatestCommitHash(queue.getGitRepoDir())
       await queue.createJob(dummyPayload())
       await queue.markJobAsStarted(dummyPayload())
-      await queue.markJobAsFinished(firstJobCreated.getJobId(), dummyPayload())
+      await queue.markJobAsFinished(dummyPayload())
 
       const nextJob = queue.getNextJob()
       expect(
@@ -358,7 +352,7 @@ describe('Queue', () => {
     ).toBe(true)
 
     await queue1.markJobAsStarted(payload1)
-    await queue1.markJobAsFinished(new JobId(1), payload1)
+    await queue1.markJobAsFinished(payload1)
     await queue1.createJob(payload2)
     const nextJob3 = queue1.getNextJob()
     latestCommit = getLatestCommitHash(queue1.getGitRepoDir())
