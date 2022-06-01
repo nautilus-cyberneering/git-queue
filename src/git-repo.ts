@@ -3,8 +3,7 @@ import {CommitMessage} from './commit-message'
 import {CommitOptions} from './commit-options'
 import {GitDirNotInitializedError} from './errors'
 import {GitRepoDir} from './git-repo-dir'
-import {execSync} from 'child_process'
-import {existsSync} from 'fs'
+import {Git} from './git'
 
 export class GitRepo {
   private readonly dir: GitRepoDir
@@ -17,11 +16,8 @@ export class GitRepo {
 
   isInitialized(): boolean {
     try {
-      // Make sure the string we will pass to to the shell is an actual dir
-      if (!existsSync(this.dir.getDirPath())) {
-        throw new Error()
-      }
-      execSync(`git -C ${this.getDirPath()} status`, {stdio: 'ignore'})
+      const git = new Git(this.dir)
+      git.status()
     } catch {
       return false
     }
@@ -58,11 +54,8 @@ export class GitRepo {
       throw new GitDirNotInitializedError(this.dir.getDirPath())
     }
     try {
-      // Make sure the string we will pass to to the shell is an actual dir
-      if (!existsSync(this.dir.getDirPath())) {
-        throw new Error()
-      }
-      execSync(`git -C ${this.dir.getDirPath()} log -n 0`, {stdio: 'ignore'})
+      const git = new Git(this.dir)
+      git.log()
     } catch (err) {
       // No commits yet
       return false
