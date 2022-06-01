@@ -1,11 +1,18 @@
 import {CommitHash} from '../../src/commit-hash'
 import {CommitInfo} from '../../src/commit-info'
-import {CommittedMessage} from '../../src/committed-message'
+import {
+  CommittedMessage,
+  JobStartedCommittedMessage
+} from '../../src/committed-message'
 import {CommittedMessageLog} from '../../src/committed-message-log'
 import {DefaultLogFields} from 'simple-git'
 
 function dummyNewJobCommitSubjectText(): string {
   return '📝🈺: queue-name: job.id.1 job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+}
+
+function dummyStartJobCommitSubjectText(): string {
+  return '📝👔: queue-name: job.id.1 job.ref.f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
 }
 
 function dummySimpleGitCommit(
@@ -27,6 +34,18 @@ function dummySimpleGitCommitWithHash(hash: string): DefaultLogFields {
     hash,
     date: 'not relevant',
     message: dummyNewJobCommitSubjectText(),
+    refs: 'not relevant',
+    body: 'not relevant',
+    author_name: 'not relevant',
+    author_email: 'not relevant'
+  }
+}
+
+function dummySimpleStartJobGitCommitWithHash(hash: string): DefaultLogFields {
+  return {
+    hash,
+    date: 'not relevant',
+    message: dummyStartJobCommitSubjectText(),
     refs: 'not relevant',
     body: 'not relevant',
     author_name: 'not relevant',
@@ -112,6 +131,34 @@ describe('CommittedMessageLog', () => {
       expect(
         committedMessageLog.getNextToLatestMessage().equalsTo(expectedMessage)
       ).toBe(true)
+    })
+
+    describe('should returnthe latest message that meets the condition, returning. ...', () => {
+      it('the committed message if there are two or more commits', async () => {
+        const commit1 = dummySimpleGitCommitWithHash(
+          'f1a69d48a01cc130a64aeac5eaf762e4ba685de7'
+        )
+        const commit2 = dummySimpleStartJobGitCommitWithHash(
+          '2ab1cce1479d25966e2dba5be89849a71264a192'
+        )
+
+        const committedMessageLog = CommittedMessageLog.fromGitLogCommits([
+          commit1,
+          commit2
+        ])
+
+        const expectedMessage = CommittedMessage.fromCommitInfo(
+          CommitInfo.fromDefaultLogFields(commit2)
+        )
+
+        expect(
+          committedMessageLog
+            .findLatestsMessage(
+              message => message instanceof JobStartedCommittedMessage
+            )
+            .equalsTo(expectedMessage)
+        ).toBe(true)
+      })
     })
 
     it('the null committed message in any other case', async () => {

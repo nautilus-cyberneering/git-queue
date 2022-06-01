@@ -79,24 +79,12 @@ export class CommittedMessageLog {
         ) || nullMessage()
   }
 
-  // TO-DO: Test this
   findLatestsMessage(
     condition: (message: CommittedMessage) => boolean
   ): CommittedMessage {
     return this.isEmpty()
       ? nullMessage()
       : this.messages.find(condition) || nullMessage()
-  }
-
-  findOldestMessage(
-    condition: (message: CommittedMessage) => boolean
-  ): CommittedMessage {
-    for (let index = this.messages.length - 1; index >= 0; index--) {
-      if (condition(this.messages[index])) {
-        return this.messages[index]
-      }
-    }
-    return nullMessage()
   }
 
   getJobCreationMessage(jobId: JobId): CommittedMessage {

@@ -459,19 +459,10 @@ class CommittedMessageLog {
             ? (0, committed_message_1.nullMessage)()
             : this.messages.find(message => message instanceof committed_message_1.NewJobCommittedMessage) || (0, committed_message_1.nullMessage)();
     }
-    // TO-DO: Test this
     findLatestsMessage(condition) {
         return this.isEmpty()
             ? (0, committed_message_1.nullMessage)()
             : this.messages.find(condition) || (0, committed_message_1.nullMessage)();
-    }
-    findOldestMessage(condition) {
-        for (let index = this.messages.length - 1; index >= 0; index--) {
-            if (condition(this.messages[index])) {
-                return this.messages[index];
-            }
-        }
-        return (0, committed_message_1.nullMessage)();
     }
     getJobCreationMessage(jobId) {
         return this.isEmpty()
@@ -1616,12 +1607,6 @@ class Queue {
     jobIsPending(jobId) {
         return (this.getLatestMessageRelatedToJob(jobId) instanceof committed_message_1.NewJobCommittedMessage);
     }
-    getOldestPendingJob() {
-        return this.committedMessages
-            .findOldestMessage(message => message instanceof committed_message_1.NewJobCommittedMessage &&
-            this.jobIsPending(message.jobId()))
-            .jobId();
-    }
     getLatestFinishedJobMessage() {
         return this.committedMessages.findLatestsMessage(message => message instanceof committed_message_1.JobFinishedCommittedMessage);
     }
@@ -1652,13 +1637,13 @@ class Queue {
         }
     }
     // Job states: new -> started -> finished
-    getNextJobId() {
+    getJobIdForNewJob() {
         const getLatestNewJobMessage = this.getLatestNewJobMessage();
         return getLatestNewJobMessage.jobId().getNextConsecutiveJobId();
     }
     createJob(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const nextJobId = this.getNextJobId();
+            const nextJobId = this.getJobIdForNewJob();
             const message = new message_1.NewJobMessage(payload, nextJobId);
             const commit = yield this.commitMessage(message);
             return new job_1.Job(payload, commit.hash, nextJobId);
@@ -1666,11 +1651,11 @@ class Queue {
     }
     markJobAsStarted(payload) {
         return __awaiter(this, void 0, void 0, function* () {
-            const oldestPendingJobId = this.getOldestPendingJob();
-            const latestMessage = this.getLatestMessageRelatedToJob(oldestPendingJobId);
+            const nextJob = this.getNextJob();
+            const latestMessage = this.getLatestMessageRelatedToJob(nextJob.getJobId());
             this.guardThatLastMessageWasNewJob(latestMessage);
             this.guardThatLastStartedJobIsFinished();
-            const message = new message_1.JobStartedMessage(payload, oldestPendingJobId, latestMessage.commitHash());
+            const message = new message_1.JobStartedMessage(payload, nextJob.getJobId(), latestMessage.commitHash());
             const commit = yield this.commitMessage(message);
             return commit;
         });
