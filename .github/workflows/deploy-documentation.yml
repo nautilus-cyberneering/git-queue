@@ -1,0 +1,32 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+
+jobs:
+  build:
+    name: Deploy documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2.3.1
+        with:
+          python-version: '3.9'
+
+      - name: Setup Poetry
+        run: pip3 install mkdocs
+
+      - name: Build Documentation
+        run: |
+          mkdocs build
+
+      - name: Deploy to GitHub Pages
+        run: |
+          mkdocs gh-deploy -v --force

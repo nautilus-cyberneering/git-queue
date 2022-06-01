@@ -1,0 +1,10 @@
+site_name: Git Queue
+site_url: https://github.com/Nautilus-Cyberneering/git-queue
+nav:
+  - Home: index.md
+  - Install: install.md
+  - Commands: commands.md
+  - Development: development.md
+  - Documentation: documentation.md
+  - Glossary: glossary.md
+theme: readthedocs
