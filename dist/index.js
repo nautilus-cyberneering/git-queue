@@ -926,8 +926,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GitRepo = void 0;
 const errors_1 = __nccwpck_require__(9292);
-const child_process_1 = __nccwpck_require__(2081);
-const fs_1 = __nccwpck_require__(7147);
+const git_1 = __nccwpck_require__(3374);
 class GitRepo {
     constructor(dir, git) {
         this.dir = dir;
@@ -935,11 +934,8 @@ class GitRepo {
     }
     isInitialized() {
         try {
-            // Make sure the string we will pass to to the shell is an actual dir
-            if (!(0, fs_1.existsSync)(this.dir.getDirPath())) {
-                throw new Error();
-            }
-            (0, child_process_1.execSync)(`git -C ${this.getDirPath()} status`, { stdio: 'ignore' });
+            const git = new git_1.Git(this.dir);
+            git.status();
         }
         catch (_a) {
             return false;
@@ -977,11 +973,8 @@ class GitRepo {
                 throw new errors_1.GitDirNotInitializedError(this.dir.getDirPath());
             }
             try {
-                // Make sure the string we will pass to to the shell is an actual dir
-                if (!(0, fs_1.existsSync)(this.dir.getDirPath())) {
-                    throw new Error();
-                }
-                (0, child_process_1.execSync)(`git -C ${this.dir.getDirPath()} log -n 0`, { stdio: 'ignore' });
+                const git = new git_1.Git(this.dir);
+                git.log();
             }
             catch (err) {
                 // No commits yet
@@ -997,6 +990,65 @@ class GitRepo {
     }
 }
 exports.GitRepo = GitRepo;
+
+
+/***/ }),
+
+/***/ 3374:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Git = void 0;
+const child_process_1 = __nccwpck_require__(2081);
+/**
+ * For now, this class is only used to detect some corner cases in a git repo.
+ * There are cases where the Git console command returns an error. For example:
+ *
+ * In a not initialized Git repo:
+ *
+ * git status && echo "OK"
+ * fatal: not a git repository (or any of the parent directories): .git
+ *
+ * git log && echo "OK"
+ * fatal: not a git repository (or any of the parent directories): .git
+ *
+ * In a initialized Git repo but without any commits:
+ *
+ * git init && git log && echo "OK"
+ * Initialized empty Git repository in /tmp/test/.git/
+ * fatal: your current branch 'main' does not have any commits yet
+ */
+class Git {
+    constructor(dir) {
+        this.dir = dir;
+    }
+    execSync(args) {
+        const cmd = `git`;
+        return (0, child_process_1.execFileSync)(cmd, args, {
+            stdio: 'ignore',
+            cwd: this.dir.getDirPath()
+        });
+    }
+    status() {
+        const args = ['status'];
+        return this.execSync(args);
+    }
+    log() {
+        const args = ['log', '-n', '0'];
+        return this.execSync(args);
+    }
+    init() {
+        const args = ['init'];
+        return this.execSync(args);
+    }
+    emptyCommit(message) {
+        const args = ['commit', '--allow-empty', '-m', message];
+        return this.execSync(args);
+    }
+}
+exports.Git = Git;
 
 
 /***/ }),
