@@ -18,6 +18,7 @@
     "i18n-text/no-en": "off",
     "import/no-namespace": "off",
     "no-unused-vars": "off",
+    "no-undef": "off",
     "semi": "off",
     "@typescript-eslint/array-type": "error",
     "@typescript-eslint/await-thenable": "error",

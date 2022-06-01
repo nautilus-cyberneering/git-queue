@@ -1,5 +1,5 @@
 import {GitRepoDir} from './git-repo-dir'
-import {execFileSync} from 'child_process'
+import {execFileSync, ExecFileSyncOptions} from 'child_process'
 
 /**
  * For now, this class is only used to detect some corner cases in a git repo.
@@ -21,36 +21,52 @@ import {execFileSync} from 'child_process'
  */
 export class Git {
   private readonly dir: GitRepoDir
+  private readonly env: NodeJS.ProcessEnv | undefined
 
-  constructor(dir: GitRepoDir) {
+  constructor(dir: GitRepoDir, env?: NodeJS.ProcessEnv | undefined) {
     this.dir = dir
+    this.env = env
   }
 
-  execSync(args?: readonly string[]): string | Buffer {
+  execSync(args?: readonly string[]): string {
     const cmd = `git`
-    return execFileSync(cmd, args, {
-      stdio: 'ignore',
-      cwd: this.dir.getDirPath()
-    })
+    const options: ExecFileSyncOptions = {
+      stdio: 'pipe',
+      shell: false,
+      cwd: this.dir.getDirPath(),
+      ...(typeof this.env !== 'undefined' && {env: this.env})
+    }
+
+    return execFileSync(cmd, args, options).toString()
   }
 
-  status(): string | Buffer {
+  status(): string {
     const args: readonly string[] = ['status']
     return this.execSync(args)
   }
 
-  log(): string | Buffer {
+  log(): string {
     const args: readonly string[] = ['log', '-n', '0']
     return this.execSync(args)
   }
 
-  init(): string | Buffer {
+  init(): string {
     const args: readonly string[] = ['init']
     return this.execSync(args)
   }
 
-  emptyCommit(message: string): string | Buffer {
-    const args: readonly string[] = ['commit', '--allow-empty', '-m', message]
+  emptyCommit(message: string): string {
+    const args: readonly string[] = [
+      'commit',
+      '--allow-empty',
+      '-m',
+      `"${message}"`
+    ]
+    return this.execSync(args)
+  }
+
+  setLocalConfig(key: string, value: string): string {
+    const args: readonly string[] = ['config', `${key}`, `"${value}"`]
     return this.execSync(args)
   }
 }

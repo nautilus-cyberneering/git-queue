@@ -1021,15 +1021,14 @@ const child_process_1 = __nccwpck_require__(2081);
  * fatal: your current branch 'main' does not have any commits yet
  */
 class Git {
-    constructor(dir) {
+    constructor(dir, env) {
         this.dir = dir;
+        this.env = env;
     }
     execSync(args) {
         const cmd = `git`;
-        return (0, child_process_1.execFileSync)(cmd, args, {
-            stdio: 'ignore',
-            cwd: this.dir.getDirPath()
-        });
+        const options = Object.assign({ stdio: 'pipe', shell: false, cwd: this.dir.getDirPath() }, (typeof this.env !== 'undefined' && { env: this.env }));
+        return (0, child_process_1.execFileSync)(cmd, args, options).toString();
     }
     status() {
         const args = ['status'];
@@ -1044,7 +1043,16 @@ class Git {
         return this.execSync(args);
     }
     emptyCommit(message) {
-        const args = ['commit', '--allow-empty', '-m', message];
+        const args = [
+            'commit',
+            '--allow-empty',
+            '-m',
+            `"${message}"`
+        ];
+        return this.execSync(args);
+    }
+    setLocalConfig(key, value) {
+        const args = ['config', `${key}`, `"${value}"`];
         return this.execSync(args);
     }
 }
