@@ -9,9 +9,10 @@
     "esModuleInterop": true
   },
   "exclude": [
-    "node_modules",
-    "report",
     "**/*.test.ts",
-    "**/src/__tests__/**/*.ts"
+    "**/src/__tests__/**/*.ts",
+    "cinder",
+    "node_modules",
+    "report"
   ]
 }
