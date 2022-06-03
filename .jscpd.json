@@ -9,10 +9,12 @@
     "**/.venv'/**",
     "**/*.svg",
     "**/*cache*/**",
+    "**/cinder/**",
     "**/node_modules/**",
     "**/report/**",
     "coverage/**",
     "dist/**",
-    "lib/**"
+    "lib/**",
+    "README.md"
   ]
 }
