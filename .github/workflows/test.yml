@@ -153,7 +153,7 @@ jobs:
           # Import test GPG key
           # secretlint-disable
           {
-            echo -e "-----BEGIN PGP PRIVATE KEY BLOCK-----"
+            echo -e "-----BEGIN PGP PRIVATE KEY BLOCK-----\n"
             cat __tests__/fixtures/test-key-committer.pgp
             echo -e "\n-----END PGP PRIVATE KEY BLOCK-----\n"
           } | gpg --import --batch --yes -
