@@ -914,21 +914,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GitRepo = void 0;
 const errors_1 = __nccwpck_require__(9292);
-const git_1 = __nccwpck_require__(3374);
 class GitRepo {
     constructor(dir, git) {
         this.dir = dir;
         this.git = git;
     }
     isInitialized() {
-        try {
-            const git = new git_1.Git(this.dir);
-            git.status();
-        }
-        catch (_a) {
-            return false;
-        }
-        return true;
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield this.git.raw('status');
+            }
+            catch (_a) {
+                return false;
+            }
+            return true;
+        });
     }
     getDir() {
         return this.dir;
@@ -944,12 +944,6 @@ class GitRepo {
     env(name, value) {
         this.git.env(name, value);
     }
-    getCurrentBranch() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const status = yield this.git.status();
-            return status.current;
-        });
-    }
     log() {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.git.log();
@@ -957,18 +951,22 @@ class GitRepo {
     }
     hasCommits() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!this.isInitialized()) {
-                throw new errors_1.GitDirNotInitializedError(this.dir.getDirPath());
-            }
+            yield this.guardThatRepoIsInitialized();
             try {
-                const git = new git_1.Git(this.dir);
-                git.log();
+                yield this.git.raw('log', '-n', '0');
             }
             catch (err) {
                 // No commits yet
                 return false;
             }
             return true;
+        });
+    }
+    guardThatRepoIsInitialized() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!(yield this.isInitialized())) {
+                throw new errors_1.GitDirNotInitializedError(this.dir.getDirPath());
+            }
         });
     }
     commit(commitMessage, commitOptions) {
@@ -978,73 +976,6 @@ class GitRepo {
     }
 }
 exports.GitRepo = GitRepo;
-
-
-/***/ }),
-
-/***/ 3374:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Git = void 0;
-const child_process_1 = __nccwpck_require__(2081);
-/**
- * For now, this class is only used to detect some corner cases in a git repo.
- * There are cases where the Git console command returns an error. For example:
- *
- * In a not initialized Git repo:
- *
- * git status && echo "OK"
- * fatal: not a git repository (or any of the parent directories): .git
- *
- * git log && echo "OK"
- * fatal: not a git repository (or any of the parent directories): .git
- *
- * In a initialized Git repo but without any commits:
- *
- * git init && git log && echo "OK"
- * Initialized empty Git repository in /tmp/test/.git/
- * fatal: your current branch 'main' does not have any commits yet
- */
-class Git {
-    constructor(dir, env) {
-        this.dir = dir;
-        this.env = env;
-    }
-    execSync(args) {
-        const cmd = `git`;
-        const options = Object.assign({ stdio: 'pipe', shell: false, cwd: this.dir.getDirPath() }, (typeof this.env !== 'undefined' && { env: this.env }));
-        return (0, child_process_1.execFileSync)(cmd, args, options).toString();
-    }
-    status() {
-        const args = ['status'];
-        return this.execSync(args);
-    }
-    log() {
-        const args = ['log', '-n', '0'];
-        return this.execSync(args);
-    }
-    init() {
-        const args = ['init'];
-        return this.execSync(args);
-    }
-    emptyCommit(message) {
-        const args = [
-            'commit',
-            '--allow-empty',
-            '-m',
-            `"${message}"`
-        ];
-        return this.execSync(args);
-    }
-    setLocalConfig(key, value) {
-        const args = ['config', `${key}`, `"${value}"`];
-        return this.execSync(args);
-    }
-}
-exports.Git = Git;
 
 
 /***/ }),
@@ -1524,7 +1455,7 @@ class Queue {
     }
     guardThatGitRepoHasBeenInitialized() {
         return __awaiter(this, void 0, void 0, function* () {
-            const isInitialized = this.gitRepo.isInitialized();
+            const isInitialized = yield this.gitRepo.isInitialized();
             if (!isInitialized) {
                 throw new errors_1.GitDirNotInitializedError(this.gitRepo.getDirPath());
             }
