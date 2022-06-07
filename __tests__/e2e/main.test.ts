@@ -35,9 +35,17 @@ function executeAction(env): string | Buffer {
   return output
 }
 
+function committerIdentity(): object {
+  return {
+    GIT_COMMITTER_NAME: 'A Committer',
+    GIT_COMMITTER_EMAIL: 'committer@example.com'
+  }
+}
+
 function createSampleJob(gitRepo: GitRepo, payload: String): string | Buffer {
   return executeAction({
     ...process.env,
+    ...committerIdentity(),
     INPUT_QUEUE_NAME: 'queue-name',
     INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
     INPUT_ACTION: 'create-job',
@@ -63,6 +71,7 @@ function startSampleJob(
 ): string | Buffer {
   return executeAction({
     ...process.env,
+    ...committerIdentity(),
     INPUT_QUEUE_NAME: 'queue-name',
     INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
     INPUT_ACTION: 'start-job',
@@ -79,6 +88,7 @@ function finishSampleJob(
 ): string | Buffer {
   return executeAction({
     ...process.env,
+    ...committerIdentity(),
     INPUT_QUEUE_NAME: 'queue-name',
     INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
     INPUT_ACTION: 'finish-job',
@@ -221,6 +231,7 @@ describe('GitHub Action', () => {
 
     const env = {
       ...process.env,
+      ...committerIdentity(),
       INPUT_QUEUE_NAME: 'queue-name',
       INPUT_GIT_REPO_DIR: gitRepo.getDirPath(),
       INPUT_ACTION: 'create-job',
@@ -240,11 +251,13 @@ describe('GitHub Action', () => {
 
   it('should allow to disable commit signing for a given commit', async () => {
     const inputs = await InputsBuilder.instance()
+      .forDefaultAction()
       .withNoGpgSignature()
       .buildInputs()
 
     const env = {
       ...process.env,
+      ...committerIdentity(),
       ...inputs
     }
 
@@ -257,10 +270,14 @@ describe('GitHub Action', () => {
   })
 
   it('should always overwrite the commit author with: NautilusCyberneering[bot] <bot@nautilus-cyberneering.de>', async () => {
-    const defaultInputs = await InputsBuilder.instance().buildInputs()
+    const defaultInputs = await InputsBuilder.instance()
+      .forDefaultAction()
+      .withNoGpgSignature()
+      .buildInputs()
 
     const env = {
       ...process.env,
+      ...committerIdentity(),
       ...defaultInputs
     }
 
