@@ -1,5 +1,4 @@
 import {CommittedMessage} from './committed-message'
-import {JobId} from './job-id'
 import {MAX_QUEUE_NAME_LENGTH} from './queue-name'
 
 export class MissingQueueNameInCommitSubjectError extends Error {
@@ -70,15 +69,6 @@ export class MissingNewJobMessageError extends Error {
       `Can't start job. Previous message from this job is not a new job message. Previous message commit: ${committedMessage
         .commitHash()
         .toString()}`
-    )
-    Object.setPrototypeOf(this, MissingNewJobMessageError.prototype)
-  }
-}
-
-export class UnfinishedJobMessageError extends Error {
-  constructor(jobId: JobId) {
-    super(
-      `Can't start job. A previously started Job has not finished yer. Unfinished Job Id: ${jobId.toString()}`
     )
     Object.setPrototypeOf(this, MissingNewJobMessageError.prototype)
   }

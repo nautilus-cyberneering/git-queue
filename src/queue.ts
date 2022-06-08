@@ -7,8 +7,7 @@ import {
 import {
   GitDirNotInitializedError,
   MissingJobStartedMessageError,
-  MissingNewJobMessageError,
-  UnfinishedJobMessageError
+  MissingNewJobMessageError
 } from './errors'
 import {Job, nullJob} from './job'
 import {
@@ -77,15 +76,6 @@ export class Queue {
   ): void {
     if (!(latestMessage instanceof JobStartedCommittedMessage)) {
       throw new MissingJobStartedMessageError(latestMessage)
-    }
-  }
-
-  private guardThatLastStartedJobIsFinished(): void {
-    const lastStartedJobMessageJobId = this.getLatestStartedJobMessage().jobId()
-    const lastFinishedJobMessageJobId =
-      this.getLatestFinishedJobMessage().jobId()
-    if (!lastFinishedJobMessageJobId.equalsTo(lastStartedJobMessageJobId)) {
-      throw new UnfinishedJobMessageError(lastStartedJobMessageJobId)
     }
   }
 
@@ -229,7 +219,6 @@ export class Queue {
     const nextJob = this.getNextJob()
     const latestMessage = this.getLatestMessageRelatedToJob(nextJob.getJobId())
     this.guardThatLastMessageWasNewJob(latestMessage)
-    this.guardThatLastStartedJobIsFinished()
 
     const message = new JobStartedMessage(
       payload,

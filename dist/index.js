@@ -752,7 +752,7 @@ exports.getErrorMessage = getErrorMessage;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.InvalidCommitBodyError = exports.InvalidJobIdError = exports.InvalidHashError = exports.QueueNameNotValidError = exports.UnfinishedJobMessageError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingJobIdInCommitSubjectError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
+exports.InvalidCommitBodyError = exports.InvalidJobIdError = exports.InvalidHashError = exports.QueueNameNotValidError = exports.MissingNewJobMessageError = exports.MissingJobStartedMessageError = exports.GitDirNotFoundError = exports.GitDirNotInitializedError = exports.InvalidMessageKeyError = exports.MissingCommitHashInJobReferenceError = exports.MissingJobIdInCommitSubjectError = exports.MissingMessageKeyInCommitSubjectError = exports.MissingQueueNameInCommitSubjectError = void 0;
 const queue_name_1 = __nccwpck_require__(7894);
 class MissingQueueNameInCommitSubjectError extends Error {
     constructor(commitSubject) {
@@ -821,13 +821,6 @@ class MissingNewJobMessageError extends Error {
     }
 }
 exports.MissingNewJobMessageError = MissingNewJobMessageError;
-class UnfinishedJobMessageError extends Error {
-    constructor(jobId) {
-        super(`Can't start job. A previously started Job has not finished yer. Unfinished Job Id: ${jobId.toString()}`);
-        Object.setPrototypeOf(this, MissingNewJobMessageError.prototype);
-    }
-}
-exports.UnfinishedJobMessageError = UnfinishedJobMessageError;
 class QueueNameNotValidError extends Error {
     constructor(queueName) {
         super(`Queue name not valid: ${queueName}.\n` +
@@ -1472,13 +1465,6 @@ class Queue {
             throw new errors_1.MissingJobStartedMessageError(latestMessage);
         }
     }
-    guardThatLastStartedJobIsFinished() {
-        const lastStartedJobMessageJobId = this.getLatestStartedJobMessage().jobId();
-        const lastFinishedJobMessageJobId = this.getLatestFinishedJobMessage().jobId();
-        if (!lastFinishedJobMessageJobId.equalsTo(lastStartedJobMessageJobId)) {
-            throw new errors_1.UnfinishedJobMessageError(lastStartedJobMessageJobId);
-        }
-    }
     loadMessagesFromGit() {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.guardThatGitRepoHasBeenInitialized();
@@ -1577,7 +1563,6 @@ class Queue {
             const nextJob = this.getNextJob();
             const latestMessage = this.getLatestMessageRelatedToJob(nextJob.getJobId());
             this.guardThatLastMessageWasNewJob(latestMessage);
-            this.guardThatLastStartedJobIsFinished();
             const message = new message_1.JobStartedMessage(payload, nextJob.getJobId(), latestMessage.commitHash());
             const commit = yield this.commitMessage(message);
             return commit;
