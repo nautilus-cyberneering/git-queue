@@ -93,7 +93,7 @@ export class CommittedMessageLog {
       : this.messages.find(
           message =>
             message instanceof NewJobCommittedMessage &&
-            Job.fromCommittedMessage(message).getJobId().equalsTo(jobId)
+            Job.fromNewJobCommittedMessage(message).getJobId().equalsTo(jobId)
         ) || nullMessage()
   }
 

@@ -468,7 +468,7 @@ class CommittedMessageLog {
         return this.isEmpty()
             ? (0, committed_message_1.nullMessage)()
             : this.messages.find(message => message instanceof committed_message_1.NewJobCommittedMessage &&
-                job_1.Job.fromCommittedMessage(message).getJobId().equalsTo(jobId)) || (0, committed_message_1.nullMessage)();
+                job_1.Job.fromNewJobCommittedMessage(message).getJobId().equalsTo(jobId)) || (0, committed_message_1.nullMessage)();
     }
     findByCommitHash(commitHash) {
         const commits = this.messages.filter(message => message.commitHash().equalsTo(commitHash));
@@ -493,7 +493,7 @@ exports.CommittedMessageLog = CommittedMessageLog;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.nullMessage = exports.JobStartedCommittedMessage = exports.JobFinishedCommittedMessage = exports.NewJobCommittedMessage = exports.NullCommittedMessage = exports.CommittedMessage = void 0;
+exports.nullMessage = exports.JobFinishedCommittedMessage = exports.JobStartedCommittedMessage = exports.NewJobCommittedMessage = exports.NullCommittedMessage = exports.CommittedMessage = void 0;
 const commit_info_1 = __nccwpck_require__(4136);
 const job_id_1 = __nccwpck_require__(9654);
 const commit_body_1 = __nccwpck_require__(3801);
@@ -552,12 +552,12 @@ exports.NullCommittedMessage = NullCommittedMessage;
 class NewJobCommittedMessage extends CommittedMessage {
 }
 exports.NewJobCommittedMessage = NewJobCommittedMessage;
-class JobFinishedCommittedMessage extends CommittedMessage {
-}
-exports.JobFinishedCommittedMessage = JobFinishedCommittedMessage;
 class JobStartedCommittedMessage extends CommittedMessage {
 }
 exports.JobStartedCommittedMessage = JobStartedCommittedMessage;
+class JobFinishedCommittedMessage extends CommittedMessage {
+}
+exports.JobFinishedCommittedMessage = JobFinishedCommittedMessage;
 function nullMessage() {
     return new NullCommittedMessage((0, commit_info_1.nullCommitInfo)());
 }
@@ -1078,18 +1078,25 @@ exports.nullJobId = nullJobId;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.nullJob = exports.Job = void 0;
+exports.nullJob = exports.Job = exports.JobState = void 0;
 const commit_hash_1 = __nccwpck_require__(5533);
 const job_id_1 = __nccwpck_require__(9654);
 const NO_JOB = '--no-job--';
+var JobState;
+(function (JobState) {
+    JobState["New"] = "new";
+    JobState["Started"] = "started";
+    JobState["Finished"] = "finished";
+})(JobState = exports.JobState || (exports.JobState = {}));
 class Job {
-    constructor(payload, commitHash, jobId) {
+    constructor(payload, commitHash, jobId, state = JobState.New) {
         this.payload = payload;
         this.commitHash = commitHash;
         this.jobId = jobId;
+        this.state = state;
     }
-    static fromCommittedMessage(newJobCommittedMessage) {
-        return new Job(newJobCommittedMessage.payload(), newJobCommittedMessage.commitHash(), newJobCommittedMessage.jobId());
+    static fromNewJobCommittedMessage(newJobCommittedMessage, state = JobState.New) {
+        return new Job(newJobCommittedMessage.payload(), newJobCommittedMessage.commitHash(), newJobCommittedMessage.jobId(), state);
     }
     getPayload() {
         return this.payload;
@@ -1102,6 +1109,15 @@ class Job {
     }
     isNull() {
         return this.payload === NO_JOB && this.commitHash.isNull();
+    }
+    isNew() {
+        return this.state === JobState.New;
+    }
+    isStarted() {
+        return this.state === JobState.Started;
+    }
+    isFinished() {
+        return this.state === JobState.Finished;
     }
     equalsTo(other) {
         return (this.payload === other.getPayload() &&
@@ -1531,7 +1547,7 @@ class Queue {
         const latestFinishedJobMessage = this.getLatestFinishedJobMessage();
         const possibleNextJobId = latestFinishedJobMessage.isNull()
             ? (0, job_1.nullJob)().getJobId().getNextConsecutiveJobId()
-            : job_1.Job.fromCommittedMessage(latestFinishedJobMessage)
+            : job_1.Job.fromNewJobCommittedMessage(latestFinishedJobMessage)
                 .getJobId()
                 .getNextConsecutiveJobId();
         const jobCreationCommit = this.getJobCreationMessage(possibleNextJobId);
@@ -1539,8 +1555,22 @@ class Queue {
             return (0, job_1.nullJob)();
         }
         else {
-            return job_1.Job.fromCommittedMessage(jobCreationCommit);
+            return job_1.Job.fromNewJobCommittedMessage(jobCreationCommit);
         }
+    }
+    getJob(jobId) {
+        const latestMessage = this.getLatestMessageRelatedToJob(jobId);
+        const jobCreationCommit = this.getJobCreationMessage(jobId);
+        if (latestMessage instanceof committed_message_1.NewJobCommittedMessage) {
+            return job_1.Job.fromNewJobCommittedMessage(jobCreationCommit);
+        }
+        if (latestMessage instanceof committed_message_1.JobStartedCommittedMessage) {
+            return job_1.Job.fromNewJobCommittedMessage(jobCreationCommit, job_1.JobState.Started);
+        }
+        if (latestMessage instanceof committed_message_1.JobFinishedCommittedMessage) {
+            return job_1.Job.fromNewJobCommittedMessage(jobCreationCommit, job_1.JobState.Finished);
+        }
+        return (0, job_1.nullJob)();
     }
     // Job states: new -> started -> finished
     getJobIdForNewJob() {

@@ -375,4 +375,50 @@ describe('Queue', () => {
       nextJob3.equalsTo(new Job(payload2, latestCommit, new JobId(2)))
     ).toBe(true)
   })
+
+  it('should find a new job by ID', async () => {
+    const queue = await createTestQueue(commitOptionsForTests())
+
+    await queue.createJob(dummyPayload())
+
+    const job = queue.getJob(new JobId(1))
+
+    expect(job.getJobId().equalsTo(new JobId(1))).toBe(true)
+    expect(job.isNew()).toBe(true)
+  })
+
+  it('should find an started job by ID', async () => {
+    const queue = await createTestQueue(commitOptionsForTests())
+
+    await queue.createJob(dummyPayload())
+    await queue.markJobAsStarted(dummyPayload())
+
+    const job = queue.getJob(new JobId(1))
+
+    expect(job.getJobId().equalsTo(new JobId(1))).toBe(true)
+    expect(job.isStarted()).toBe(true)
+  })
+
+  it('should find a finished job by ID', async () => {
+    const queue = await createTestQueue(commitOptionsForTests())
+
+    await queue.createJob(dummyPayload())
+    await queue.markJobAsStarted(dummyPayload())
+    await queue.markJobAsFinished(dummyPayload())
+
+    const job = queue.getJob(new JobId(1))
+
+    expect(job.getJobId().equalsTo(new JobId(1))).toBe(true)
+    expect(job.isFinished()).toBe(true)
+  })
+
+  it('should return a null job when finding a job by ID if it does not exist', async () => {
+    const queue = await createTestQueue(commitOptionsForTests())
+
+    await queue.createJob(dummyPayload())
+
+    const job = queue.getJob(new JobId(100))
+
+    expect(job.isNull()).toBe(true)
+  })
 })

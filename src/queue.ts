@@ -9,7 +9,7 @@ import {
   MissingJobStartedMessageError,
   MissingNewJobMessageError
 } from './errors'
-import {Job, nullJob} from './job'
+import {Job, JobState, nullJob} from './job'
 import {
   JobFinishedMessage,
   JobStartedMessage,
@@ -179,7 +179,7 @@ export class Queue {
 
     const possibleNextJobId = latestFinishedJobMessage.isNull()
       ? nullJob().getJobId().getNextConsecutiveJobId()
-      : Job.fromCommittedMessage(latestFinishedJobMessage)
+      : Job.fromNewJobCommittedMessage(latestFinishedJobMessage)
           .getJobId()
           .getNextConsecutiveJobId()
 
@@ -188,8 +188,30 @@ export class Queue {
     if (jobCreationCommit.isNull()) {
       return nullJob()
     } else {
-      return Job.fromCommittedMessage(jobCreationCommit)
+      return Job.fromNewJobCommittedMessage(jobCreationCommit)
     }
+  }
+
+  getJob(jobId: JobId): Job {
+    const latestMessage = this.getLatestMessageRelatedToJob(jobId)
+    const jobCreationCommit = this.getJobCreationMessage(jobId)
+
+    if (latestMessage instanceof NewJobCommittedMessage) {
+      return Job.fromNewJobCommittedMessage(jobCreationCommit)
+    }
+
+    if (latestMessage instanceof JobStartedCommittedMessage) {
+      return Job.fromNewJobCommittedMessage(jobCreationCommit, JobState.Started)
+    }
+
+    if (latestMessage instanceof JobFinishedCommittedMessage) {
+      return Job.fromNewJobCommittedMessage(
+        jobCreationCommit,
+        JobState.Finished
+      )
+    }
+
+    return nullJob()
   }
 
   // Job states: new -> started -> finished
