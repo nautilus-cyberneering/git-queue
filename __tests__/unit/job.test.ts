@@ -1,6 +1,6 @@
 import {CommitHash} from '../../src/commit-hash'
 import {CommitInfo} from '../../src/commit-info'
-import {Job, nullJob} from '../../src/job'
+import {Job, JobState, nullJob} from '../../src/job'
 import {JobId} from '../../src/job-id'
 import {NewJobCommittedMessage} from '../../src/committed-message'
 import {dummyCommitBodyText} from '../../src/__tests__/helpers'
@@ -80,7 +80,7 @@ describe('Job', () => {
 
     const newJobCommittedMessage = new NewJobCommittedMessage(commitInfo)
 
-    const job = Job.fromCommittedMessage(newJobCommittedMessage)
+    const job = Job.fromNewJobCommittedMessage(newJobCommittedMessage)
 
     expect(job.getPayload()).toBe('test')
     expect(
@@ -88,5 +88,46 @@ describe('Job', () => {
         .getCommitHash()
         .equalsTo(new CommitHash('ad5cea6308f69d7955d8de5f0da19f675d5ba75f'))
     ).toBe(true)
+  })
+
+  it('should have a "new" state when the job is still pending to process (default state)', () => {
+    const job = new Job(
+      'payload',
+      new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf'),
+      new JobId(0),
+      JobState.New
+    )
+
+    expect(job.isNew()).toBe(true)
+
+    const jobWithDefaultState = new Job(
+      'payload',
+      new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf'),
+      new JobId(0)
+    )
+
+    expect(jobWithDefaultState.isNew()).toBe(true)
+  })
+
+  it('should have a "started" state when the job processing has already started', () => {
+    const job = new Job(
+      'payload',
+      new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf'),
+      new JobId(0),
+      JobState.Started
+    )
+
+    expect(job.isStarted()).toBe(true)
+  })
+
+  it('should have a "finished" state when the job processing has already finished', () => {
+    const job = new Job(
+      'payload',
+      new CommitHash('a362802b98c78df052a78796a1a7cde60a5c1faf'),
+      new JobId(0),
+      JobState.Finished
+    )
+
+    expect(job.isFinished()).toBe(true)
   })
 })

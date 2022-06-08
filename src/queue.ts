@@ -7,10 +7,9 @@ import {
 import {
   GitDirNotInitializedError,
   MissingJobStartedMessageError,
-  MissingNewJobMessageError,
-  UnfinishedJobMessageError
+  MissingNewJobMessageError
 } from './errors'
-import {Job, nullJob} from './job'
+import {Job, JobState, nullJob} from './job'
 import {
   JobFinishedMessage,
   JobStartedMessage,
@@ -77,15 +76,6 @@ export class Queue {
   ): void {
     if (!(latestMessage instanceof JobStartedCommittedMessage)) {
       throw new MissingJobStartedMessageError(latestMessage)
-    }
-  }
-
-  private guardThatLastStartedJobIsFinished(): void {
-    const lastStartedJobMessageJobId = this.getLatestStartedJobMessage().jobId()
-    const lastFinishedJobMessageJobId =
-      this.getLatestFinishedJobMessage().jobId()
-    if (!lastFinishedJobMessageJobId.equalsTo(lastStartedJobMessageJobId)) {
-      throw new UnfinishedJobMessageError(lastStartedJobMessageJobId)
     }
   }
 
@@ -161,12 +151,6 @@ export class Queue {
     return this.committedMessages.getLatestNewJobMessage()
   }
 
-  jobIsPending(jobId: JobId): boolean {
-    return (
-      this.getLatestMessageRelatedToJob(jobId) instanceof NewJobCommittedMessage
-    )
-  }
-
   getLatestFinishedJobMessage(): CommittedMessage {
     return this.committedMessages.findLatestsMessage(
       message => message instanceof JobFinishedCommittedMessage
@@ -195,7 +179,7 @@ export class Queue {
 
     const possibleNextJobId = latestFinishedJobMessage.isNull()
       ? nullJob().getJobId().getNextConsecutiveJobId()
-      : Job.fromCommittedMessage(latestFinishedJobMessage)
+      : Job.fromNewJobCommittedMessage(latestFinishedJobMessage)
           .getJobId()
           .getNextConsecutiveJobId()
 
@@ -204,8 +188,30 @@ export class Queue {
     if (jobCreationCommit.isNull()) {
       return nullJob()
     } else {
-      return Job.fromCommittedMessage(jobCreationCommit)
+      return Job.fromNewJobCommittedMessage(jobCreationCommit)
     }
+  }
+
+  getJob(jobId: JobId): Job {
+    const latestMessage = this.getLatestMessageRelatedToJob(jobId)
+    const jobCreationCommit = this.getJobCreationMessage(jobId)
+
+    if (latestMessage instanceof NewJobCommittedMessage) {
+      return Job.fromNewJobCommittedMessage(jobCreationCommit)
+    }
+
+    if (latestMessage instanceof JobStartedCommittedMessage) {
+      return Job.fromNewJobCommittedMessage(jobCreationCommit, JobState.Started)
+    }
+
+    if (latestMessage instanceof JobFinishedCommittedMessage) {
+      return Job.fromNewJobCommittedMessage(
+        jobCreationCommit,
+        JobState.Finished
+      )
+    }
+
+    return nullJob()
   }
 
   // Job states: new -> started -> finished
@@ -229,7 +235,6 @@ export class Queue {
     const nextJob = this.getNextJob()
     const latestMessage = this.getLatestMessageRelatedToJob(nextJob.getJobId())
     this.guardThatLastMessageWasNewJob(latestMessage)
-    this.guardThatLastStartedJobIsFinished()
 
     const message = new JobStartedMessage(
       payload,

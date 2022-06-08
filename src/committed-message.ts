@@ -70,8 +70,8 @@ export abstract class CommittedMessage implements Nullable {
 
 export class NullCommittedMessage extends CommittedMessage {}
 export class NewJobCommittedMessage extends CommittedMessage {}
-export class JobFinishedCommittedMessage extends CommittedMessage {}
 export class JobStartedCommittedMessage extends CommittedMessage {}
+export class JobFinishedCommittedMessage extends CommittedMessage {}
 
 export function nullMessage(): NullCommittedMessage {
   return new NullCommittedMessage(nullCommitInfo())
