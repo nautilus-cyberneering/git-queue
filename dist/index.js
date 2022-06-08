@@ -1513,9 +1513,6 @@ class Queue {
     getLatestNewJobMessage() {
         return this.committedMessages.getLatestNewJobMessage();
     }
-    jobIsPending(jobId) {
-        return (this.getLatestMessageRelatedToJob(jobId) instanceof committed_message_1.NewJobCommittedMessage);
-    }
     getLatestFinishedJobMessage() {
         return this.committedMessages.findLatestsMessage(message => message instanceof committed_message_1.JobFinishedCommittedMessage);
     }

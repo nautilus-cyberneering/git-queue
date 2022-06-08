@@ -151,12 +151,6 @@ export class Queue {
     return this.committedMessages.getLatestNewJobMessage()
   }
 
-  jobIsPending(jobId: JobId): boolean {
-    return (
-      this.getLatestMessageRelatedToJob(jobId) instanceof NewJobCommittedMessage
-    )
-  }
-
   getLatestFinishedJobMessage(): CommittedMessage {
     return this.committedMessages.findLatestsMessage(
       message => message instanceof JobFinishedCommittedMessage
