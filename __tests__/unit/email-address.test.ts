@@ -30,11 +30,19 @@ describe('EmailAddress', () => {
   })
 
   it('should validate email addresses', () => {
+    const account = 'c'.repeat(63)
+    const host = 'c'.repeat(63)
+    const domain = 'c'.repeat(63)
+    const address = `${host}.${domain}`
+    const maxSizeEmail = `${account}@${address}`
+    const maliciousDoSAttackEmail = `xxx${account}@$xxx${address}`
+
     const validEmails = [
       'Abc@example.com',
       'Abc.123@example.com',
       'user+mailbox/department=shipping@example.com',
-      "!#$%&'*+-/=?^_`.{|}~@example.com"
+      "!#$%&'*+-/=?^_`.{|}~@example.com",
+      maxSizeEmail
     ]
 
     for (const email of validEmails) {
@@ -59,7 +67,8 @@ describe('EmailAddress', () => {
       '"Joe.\\Blow"@example.com',
       'Loïc.Accentué@voilà.fr',
       'user@[IPv6:2001:DB8::1]',
-      '" "@example.org'
+      '" "@example.org',
+      maliciousDoSAttackEmail
     ]
 
     for (const email of invalidEmails) {
