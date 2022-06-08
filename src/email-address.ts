@@ -1,3 +1,5 @@
+import * as EmailValidator from 'email-validator'
+
 /*
  * Wrapper for RFC5322 email address.
  *
@@ -85,7 +87,5 @@ export class EmailAddress {
 }
 
 export function emailIsValid(email: string): boolean {
-  return /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>().,;\s@"]+\.{0,1})+([^<>().,;:\s@"]{2,}|[\d.]+))$/.test(
-    email
-  )
+  return EmailValidator.validate(email)
 }

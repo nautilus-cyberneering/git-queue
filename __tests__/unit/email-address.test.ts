@@ -32,20 +32,9 @@ describe('EmailAddress', () => {
   it('should validate email addresses', () => {
     const validEmails = [
       'Abc@example.com',
-      'Abc@example.com.',
-      'Abc@10.42.0.1',
-      'user@localserver',
       'Abc.123@example.com',
       'user+mailbox/department=shipping@example.com',
-      '"very.(),:;<>[]".VERY."very@\\ "very".unusual"@strange.example.com',
-      "!#$%&'*+-/=?^_`.{|}~@example.com",
-      '"()<>[]:,;@\\"!#$%&\'-/=?^_`{}| ~.a"@example.org',
-      '"Abc@def"@example.com',
-      '"Fred Bloggs"@example.com',
-      '"Joe.\\Blow"@example.com',
-      'Loïc.Accentué@voilà.fr',
-      'user@[IPv6:2001:DB8::1]',
-      '" "@example.org'
+      "!#$%&'*+-/=?^_`.{|}~@example.com"
     ]
 
     for (const email of validEmails) {
@@ -59,7 +48,18 @@ describe('EmailAddress', () => {
       'this is"notallowed@example.com',
       'this still"not\\allowed@example.com',
       'john..doe@example.com',
-      'john.doe@example..com'
+      'john.doe@example..com',
+      'Abc@example.com.',
+      'Abc@10.42.0.1',
+      'user@localserver',
+      '"very.(),:;<>[]".VERY."very@\\ "very".unusual"@strange.example.com',
+      '"()<>[]:,;@\\"!#$%&\'-/=?^_`{}| ~.a"@example.org',
+      '"Abc@def"@example.com',
+      '"Fred Bloggs"@example.com',
+      '"Joe.\\Blow"@example.com',
+      'Loïc.Accentué@voilà.fr',
+      'user@[IPv6:2001:DB8::1]',
+      '" "@example.org'
     ]
 
     for (const email of invalidEmails) {
