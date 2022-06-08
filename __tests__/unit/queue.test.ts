@@ -131,6 +131,21 @@ describe('Queue', () => {
     await expect(fn()).rejects.toThrowError(expectedError)
   })
 
+  it('should fail when trying to start the same job twice', async () => {
+    const queue = await createTestQueue(commitOptionsForTests())
+
+    await queue.createJob(dummyPayload())
+    const commitInfo = await queue.markJobAsStarted(dummyPayload())
+
+    const expectedError = `Can't start job. Previous message from this job is not a new job message. Previous message commit: ${commitInfo.hash}`
+
+    const fn = async (): Promise<CommitInfo> => {
+      return queue.markJobAsStarted(dummyPayload())
+    }
+
+    await expect(fn()).rejects.toThrowError(expectedError)
+  })
+
   it('should mark a job as finished', async () => {
     const queue = await createTestQueue(commitOptionsForTests())
 
