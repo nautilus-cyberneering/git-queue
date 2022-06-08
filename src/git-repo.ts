@@ -3,7 +3,6 @@ import {CommitMessage} from './commit-message'
 import {CommitOptions} from './commit-options'
 import {GitDirNotInitializedError} from './errors'
 import {GitRepoDir} from './git-repo-dir'
-import {Git} from './git'
 
 export class GitRepo {
   private readonly dir: GitRepoDir
@@ -14,10 +13,9 @@ export class GitRepo {
     this.git = git
   }
 
-  isInitialized(): boolean {
+  async isInitialized(): Promise<boolean> {
     try {
-      const git = new Git(this.dir)
-      git.status()
+      await this.git.raw('status')
     } catch {
       return false
     }
@@ -40,27 +38,25 @@ export class GitRepo {
     this.git.env(name, value)
   }
 
-  async getCurrentBranch(): Promise<string | null> {
-    const status = await this.git.status()
-    return status.current
-  }
-
   async log(): Promise<LogResult<DefaultLogFields>> {
     return await this.git.log()
   }
 
   async hasCommits(): Promise<boolean> {
-    if (!this.isInitialized()) {
-      throw new GitDirNotInitializedError(this.dir.getDirPath())
-    }
+    await this.guardThatRepoIsInitialized()
     try {
-      const git = new Git(this.dir)
-      git.log()
+      await this.git.raw('log', '-n', '0')
     } catch (err) {
       // No commits yet
       return false
     }
     return true
+  }
+
+  async guardThatRepoIsInitialized(): Promise<void> {
+    if (!(await this.isInitialized())) {
+      throw new GitDirNotInitializedError(this.dir.getDirPath())
+    }
   }
 
   async commit(
