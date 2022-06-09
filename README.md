@@ -7,7 +7,7 @@ Documentation: <https://nautilus-cyberneering.github.io/git-queue/>
 
 This GitHub Action is a job queue with the following characteristics:
 
-- It only allows the execution of a job at the same time. Multiple pending jobs is allowed.
+- It only allows the execution of one job at a time. Multiple pending jobs are allowed.
 - Jobs are done by GitHub workflows intended to create git commits and merge them into target branches.
 - It provides an optimistic locking mechanism to guarantee that commits are merged in a mutual exclusion way, avoiding duplicate commits. When the queue accepts more than one active job (not finished) it will also guarantee the execution order.
 
