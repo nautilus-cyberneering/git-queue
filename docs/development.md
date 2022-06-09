@@ -59,7 +59,7 @@ Make sure commits keep their signatures.
 ## Update node dependencies
 
 - Dependencies updates should be in an independent branch, as any other code modification.
-- We are reusing always the same [issue](https://github.com/Nautilus-Cyberneering/git-queue/issues/183) and the same [branch name](https://github.com/Nautilus-Cyberneering/git-queue/tree/issue-183-update-node-depdencies) for dependencies update. That way we have a dependency update history (issue) and a consistent updates branch that can be used for automation.
+- We are reusing always the same [issue](https://github.com/Nautilus-Cyberneering/git-queue/issues/183) and the same branch name(`issue-183-update-node-dependencies`) for dependencies update. That way we have a dependency update history (issue) and a consistent updates branch that can be used for automation.
 - If a dependency breaks the code (i.e, does not compile or the tests do not pass), it should be solved in a separate, specific issue.
 
 Given everything, the process of dependencies updates would be as follows:
