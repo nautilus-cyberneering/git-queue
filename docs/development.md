@@ -1,24 +1,26 @@
 # Development
 
-Requirements:
+You can read our [CONTRIBUTING](../CONTRIBUTING.md) and [CODE_OF_CONDUCT](../CODE_OF_CONDUCT.md) guides before star contributing.
 
-- Node >= 16.13.2
+## Requirements
 
-Basic commands:
+- Node >= 16.13.2.
+- The action has only been tested with Linux.
+- Make sure you do not alter the queue commits with destructive commands like `git --amend` or `git rebase`. In general, command that rewrite or reorganize commits could affect the queue integrity.
 
-- Install with `yarn install`.
-- Build the typescript and package it for distribution `yarn build && yarn package`.
-- Run all tests `yarn test`.
+## Install
+
+Install with `yarn install`.
+
+## Testing
+
+- Run all tests with `yarn test`.
+- Run only unit tests with `yarn test-unit`.
+- Run only unit tests with `yarn test-e2e`.
+
+## Linting
+
 - Run `TypeScript` linter `yarn format && yarn lint`.
-
-Run the app locally:
-
-```shell
-yarn run build && \
-INPUT_QUEUE_NAME="queue-name" \
-INPUT_ACTION="next-job" \
-  node dist/index.js
-```
 
 Run [MegaLinter](https://github.com/megalinter/megalinter) locally:
 
@@ -27,6 +29,21 @@ mega-linter-runner -e 'ENABLE=MARKDOWN'
 ```
 
 You can use the `-e` option to select the linters you want to execute.
+
+Build the typescript and package it for distribution `yarn build && yarn package`.
+
+## Run locally
+
+You can run the app locally:
+
+```shell
+yarn run build && \
+INPUT_QUEUE_NAME="queue-name" \
+INPUT_ACTION="next-job" \
+  node dist/index.js
+```
+
+Where inputs are environment variables with the prefix `INPUT_` and the input name in uppercase.
 
 You can run workflows locally with the [act](https://github.com/nektos/act) app.
 
@@ -80,6 +97,35 @@ If a security alert is warned by dependabot (critical security vulnerability) pr
 For not critical updates we update them roughly once a week.
 
 > NOTE: be aware of merging `dependabot` PRs directly using the GitHub interface. In some cases might produce [unverified commits](https://github.com/Nautilus-Cyberneering/git-queue/discussions/205#discussioncomment-2731691). When GitHub cannot sign the rebased commits.
+
+## How to create pull requests
+
+In order to contribute you should follow the next steps:
+
+1. Make sure there is an issue for your contribution. You can pick up one of the already-define issues or create a new issue describing what you want to implement, fix, ...
+
+2. Create a fork and a new branch following the branch name convention: `issue-XXX-short-description-or-issue-title-with-kebab-case-format`
+
+3. Make your changes and commit them using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format. Make sure you sign your commits.
+
+4. It is very important that all commits have a distribution package of the application. That means you should run always: `yarn install && yarn build && yarn package` before committing. That sometimes changes the content of the `dist` folder. Those changes should be included in the commit. We encourage you tu run `yarn install && yarn all` before committing. That command is going to build the app but it's also going to test it and fix the TypeScript linting.
+
+5. The target branch for your pull request should be `develop`. Keep you branch rebased with `develop` branch.
+
+Recommendations:
+
+- If you do not run [MegaLinter](https://github.com/megalinter/megalinter) locally, we recommend you to push each new commit to a draft pull request in order to be sure all checks pass for every commit. It could be quiet annoying try to fix all commits at the end, when you have finished the issue implementation.
+- If you have a [MegaLinter](https://github.com/megalinter/megalinter) error you can check the [workflow log](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/mega-linter.yml). At the beginning of each linter processing you can see what MegaLinter is doing:
+
+```s
+[GitHub Status Reporter] Error posting Status for JAVASCRIPTwith standard: 403
+GitHub API response: {"message":"Resource not accessible by integration","documentation_url":"https://docs.github.com/rest/reference/repos#create-a-commit-status"}
+[Text Reporter] Generated TEXT report: /github/workspace/report/linters_logs/SUCCESS-JAVASCRIPT_STANDARD.log
+```
+
+And where to get more info about the linter is using and its configuration.
+
+You can also download the reports as an artifact.
 
 ## Releases
 
