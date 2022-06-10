@@ -3,7 +3,7 @@ name: Test
 on:
   pull_request:
   push:
-    branches: [main, issue-*]
+    branches: [main, develop, issue-*]
   workflow_dispatch:
 
 jobs:
