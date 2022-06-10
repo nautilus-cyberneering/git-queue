@@ -1,13 +1,13 @@
 # Git Queue
 
 <!-- markdownlint-disable-next-line MD013 -->
-[![Check dist/](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/check-dist.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/check-dist.yml) [![MegaLinter](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/mega-linter.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/mega-linter.yml) [![Test](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test.yml) [![Test build](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test-build.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test-build.yml)
+[![Check dist/](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/check-dist.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/check-dist.yml) [![MegaLinter](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/mega-linter.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/mega-linter.yml) [![Test](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test.yml) [![Test build](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test-build.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/test-build.yml) [![CodeQL](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/codeql.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/codeql.yml) [![Deploy Documentation](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/deploy-documentation.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/deploy-documentation.yml) [![Publish GitHub Release](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/publish-github-release.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/git-queue/actions/workflows/publish-github-release.yml)
 
 Documentation: <https://nautilus-cyberneering.github.io/git-queue/>
 
 This GitHub Action is a job queue with the following characteristics:
 
-- It only allows the execution of a job at the same time. Multiple pending jobs is allowed.
+- It only allows the execution of one job at a time. Multiple pending jobs are allowed.
 - Jobs are done by GitHub workflows intended to create git commits and merge them into target branches.
 - It provides an optimistic locking mechanism to guarantee that commits are merged in a mutual exclusion way, avoiding duplicate commits. When the queue accepts more than one active job (not finished) it will also guarantee the execution order.
 
