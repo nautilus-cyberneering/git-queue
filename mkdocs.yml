@@ -1,6 +1,7 @@
 site_name: Git Queue
-site_url: https://nautilus-cyberneering.github.io/git-queue/
-repo_url: https://github.com/Nautilus-Cyberneering/git-queue
+site_url: "https://nautilus-cyberneering.github.io/git-queue"
+repo_url: "https://github.com/Nautilus-Cyberneering/git-queue"
+edit_uri: "https://github.com/Nautilus-Cyberneering/git-queue/edit/main/docs"
 site_description: 'A GitHub Action that implements a job queue with a concurrency lock by using Git empty commits'
 nav:
   - Home: index.md
