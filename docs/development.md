@@ -1,6 +1,6 @@
 # Development
 
-You can read our [CONTRIBUTING](../CONTRIBUTING.md) and [CODE_OF_CONDUCT](../CODE_OF_CONDUCT.md) guides before star contributing.
+You can read our [CONTRIBUTING](https://github.com/Nautilus-Cyberneering/git-queue/blob/main/CONTRIBUTING.md) and [CODE_OF_CONDUCT](https://github.com/Nautilus-Cyberneering/git-queue/blob/main/CODE_OF_CONDUCT.md) guides before star contributing.
 
 ## Requirements
 
