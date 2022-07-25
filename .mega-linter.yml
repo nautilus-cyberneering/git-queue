@@ -10,6 +10,7 @@ DEFAULT_BRANCH: main # Usually master or main
 # - SPELL # Uncomment to disable checks of spelling mistakes
 DISABLE_LINTERS:
   - TYPESCRIPT_STANDARD
+  - REPOSITORY_GITLEAKS
 SHOW_ELAPSED_TIME: true
 FILEIO_REPORTER: false
 JAVASCRIPT_ES_FILTER_REGEX_EXCLUDE: (dist|cinder|jest.config.js)
