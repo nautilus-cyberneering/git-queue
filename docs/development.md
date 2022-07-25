@@ -108,7 +108,7 @@ In order to contribute you should follow the next steps:
 
 3. Make your changes and commit them using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format. Make sure you sign your commits.
 
-4. It is very important that all commits have a distribution package of the application. That means you should run always: `yarn install && yarn build && yarn package` before committing. That sometimes changes the content of the `dist` folder. Those changes should be included in the commit. We encourage you tu run `yarn install && yarn all` before committing. That command is going to build the app but it's also going to test it and fix the TypeScript linting.
+4. It is very important that all commits have a distribution package of the application. That means you should run always: `yarn install && yarn build && yarn package` before committing. That sometimes changes the content of the `dist` folder. Those changes should be included in the commit. That command is going to build the app but it's also going to test it and fix the TypeScript linting.
 
 5. The target branch for your pull request should be `develop`. Keep you branch rebased with `develop` branch.
 
