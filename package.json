@@ -29,7 +29,7 @@
   "author": "Nautilus-Cyberneering",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.6.0",
+    "@actions/core": "^1.9.0",
     "@actions/exec": "^1.1.1",
     "ajv": "^8.11.0",
     "email-validator": "^2.0.4",
@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@types/jest": "^28.1.1",
-    "@types/node": "^17.0.23",
+    "@types/node": "^18.0.0",
     "@typescript-eslint/parser": "^5.17.0",
     "@vercel/ncc": "^0.33.3",
     "eslint": "^8.12.0",
@@ -50,7 +50,7 @@
     "jest-runtime": "^28.1.1",
     "js-yaml": "^4.1.0",
     "openpgp": "^5.2.1",
-    "prettier": "2.6.2",
+    "prettier": "^2.7.1",
     "ts-jest": "^28.0.5",
     "typescript": "^4.6.3",
     "typescript-formatter": "^7.2.2"
