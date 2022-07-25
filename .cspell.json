@@ -4,6 +4,7 @@
   "ignorePaths": [
     ".vscode",
     "**/.git/**",
+    "**/docs/images/**",
     "**/node_modules/**",
     "**/vscode-extension/**",
     "cinder",
