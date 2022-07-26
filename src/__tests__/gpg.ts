@@ -102,6 +102,7 @@ export const overwriteAgentConfiguration = async (
   config: string,
   homedir: string
 ): Promise<void> => {
+  // nosemgrep
   const gpgAgentConfPath: string = path.join(homedir, 'gpg-agent.conf')
 
   fs.writeFile(gpgAgentConfPath, config, function (err) {

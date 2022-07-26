@@ -900,6 +900,7 @@ class GitRepoDir {
         }
     }
     normalizePath(dirPath) {
+        // nosemgrep
         return (0, path_1.isAbsolute)(dirPath) ? dirPath : (0, path_1.resolve)(dirPath);
     }
     getDirPath() {
@@ -1427,6 +1428,7 @@ class QueueName {
         return this.value === other.value;
     }
     guardThatNameIsValid(value) {
+        // nosemgrep
         if (!RegExp(`^[a-z-_ ]{1,${exports.MAX_QUEUE_NAME_LENGTH}}$`).test(value)) {
             throw new errors_1.QueueNameNotValidError(value);
         }

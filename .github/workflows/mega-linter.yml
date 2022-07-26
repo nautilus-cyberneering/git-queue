@@ -10,6 +10,7 @@ on:
     branches: [main, develop]
 
 permissions:
+  issues: write
   pull-requests: write
   statuses: write
 
@@ -37,7 +38,7 @@ jobs:
         id: ml
         # You can override MegaLinter flavor used to have faster performances
         # More info at https://megalinter.github.io/flavors/
-        uses: megalinter/megalinter/flavors/javascript@v5
+        uses: oxsecurity/megalinter/flavors/javascript@v6
         env:
           # All available variables are described in documentation
           # https://megalinter.github.io/configuration/
