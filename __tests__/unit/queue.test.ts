@@ -240,6 +240,7 @@ describe('Queue', () => {
 
     const output = gitLogForLatestCommit(gitRepo.getDirPath())
 
+    // nosemgrep
     expect(RegExp(`gpg:.+RSA.+${signingKeyFingerprint}`).test(output)).toBe(
       true
     )
