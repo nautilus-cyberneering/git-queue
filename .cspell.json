@@ -73,6 +73,7 @@
     "strcmp",
     "stringifying",
     "STYLELINT",
+    "TRIVY",
     "tsbuildinfo",
     "venv",
     "vercel",
