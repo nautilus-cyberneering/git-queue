@@ -64,7 +64,7 @@ Document format should be Markdown unless an alternative format is really necess
 
 ## Style guides
 
-In this repository we use Megalinter. We recommend you to install the local checker so as to speed up your contribution process. You will find the local installation options at the bottom of the page: <https://megalinter.github.io/v5/installation/>.
+In this repository we use Megalinter. We recommend you to install the local checker so as to speed up your contribution process. You will find the local installation options at the bottom of the page: <https://oxsecurity.github.io/megalinter/v5/installation/>.
 
 ### Code style guide
 

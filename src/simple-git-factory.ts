@@ -1,4 +1,4 @@
-import simpleGit, {SimpleGit, SimpleGitOptions} from 'simple-git'
+import {simpleGit, SimpleGit, SimpleGitOptions} from 'simple-git'
 import {GitRepoDir} from './git-repo-dir'
 
 export async function createGitInstance(

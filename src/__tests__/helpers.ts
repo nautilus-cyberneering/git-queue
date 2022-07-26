@@ -2,7 +2,7 @@ import * as cp from 'child_process'
 import * as gpg from './gpg'
 import * as openpgp from './openpgp'
 
-import simpleGit, {SimpleGit, SimpleGitOptions} from 'simple-git'
+import {simpleGit, SimpleGit, SimpleGitOptions} from 'simple-git'
 
 import {CommitHash} from '../commit-hash'
 import {GitRepo} from '../git-repo'

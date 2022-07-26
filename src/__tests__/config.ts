@@ -32,6 +32,7 @@ export function testConfiguration(): TestConfig {
   )
 
   // secretlint-disable
+  // nosemgrep
   const gpgPrivateKey = `-----BEGIN PGP PRIVATE KEY BLOCK-----\n\n${gpgPrivateKeyBody}\n-----END PGP PRIVATE KEY BLOCK-----`
   // secretlint-enable
 

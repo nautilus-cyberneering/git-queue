@@ -20,7 +20,8 @@ export class QueueName implements Nullable {
     return this.value === other.value
   }
 
-  guardThatNameIsValid(value): void {
+  guardThatNameIsValid(value: string): void {
+    // nosemgrep
     if (!RegExp(`^[a-z-_ ]{1,${MAX_QUEUE_NAME_LENGTH}}$`).test(value)) {
       throw new QueueNameNotValidError(value)
     }
