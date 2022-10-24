@@ -28,9 +28,9 @@ describe('QueueName', () => {
       )
     }
 
-    expect(invalidCharacters).toThrowError()
-    expect(emptyString).toThrowError()
-    expect(longString).toThrowError()
+    expect(invalidCharacters).toThrow()
+    expect(emptyString).toThrow()
+    expect(longString).toThrow()
   })
 
   it('should transform blank spaces of the queue name into dashes', () => {

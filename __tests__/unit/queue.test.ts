@@ -125,7 +125,7 @@ describe('Queue', () => {
 
     const expectedError = `Can't start job. Previous message from this job is not a new job message. Previous message commit: --no-commit-hash--`
 
-    await expect(fn()).rejects.toThrowError(expectedError)
+    await expect(fn()).rejects.toThrow(expectedError)
   })
 
   it('should fail when trying to start the same job twice', async () => {
@@ -140,7 +140,7 @@ describe('Queue', () => {
       return queue.markJobAsStarted(dummyPayload())
     }
 
-    await expect(fn()).rejects.toThrowError(expectedError)
+    await expect(fn()).rejects.toThrow(expectedError)
   })
 
   it('should allow marking a job as finished', async () => {
@@ -194,7 +194,7 @@ describe('Queue', () => {
 
     const expectedError = `Can't finish job. Previous message from this job is not a job started message. Previous message commit: --no-commit-hash--`
 
-    await expect(fn()).rejects.toThrowError(expectedError)
+    await expect(fn()).rejects.toThrow(expectedError)
   })
 
   it('should fail when trying to finish a job that does not exists', async () => {
@@ -207,7 +207,7 @@ describe('Queue', () => {
 
     const expectedError = `Can't finish job. Previous message from this job is not a job started message. Previous message commit: --no-commit-hash--`
 
-    await expect(fn()).rejects.toThrowError(expectedError)
+    await expect(fn()).rejects.toThrow(expectedError)
   })
 
   it('should allow to specify the commit author', async () => {
@@ -260,7 +260,7 @@ describe('Queue', () => {
 
     const expectedError = `Git dir: ${gitRepo.getDirPath()} has not been initialized`
 
-    await expect(fn()).rejects.toThrowError(expectedError)
+    await expect(fn()).rejects.toThrow(expectedError)
   })
 
   it('should return all the messages in the queue', async () => {
