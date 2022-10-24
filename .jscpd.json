@@ -12,9 +12,9 @@
     "**/cinder/**",
     "**/node_modules/**",
     "**/report/**",
-    "coverage/**",
-    "dist/**",
-    "lib/**",
-    "README.md"
+    "**/coverage/**",
+    "**/dist/**",
+    "**/lib/**",
+    "**/README.md"
   ]
 }
