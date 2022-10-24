@@ -22,9 +22,9 @@ describe('CommitHash', () => {
       return new CommitHash('ad5cea63-8f69d-955d8-e5f0da-9f675d5ba75f')
     }
 
-    expect(longHash).toThrowError()
-    expect(shortHash).toThrowError()
-    expect(nonSHA1Hash).toThrowError()
+    expect(longHash).toThrow()
+    expect(shortHash).toThrow()
+    expect(nonSHA1Hash).toThrow()
   })
 
   it('should compare two commit hashes', () => {
