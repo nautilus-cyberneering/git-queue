@@ -19,7 +19,7 @@ describe('CommitSubjectParser', () => {
       return parser.getMessageKey().toString()
     }
 
-    expect(fn).toThrowError()
+    expect(fn).toThrow()
   })
 
   it('should parse the queue name from a commit subject', () => {
@@ -38,7 +38,7 @@ describe('CommitSubjectParser', () => {
       return parser.getQueueName().toString()
     }
 
-    expect(fn).toThrowError()
+    expect(fn).toThrow()
   })
 
   it('should parse the job reference (commit hash) from a commit subject', () => {
@@ -66,7 +66,7 @@ describe('CommitSubjectParser', () => {
       return parser.getJobRef().toString()
     }
 
-    expect(fn).toThrowError()
+    expect(fn).toThrow()
   })
 
   it('should fail when the job reference prefix exists but the reference value is missing in a commit subject', () => {
@@ -77,7 +77,7 @@ describe('CommitSubjectParser', () => {
       return parser.getJobRef().toString()
     }
 
-    expect(fn).toThrowError()
+    expect(fn).toThrow()
   })
 
   it('should return a Null Commit when the job reference does not exist', () => {
@@ -96,7 +96,7 @@ describe('CommitSubjectParser', () => {
       return parser.getJobId()
     }
 
-    expect(fn).toThrowError()
+    expect(fn).toThrow()
   })
 
   it('should parse the job id from a commit subject', () => {

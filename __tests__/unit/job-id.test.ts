@@ -12,9 +12,9 @@ describe('JobId', () => {
       return new JobId(0)
     }
 
-    expect(negativeJobId).toThrowError()
-    expect(NaNJobId).toThrowError()
-    expect(zeroJobId).not.toThrowError()
+    expect(negativeJobId).toThrow()
+    expect(NaNJobId).toThrow()
+    expect(zeroJobId).not.toThrow()
   })
 
   it('should compare two JobIds', () => {

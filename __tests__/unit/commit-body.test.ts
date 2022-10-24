@@ -24,7 +24,7 @@ describe('CommitBody', () => {
         })
       )
     }
-    expect(invalidContent).toThrowError()
+    expect(invalidContent).toThrow()
   })
 
   it('should not accept a body without the mandatory namespace field', () => {
@@ -40,7 +40,7 @@ describe('CommitBody', () => {
         })
       )
     }
-    expect(invalidContent).toThrowError()
+    expect(invalidContent).toThrow()
   })
 
   it('should not accept a body with a wrong namespace value', () => {
@@ -57,7 +57,7 @@ describe('CommitBody', () => {
         })
       )
     }
-    expect(invalidContent).toThrowError()
+    expect(invalidContent).toThrow()
   })
 
   it('should not accept a body without the mandatory metadata field', () => {
@@ -70,14 +70,14 @@ describe('CommitBody', () => {
         })
       )
     }
-    expect(invalidContent).toThrowError()
+    expect(invalidContent).toThrow()
   })
 
   it('should fail when constructing with a non-JSON content', () => {
     const invalidContent = (): CommitBody => {
       return new CommitBody('this is not a JSON content')
     }
-    expect(invalidContent).toThrowError()
+    expect(invalidContent).toThrow()
   })
 
   it('could be built from a Message', () => {
