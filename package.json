@@ -47,7 +47,7 @@
     "jest": "^28.1.0",
     "jest-circus": "^28.1.1",
     "jest-fixtures": "^0.6.0",
-    "jest-runtime": "^28.1.1",
+    "jest-runtime": "^29.3.1",
     "js-yaml": "^4.1.0",
     "openpgp": "^5.2.1",
     "prettier": "^2.7.1",
